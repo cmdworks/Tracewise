@@ -1,4 +1,4 @@
-//! Health checks and diagnostics for trail setup.
+//! Health checks and diagnostics for tracewise setup.
 use super::*;
 
 #[derive(Clone, PartialEq, Eq, Debug)]
@@ -24,7 +24,7 @@ pub(crate) fn first_on_path(path_var: &str, name: &str) -> Option<PathBuf> {
 pub fn checks(env: &Env, path_var: &str) -> Vec<Check> {
     let mut out = Vec::new();
     let manifest = read_manifest(env);
-    out.push(check(manifest.is_some(), "install.json: set up by `trail setup`", "run `trail setup`"));
+    out.push(check(manifest.is_some(), "install.json: set up by `tracewise setup`", "run `tracewise setup`"));
 
     check_programs_and_git(env, &mut out);
     check_shims_and_blocks(env, &mut out);
@@ -46,10 +46,10 @@ fn check_adapters_and_config(out: &mut Vec<Check>) {
     let work_tree = std::env::current_dir().ok().and_then(|d| tracewise_git::RepoPaths::discover(&d)).map(|r| r.work_tree);
     for (name, _, err) in crate::hook::adapter::list_files(work_tree.as_deref()) {
         if let Some(e) = err {
-            out.push(warn(format!("adapter {name} is broken and ignored: {e}"), "fix or delete the file (see `trail agent check`)"));
+            out.push(warn(format!("adapter {name} is broken and ignored: {e}"), "fix or delete the file (see `tracewise agent check`)"));
         }
     }
-    let config = tracewise_core::get_trail_home().join("config.toml");
+    let config = tracewise_core::get_tracewise_home().join("config.toml");
     if let Ok(body) = fs::read_to_string(&config) {
         if let Err(e) = toml::from_str::<toml::Table>(&body) {
             out.push(warn(
@@ -67,14 +67,14 @@ fn check_database_size(out: &mut Vec<Check>) {
         .into_iter()
         .flatten()
         .flatten()
-        .filter(|e| e.file_name().to_string_lossy().starts_with("trail.db"))
+        .filter(|e| e.file_name().to_string_lossy().starts_with("tracewise.db"))
         .filter_map(|e| e.metadata().ok())
         .map(|m| m.len())
         .sum();
     if bytes > 50 << 20 {
         out.push(warn(
             format!("database is {} MB (over 50)", bytes >> 20),
-            "run `trail gc`; if it grows again, check `trail commands` for a noisy tool",
+            "run `tracewise gc`; if it grows again, check `tracewise commands` for a noisy tool",
         ));
     }
 }
@@ -90,17 +90,17 @@ fn check_platform_features(out: &mut Vec<Check>) {
 }
 
 fn check_programs_and_git(env: &Env, out: &mut Vec<Check>) {
-    for name in PROGRAMS.iter().filter(|n| **n != "trail-sensor") {
+    for name in PROGRAMS.iter().filter(|n| **n != "tracewise-sensor") {
         let p = env.bin().join(name);
-        out.push(check(p.is_file(), format!("program {}", p.display()), "run `trail setup`"));
+        out.push(check(p.is_file(), format!("program {}", p.display()), "run `tracewise setup`"));
     }
-    let sensor = env.bin().join("trail-sensor");
+    let sensor = env.bin().join("tracewise-sensor");
     if !sensor.is_file() {
-        out.push(warn("program trail-sensor is not installed (only the strict mode needs it)", "build it, then run `trail setup`"));
+        out.push(warn("program tracewise-sensor is not installed (only the strict mode needs it)", "build it, then run `tracewise setup`"));
     }
     check_binary_hashes(&env.bin(), out);
     let git = env.bin().join("git");
-    out.push(check(git.exists(), "git wrapper ~/.trail/bin/git", "run `trail setup`"));
+    out.push(check(git.exists(), "git wrapper ~/.tracewise/bin/git", "run `tracewise setup`"));
 }
 
 /// With a `SHA256SUMS` next to the programs (a release candidate), every listed program must still match it.
@@ -126,12 +126,12 @@ fn check_shims_and_blocks(env: &Env, out: &mut Vec<Check>) {
     out.push(check(
         shims >= crate::cmd_shims::SHIM_TOOLS.len(),
         format!("shims: {shims} of {} work", crate::cmd_shims::SHIM_TOOLS.len()),
-        "run `trail setup`",
+        "run `tracewise setup`",
     ));
 
     for (path, label) in [(env.zshenv(), "~/.zshenv (PATH for every shell)"), (env.zshrc(), "~/.zshrc (terminal hook)")] {
         let text = fs::read_to_string(&path).unwrap_or_default();
-        out.push(check(text.lines().any(|l| l.trim() == BLOCK_START), format!("{label} has the Trail block"), "run `trail setup`"));
+        out.push(check(text.lines().any(|l| l.trim() == BLOCK_START), format!("{label} has the Tracewise block"), "run `tracewise setup`"));
         let legacy = text
             .lines()
             .scan(false, |inside, l| {
@@ -149,42 +149,45 @@ fn check_shims_and_blocks(env: &Env, out: &mut Vec<Check>) {
         if legacy > 0 {
             out.push(check(
                 false,
-                format!("{} has {legacy} old Trail line(s) outside the block", path.display()),
-                "run `trail setup` (it folds them into the block)",
+                format!("{} has {legacy} old Tracewise line(s) outside the block", path.display()),
+                "run `tracewise setup` (it folds them into the block)",
             ));
         }
     }
 }
 
-/// fish has no block in an rc file: Tracewise owns `conf.d/trail.fish`.
+/// fish has no block in an rc file: Tracewise owns `conf.d/tracewise.fish`.
 fn check_fish(env: &Env, out: &mut Vec<Check>) {
     use super::install::{fish_file, fish_installed};
     if !fish_installed(env) {
         return;
     }
     let text = fs::read_to_string(fish_file(env)).unwrap_or_default();
-    out.push(check(text.contains(BLOCK_START), "~/.config/fish/conf.d/trail.fish has the Trail block", "run `trail setup`"));
+    out.push(check(text.contains(BLOCK_START), "~/.config/fish/conf.d/tracewise.fish has the Tracewise block", "run `tracewise setup`"));
 }
 
 fn check_path_and_daemon(env: &Env, path_var: &str, out: &mut Vec<Check>) {
     let bin = env.bin();
     out.push(check(
         first_on_path(path_var, "git").is_some_and(|p| p.starts_with(&bin)),
-        "this shell finds the Trail git wrapper first",
-        "open a new terminal (or `source ~/.zshrc`) after `trail setup`",
+        "this shell finds the Tracewise git wrapper first",
+        "open a new terminal (or `source ~/.zshrc`) after `tracewise setup`",
     ));
-    if let Some(t) = first_on_path(path_var, "trail") {
+    if let Some(t) = first_on_path(path_var, "tracewise") {
         if !t.starts_with(&bin) {
             out.push(warn(
-                format!("`trail` on PATH is {}, not the installed copy", t.display()),
-                "remove that copy or put ~/.trail/bin first",
+                format!("`tracewise` on PATH is {}, not the installed copy", t.display()),
+                "remove that copy or put ~/.tracewise/bin first",
             ));
         }
     }
-    out.push(check(crate::util::is_daemon_running(), "daemon running", "run `trail daemon start`"));
+    out.push(check(crate::util::is_daemon_running(), "daemon running", "run `tracewise daemon start`"));
     let repos = tracewise_core::repos::list_in(&env.root);
     if repos.is_empty() {
-        out.push(warn("no repository is registered with the daemon", "run `trail init` (or `trail daemon start`) inside a repository"));
+        out.push(warn(
+            "no repository is registered with the daemon",
+            "run `tracewise init` (or `tracewise daemon start`) inside a repository",
+        ));
     } else {
         let names: Vec<_> = repos.iter().map(|r| r.work_tree.display().to_string()).collect();
         out.push(Check {
@@ -198,7 +201,10 @@ fn check_path_and_daemon(env: &Env, path_var: &str, out: &mut Vec<Check>) {
     out.push(Check {
         ok: true,
         warn: false,
-        what: format!("daemon starts at login: {}", if login { "yes" } else { "no (your choice; `trail setup --login yes` changes it)" }),
+        what: format!(
+            "daemon starts at login: {}",
+            if login { "yes" } else { "no (your choice; `tracewise setup --login yes` changes it)" }
+        ),
         fix: String::new(),
     });
 }

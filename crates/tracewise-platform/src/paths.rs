@@ -36,12 +36,12 @@ pub fn paths_equal(a: &Path, b: &Path) -> bool {
     str_a == str_b
 }
 
-/// Locate Tracewise home directory: `TRAIL_HOME` env var, else `~/.trail`.
-pub fn trail_home_dir() -> PathBuf {
-    std::env::var_os("TRAIL_HOME")
+/// Locate Tracewise home directory: `TRACEWISE_HOME` env var, else `~/.tracewise`.
+pub fn tracewise_home_dir() -> PathBuf {
+    std::env::var_os("TRACEWISE_HOME")
         .map(PathBuf::from)
-        .or_else(|| std::env::var_os("HOME").map(|h| PathBuf::from(h).join(".trail")))
-        .unwrap_or_else(|| PathBuf::from(".trail"))
+        .or_else(|| std::env::var_os("HOME").map(|h| PathBuf::from(h).join(".tracewise")))
+        .unwrap_or_else(|| PathBuf::from(".tracewise"))
 }
 
 /// Return both /private/... and non-/private/... spellings of a macOS virtual path.

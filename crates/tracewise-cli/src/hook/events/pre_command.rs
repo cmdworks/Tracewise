@@ -1,4 +1,4 @@
-use crate::hook::helpers::{is_trail_protected, recently_edited_by_person, PROTECTED_REASON};
+use crate::hook::helpers::{is_tracewise_protected, recently_edited_by_person, PROTECTED_REASON};
 use crate::hook::{HookContext, HookInput, HookOutput};
 use crate::util::normalize_and_validate_path;
 use std::collections::HashMap;
@@ -14,13 +14,13 @@ pub fn handle(ctx: &HookContext, input: HookInput) -> Result<HookOutput, String>
             return Ok(HookOutput {
                 decision: "deny",
                 reason: Some(
-                    "this command can write any file or keep running in the background; declare a reason first: `trail intent add --why <reason> <files>`"
+                    "this command can write any file or keep running in the background; declare a reason first: `tracewise intent add --why <reason> <files>`"
                         .to_string(),
                 ),
                 notice: None,
             });
         }
-        if predicted.iter().any(|p| is_trail_protected(&p.to_string_lossy(), &ctx.repo_paths.work_tree)) {
+        if predicted.iter().any(|p| is_tracewise_protected(&p.to_string_lossy(), &ctx.repo_paths.work_tree)) {
             return Ok(HookOutput { decision: "deny", reason: Some(PROTECTED_REASON.to_string()), notice: None });
         }
     }
@@ -69,7 +69,7 @@ fn check_exports(ctx: &HookContext, cmd: &str, cwd_opt: Option<&str>) {
 }
 
 fn open_background_window(ctx: &HookContext, cmd: &str, cwd: Option<String>) {
-    let ttl: i64 = std::env::var("TRAIL_BACKGROUND_TTL").ok().and_then(|v| v.parse().ok()).unwrap_or(3600);
+    let ttl: i64 = std::env::var("TRACEWISE_BACKGROUND_TTL").ok().and_then(|v| v.parse().ok()).unwrap_or(3600);
     let expires = (tracewise_core::clock::now() + chrono::Duration::seconds(ttl)).to_rfc3339_opts(chrono::SecondsFormat::Millis, true);
     let _ = ctx.db.open_window(&Window {
         id: format!("bg_{}", ulid::Ulid::new()),
@@ -93,7 +93,9 @@ fn check_agent_command_locks(ctx: &HookContext, rel_predicted: &[String]) -> Res
         if covering.is_none() {
             return Ok(Some(HookOutput {
                 decision: "deny",
-                reason: Some(format!("command predicted to write {p} with no intent declared; run `trail intent add --why <reason> {p}`")),
+                reason: Some(format!(
+                    "command predicted to write {p} with no intent declared; run `tracewise intent add --why <reason> {p}`"
+                )),
                 notice: None,
             }));
         }

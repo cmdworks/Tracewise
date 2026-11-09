@@ -7,7 +7,7 @@ use std::path::{Component, Path};
 pub struct ShareConfig {
     pub remote: String,
     pub level: String,
-    /// `refs = "hidden"`: batches go to `refs/trail/device/<id>` (not shown as branches); default: `refs/heads/trail/device/<id>`.
+    /// `refs = "hidden"`: batches go to `refs/tracewise/device/<id>` (not shown as branches); default: `refs/heads/tracewise/device/<id>`.
     #[serde(default)]
     pub hidden_refs: bool,
     /// `encrypt = true`: batches are encrypted with the project key before they are pushed (S4).
@@ -62,8 +62,8 @@ fn is_scp_style(s: &str) -> bool {
     false
 }
 
-pub fn read_trailconfig(root: &Path) -> Option<ShareConfig> {
-    let content = fs::read_to_string(root.join(".trailconfig")).ok()?;
+pub fn read_tracewiseconfig(root: &Path) -> Option<ShareConfig> {
+    let content = fs::read_to_string(root.join(".tracewiseconfig")).ok()?;
     let mut remote = None;
     let mut level = None;
     let mut hidden_refs = false;
@@ -123,7 +123,7 @@ pub fn read_trailconfig(root: &Path) -> Option<ShareConfig> {
     }
 }
 
-/// `https://user:token@host/x.git` -> `https://user@host/x.git`: a password never goes into `.trailconfig` or the data
+/// `https://user:token@host/x.git` -> `https://user@host/x.git`: a password never goes into `.tracewiseconfig` or the data
 /// (C07); git asks its credential helper for it.
 pub fn strip_credentials(url: &str) -> String {
     let Some((scheme, rest)) = url.split_once("://") else { return url.to_string() };
@@ -137,23 +137,23 @@ pub fn strip_credentials(url: &str) -> String {
     }
 }
 
-pub fn write_trailconfig(root: &Path, remote: &str, level: &str) -> io::Result<()> {
-    write_trailconfig_with(root, remote, level, false)
+pub fn write_tracewiseconfig(root: &Path, remote: &str, level: &str) -> io::Result<()> {
+    write_tracewiseconfig_with(root, remote, level, false)
 }
 
-/// `hidden_refs` adds `refs = "hidden"`: the batches are kept under `refs/trail/device/`.
-pub fn write_trailconfig_with(root: &Path, remote: &str, level: &str, hidden_refs: bool) -> io::Result<()> {
-    write_trailconfig_full(root, remote, level, hidden_refs, false)
+/// `hidden_refs` adds `refs = "hidden"`: the batches are kept under `refs/tracewise/device/`.
+pub fn write_tracewiseconfig_with(root: &Path, remote: &str, level: &str, hidden_refs: bool) -> io::Result<()> {
+    write_tracewiseconfig_full(root, remote, level, hidden_refs, false)
 }
 
-/// Like `write_trailconfig_with`, with `encrypt = true` when asked (S4).
-pub fn write_trailconfig_full(root: &Path, remote: &str, level: &str, hidden_refs: bool, encrypt: bool) -> io::Result<()> {
+/// Like `write_tracewiseconfig_with`, with `encrypt = true` when asked (S4).
+pub fn write_tracewiseconfig_full(root: &Path, remote: &str, level: &str, hidden_refs: bool, encrypt: bool) -> io::Result<()> {
     validate_remote_url(remote)?;
     let remote = &strip_credentials(remote);
     let refs = if hidden_refs { "refs = \"hidden\"\n" } else { "" };
     let enc = if encrypt { "encrypt = true\n" } else { "" };
     let block = format!("[share]\nremote = \"{}\"\nlevel = \"{}\"\n{refs}{enc}", remote, level);
-    let path = root.join(".trailconfig");
+    let path = root.join(".tracewiseconfig");
     // every other section (`[profile] share = true`, `[reasons]`, ...) is kept; only `[share]` is replaced
     let old = fs::read_to_string(&path).unwrap_or_default();
     let mut kept: Vec<&str> = Vec::new();

@@ -5,7 +5,7 @@ use common::Repo;
 #[test]
 fn doctor_reports_attribution_and_partial_hooks() {
     let repo = Repo::uninitialised("");
-    repo.write(".cursor/hooks.json", r#"{"hooks":{"PreToolUse":[{"hooks":[{"command":"trail hook PreToolUse --from cursor"}]}]}}"#);
+    repo.write(".cursor/hooks.json", r#"{"hooks":{"PreToolUse":[{"hooks":[{"command":"tracewise hook PreToolUse --from cursor"}]}]}}"#);
     assert!(repo.me(&["init"]).ok());
     repo.edit_as("human:me", "a.txt", "one\n");
     repo.edit_as("human:me", "b.txt", "two\n");

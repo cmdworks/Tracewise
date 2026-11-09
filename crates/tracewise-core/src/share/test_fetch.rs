@@ -50,7 +50,7 @@ fn remote_with_batch(root: &Path, id: &str) -> PathBuf {
     batch::git_cmd().args(["init", "-q", "--bare", remote.to_str().unwrap()]).output().unwrap();
     git(&["add", "-A"]);
     git(&["commit", "-q", "-m", "b"]);
-    git(&["branch", "-m", "trail/device/d"]);
+    git(&["branch", "-m", "tracewise/device/d"]);
     remote
 }
 

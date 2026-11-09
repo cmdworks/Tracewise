@@ -25,7 +25,7 @@ cargo build --release
 
 `setup` asks whether the watcher should start at login, then:
 
-- copies the programs to `~/.trail/bin`;
+- copies the programs to `~/.tracewise/bin`;
 - adds a `git` wrapper and a few command wrappers (`sed`, `mv`, `cp`, `rm`, `tee`) there, so writes made through them are attributed;
 - adds one clearly marked block to `~/.zshenv` and `~/.zshrc` (your other lines are kept; a backup is written);
 - starts the background watcher.
@@ -39,8 +39,6 @@ tracewise doctor --all
 <a id="unsigned-binaries"></a>
 > **Unsigned binaries.** Release binaries are not yet signed by Apple. If macOS refuses to run them, remove the download flag once: `xattr -dr com.apple.quarantine tracewise-*`.
 
-> **`trail`** is the old name of `tracewise` and is installed next to it. Both run the same program; some messages still say `trail`.
-
 ## 2. Start recording a project
 
 Tracewise works in any git repository:
@@ -50,7 +48,7 @@ cd ~/code/my-project
 tracewise init
 ```
 
-`init` records the current state of every tracked file as the *baseline* and registers the repository with the watcher. From now on every change is recorded, whoever makes it. Nothing is added to your working tree: the history lives in `.git/trail/`, which git never shows or commits.
+`init` records the current state of every tracked file as the *baseline* and registers the repository with the watcher. From now on every change is recorded, whoever makes it. Nothing is added to your working tree: the history lives in `.git/tracewise/`, which git never shows or commits.
 
 ## 3. Connect your coding agents
 
@@ -112,7 +110,7 @@ tracewise status          # this repository: changes, locks, watcher
 tracewise doctor          # checks this repository; --all checks the installation
 tracewise verify          # checks that no record was altered or removed
 tracewise gc              # packs stored versions; run now and then
-tracewise ignore build/   # stop recording a path (writes .trailignore)
+tracewise ignore build/   # stop recording a path (writes .tracewiseignore)
 ```
 
 ## Removing Tracewise
@@ -121,7 +119,7 @@ tracewise ignore build/   # stop recording a path (writes .trailignore)
 tracewise uninstall
 ```
 
-This removes exactly what `setup` installed. The history of each project stays in its `.git/trail/` folder; delete that folder to remove it too.
+This removes exactly what `setup` installed. The history of each project stays in its `.git/tracewise/` folder; delete that folder to remove it too.
 
 ## Next
 

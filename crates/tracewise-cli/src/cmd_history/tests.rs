@@ -7,11 +7,11 @@ use std::path::PathBuf;
 fn test_git_object_storage_restore_and_diff() {
     let tmp = tempfile::tempdir().unwrap();
     let work_tree = tmp.path().join("repo");
-    let data_dir = work_tree.join(".git").join("trail");
+    let data_dir = work_tree.join(".git").join("tracewise");
     fs::create_dir_all(&data_dir).unwrap();
     fs::create_dir_all(work_tree.join(".git").join("objects")).unwrap();
 
-    let db_path = data_dir.join("trail.db");
+    let db_path = data_dir.join("tracewise.db");
     let mut db = Database::open(&db_path).unwrap();
     let blobs = BlobStore::new(&data_dir);
 

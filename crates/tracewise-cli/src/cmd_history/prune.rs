@@ -1,4 +1,4 @@
-//! `trail prune`: removes the history of ignored (or chosen) paths.
+//! `tracewise prune`: removes the history of ignored (or chosen) paths.
 use super::*;
 use std::collections::{HashMap, HashSet};
 use std::io::{BufRead, IsTerminal, Write};
@@ -12,17 +12,17 @@ pub(crate) struct PruneArgs {
 }
 
 fn fail(msg: &str, code: i32) -> ! {
-    eprintln!("trail: {msg}");
+    eprintln!("tracewise: {msg}");
     process::exit(code);
 }
 
 fn db_bytes(data_dir: &Path) -> u64 {
-    ["trail.db", "trail.db-wal"].iter().filter_map(|f| fs::metadata(data_dir.join(f)).ok()).map(|m| m.len()).sum()
+    ["tracewise.db", "tracewise.db-wal"].iter().filter_map(|f| fs::metadata(data_dir.join(f)).ok()).map(|m| m.len()).sum()
 }
 
-/// How many records are under paths that are ignored today (what `trail prune` would remove), for `trail doctor`'s alert.
+/// How many records are under paths that are ignored today (what `tracewise prune` would remove), for `tracewise doctor`'s alert.
 pub(crate) fn candidates(repo_paths: &RepoPaths) -> usize {
-    let Ok(db) = Database::open_hot(&repo_paths.data_dir().join("trail.db")) else { return 0 };
+    let Ok(db) = Database::open_hot(&repo_paths.data_dir().join("tracewise.db")) else { return 0 };
     let Ok(keys) = db.change_keys() else { return 0 };
     let mut rules = tracewise_core::ignore_rules::IgnoreRules::load(&repo_paths.work_tree);
     let mut ignored: HashMap<&str, bool> = HashMap::new();
@@ -40,7 +40,7 @@ pub(crate) fn run_prune(json: bool, repo_paths: &RepoPaths, args: PruneArgs) {
     });
 
     let data_dir = repo_paths.data_dir();
-    let db = match Database::open(&data_dir.join("trail.db")) {
+    let db = match Database::open(&data_dir.join("tracewise.db")) {
         Ok(d) => d,
         Err(e) => fail(&format!("failed to open db: {e}"), 1),
     };
@@ -64,7 +64,7 @@ pub(crate) fn run_prune(json: bool, repo_paths: &RepoPaths, args: PruneArgs) {
 
     // With sharing on, the remote must already hold a record before it is removed here
     let mut skipped_unpushed = 0;
-    if tracewise_core::share::read_trailconfig(&repo_paths.work_tree).is_some() {
+    if tracewise_core::share::read_tracewiseconfig(&repo_paths.work_tree).is_some() {
         let pushed = db.pushed_change_ids().unwrap_or_default();
         let before = ids.len();
         ids.retain(|id| pushed.contains(id));
@@ -109,7 +109,7 @@ pub(crate) fn run_prune(json: bool, repo_paths: &RepoPaths, args: PruneArgs) {
             .prune_changes(&ids, &actor_name, &selector, forget_state, false)
             .unwrap_or_else(|e| fail(&format!("prune failed, nothing was removed: {e}"), 1));
         if let Err(e) = db.compact() {
-            eprintln!("trail: pruned, but compacting the database failed: {e}");
+            eprintln!("tracewise: pruned, but compacting the database failed: {e}");
         }
     }
     let bytes_after = if args.dry_run { bytes_before } else { db_bytes(&data_dir) };

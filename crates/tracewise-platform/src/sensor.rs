@@ -4,15 +4,15 @@ use crate::{PlatformError, Result};
 #[allow(unused_imports)]
 use std::path::Path;
 
-pub const DEFAULT_SENSOR_DIR: &str = "/usr/local/libexec/trail";
-pub const DEFAULT_SENSOR_PATH: &str = "/usr/local/libexec/trail/trail-sensor";
-pub const DEFAULT_SENSOR_PLIST_PATH: &str = "/Library/LaunchDaemons/dev.trail.sensor.plist";
+pub const DEFAULT_SENSOR_DIR: &str = "/usr/local/libexec/tracewise";
+pub const DEFAULT_SENSOR_PATH: &str = "/usr/local/libexec/tracewise/tracewise-sensor";
+pub const DEFAULT_SENSOR_PLIST_PATH: &str = "/Library/LaunchDaemons/dev.tracewise.sensor.plist";
 
 /// Check if the operating system provides Endpoint Security (eslogger on macOS).
 pub fn is_sensor_available() -> bool {
     #[cfg(all(target_os = "macos", not(feature = "platform-stub")))]
     {
-        if std::env::var("TRAIL_ESLOGGER").is_ok() {
+        if std::env::var("TRACEWISE_ESLOGGER").is_ok() {
             return true;
         }
         Path::new("/usr/bin/eslogger").is_file()

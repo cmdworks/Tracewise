@@ -5,7 +5,7 @@ edition.workspace = true
 license.workspace = true
 
 [[bin]]
-name = "trail-shim"
+name = "tracewise-shim"
 path = "src/main.rs"
 
 [dependencies]

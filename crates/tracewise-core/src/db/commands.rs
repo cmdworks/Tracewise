@@ -35,7 +35,7 @@ pub fn parse_retention_duration(v: &str) -> Option<chrono::Duration> {
     }
 }
 
-/// Reads the command retention duration from `.trailconfig` in `root`.
+/// Reads the command retention duration from `.tracewiseconfig` in `root`.
 /// Defaults to 30 days if not set or invalid.
 pub fn read_command_retention(root: &Path) -> Option<chrono::Duration> {
     let val = crate::reasons::config_value(root, "retention", "commands");

@@ -1,5 +1,5 @@
 //! Optional encryption of shared batches. A project key (32 random bytes) is kept in the keyring of the
-//! data folder (`share-keys.json`, mode 0600), never in the repository. With `[share] encrypt = true`, `trail push` encrypts every file of
+//! data folder (`share-keys.json`, mode 0600), never in the repository. With `[share] encrypt = true`, `tracewise push` encrypts every file of
 //! a batch except `batch.json` (XChaCha20-Poly1305, a fresh random nonce in front of each file) and then signs the encrypted bytes, so a
 //! machine without the key can still check the batch. `fetch` and `rebuild` decrypt into a scratch folder and import from there.
 //! `batch.json` stays readable: it names the key id and holds the time range the import order needs.
@@ -77,9 +77,9 @@ pub fn ensure_key(data_dir: &Path) -> io::Result<String> {
     }
 }
 
-const EXPORT_PREFIX: &str = "trailkey1";
+const EXPORT_PREFIX: &str = "tracewisekey1";
 
-/// The string that carries a key to another machine: `trailkey1:<id>:<64 hex>`. It is the key itself: a secret.
+/// The string that carries a key to another machine: `tracewisekey1:<id>:<64 hex>`. It is the key itself: a secret.
 pub fn export_key(data_dir: &Path, id: Option<&str>) -> io::Result<String> {
     let ring = load(data_dir);
     let id = id.map(String::from).or(ring.current.clone()).ok_or_else(|| bad("this clone has no key"))?;
@@ -91,7 +91,7 @@ pub fn export_key(data_dir: &Path, id: Option<&str>) -> io::Result<String> {
 /// empty or `make_current` is set. Returns its id.
 pub fn import_key(data_dir: &Path, text: &str, make_current: bool) -> io::Result<String> {
     let parts: Vec<&str> = text.trim().split(':').collect();
-    let [prefix, id, key] = parts[..] else { return Err(bad("not an exported key (expected trailkey1:<id>:<key>)")) };
+    let [prefix, id, key] = parts[..] else { return Err(bad("not an exported key (expected tracewisekey1:<id>:<key>)")) };
     if prefix != EXPORT_PREFIX || key.len() != 64 || unhex(key).is_none() || key_id(key) != id {
         return Err(bad("not a valid exported key: the id does not match the key"));
     }
@@ -106,7 +106,7 @@ pub fn import_key(data_dir: &Path, text: &str, make_current: bool) -> io::Result
     Ok(id.to_string())
 }
 
-/// Notes that the key `id` was exported at least once (`trail doctor` warns when encryption is on and it never was).
+/// Notes that the key `id` was exported at least once (`tracewise doctor` warns when encryption is on and it never was).
 pub fn note_exported(data_dir: &Path, id: &str) {
     let _ = tracewise_platform::private::write(data_dir.join("share-key-exported"), id);
 }
@@ -161,7 +161,9 @@ fn files_of(dir: &Path) -> io::Result<Vec<PathBuf>> {
 pub fn encrypt_batch(data_dir: &Path, dir: &Path) -> io::Result<String> {
     // a push never makes a key of its own: two machines would then encrypt with different keys
     let id = load(data_dir).current.ok_or_else(|| {
-        io::Error::other("encryption is on but this clone has no key; run `trail share init --encrypt` here, or import the project's key")
+        io::Error::other(
+            "encryption is on but this clone has no key; run `tracewise share init --encrypt` here, or import the project's key",
+        )
     })?;
     let key = key_by_id(&load(data_dir), &id).ok_or_else(|| bad("the current key is unreadable"))?;
     let blobs = dir.join("blobs");
@@ -190,7 +192,7 @@ pub fn decrypt_batch(data_dir: &Path, dir: &Path, key_id: &str, into: &Path) -> 
     let key = key_by_id(&load(data_dir), key_id).ok_or_else(|| {
         io::Error::new(
             io::ErrorKind::PermissionDenied,
-            format!("this history is encrypted (key {key_id}); import the key with `trail share key import` first"),
+            format!("this history is encrypted (key {key_id}); import the key with `tracewise share key import` first"),
         )
     })?;
     let _ = fs::remove_dir_all(into);

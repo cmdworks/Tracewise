@@ -118,7 +118,7 @@
       </div>
 
       <!-- Polling keeps the data fresh; a button appears only when it is not ("r" refreshes any time) -->
-      <div class="live-status text-12" role="status" title={app.statusStale ? "No answer from Trail for a while" : "Updates by itself every few seconds (r refreshes now)"}>
+      <div class="live-status text-12" role="status" title={app.statusStale ? "No answer from Tracewise for a while" : "Updates by itself every few seconds (r refreshes now)"}>
         <span class="live-dot" class:dot-stale={app.statusStale}></span>
         <span class="live-text text-muted">{app.statusStale ? "Stale" : (app.relativeStatusTime || "Live")}</span>
         {#if app.statusStale}

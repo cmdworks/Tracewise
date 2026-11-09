@@ -1,4 +1,4 @@
-//! B8: `trail undo --session` and `--intent` revert a whole task, only its changes, and an agent only its own.
+//! B8: `tracewise undo --session` and `--intent` revert a whole task, only its changes, and an agent only its own.
 mod common;
 use common::Repo;
 
@@ -72,7 +72,7 @@ fn a_session_is_undone_however_old_it_is() {
     let repo = repo();
     // a person's session recorded long ago (a person may set the clock; an agent may not)
     repo.write("a.txt", EDITED);
-    let scan = repo.with("human:me:old", &["scan"], None, &[("TRAIL_NOW", "2020-01-01T00:00:00Z")]);
+    let scan = repo.with("human:me:old", &["scan"], None, &[("TRACEWISE_NOW", "2020-01-01T00:00:00Z")]);
     assert!(scan.ok(), "{}", scan.err);
     let by_actor = repo.me(&["undo", "--actor", "me", "--dry-run", "--json"]).json();
     assert!(by_actor["reverted"].as_array().unwrap().is_empty(), "--actor alone only looks back 24 hours: {by_actor}");

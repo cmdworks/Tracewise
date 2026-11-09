@@ -1,4 +1,4 @@
-import type { Tab, TrailStatus } from "./types";
+import type { Tab, TracewiseStatus } from "./types";
 
 export interface ReloadDecision {
   reloadTimeline: boolean;
@@ -13,8 +13,8 @@ export interface ReloadDecision {
  * Pure function: takes previous status and next status.
  */
 export function decideReload(
-  prev: TrailStatus | null,
-  next: TrailStatus | null,
+  prev: TracewiseStatus | null,
+  next: TracewiseStatus | null,
   activeTab: Tab = "timeline"
 ): ReloadDecision {
   if (!next) {

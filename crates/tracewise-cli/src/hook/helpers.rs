@@ -4,7 +4,7 @@ use tracewise_core::db::Database;
 use tracewise_core::model::Actor;
 use tracewise_git::{get_git_info, RepoPaths};
 
-pub const PROTECTED_REASON: &str = "Trail's data and the agents' hook settings can only be changed by a person; ask the user to do it";
+pub const PROTECTED_REASON: &str = "Tracewise's data and the agents' hook settings can only be changed by a person; ask the user to do it";
 
 pub const AGY_EDIT_TOOLS: [&str; 8] = [
     "write_file",
@@ -18,7 +18,7 @@ pub const AGY_EDIT_TOOLS: [&str; 8] = [
 ];
 
 /// Files an agent must never write: Tracewise's data, its home, and the agents' hook configs (the agent could remove its own hooks).
-pub fn is_trail_protected(raw: &str, work_tree: &Path) -> bool {
+pub fn is_tracewise_protected(raw: &str, work_tree: &Path) -> bool {
     let p = Path::new(raw);
     let joined = if p.is_absolute() { p.to_path_buf() } else { work_tree.join(p) };
     let mut abs = PathBuf::new();
@@ -31,17 +31,17 @@ pub fn is_trail_protected(raw: &str, work_tree: &Path) -> bool {
             other => abs.push(other),
         }
     }
-    if abs.starts_with(tracewise_core::get_trail_home()) {
+    if abs.starts_with(tracewise_core::get_tracewise_home()) {
         return true;
     }
     let Ok(rel) = abs.strip_prefix(work_tree) else {
         return false;
     };
     let rel = rel.to_string_lossy();
-    rel == ".git/trail"
-        || rel == ".trailconfig"
-        || rel.starts_with(".trail/adapters")
-        || rel.starts_with(".git/trail/")
+    rel == ".git/tracewise"
+        || rel == ".tracewiseconfig"
+        || rel.starts_with(".tracewise/adapters")
+        || rel.starts_with(".git/tracewise/")
         || rel.starts_with(".claude/settings")
         || rel.starts_with(".agents/hooks")
         || rel.starts_with(".codex/")
@@ -53,7 +53,7 @@ pub fn is_trail_protected(raw: &str, work_tree: &Path) -> bool {
 /// `{"decision","reason"}` back. It has no session-end event: `Stop` with `fullyIdle` is the end.
 /// How long after a person's (or an unhooked editor's) save an agent must leave the file alone.
 pub fn edit_grace_secs() -> i64 {
-    std::env::var("TRAIL_EDIT_GRACE_SECS").ok().and_then(|v| v.parse().ok()).unwrap_or(20)
+    std::env::var("TRACEWISE_EDIT_GRACE_SECS").ok().and_then(|v| v.parse().ok()).unwrap_or(20)
 }
 
 /// A deny reason when somebody else saved one of `paths` a moment ago: they are probably still editing it.
@@ -144,7 +144,7 @@ pub fn get_git_file_blob(work_tree: &Path, rel_path: &str) -> Option<String> {
         .arg(work_tree)
         .arg("rev-parse")
         .arg(format!("HEAD:{rel_path}"))
-        .env("TRAIL_GIT_DEPTH", "1")
+        .env("TRACEWISE_GIT_DEPTH", "1")
         .output()
         .ok()?;
     if out.status.success() {

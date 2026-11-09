@@ -18,11 +18,11 @@ fn batch(root: &Path, device: &str) -> PathBuf {
     d
 }
 
-// one test: TRAIL_HOME is process-wide
+// one test: TRACEWISE_HOME is process-wide
 #[test]
 fn sign_verify_tamper_and_key_change() {
     let home = TempDir::new().unwrap();
-    std::env::set_var("TRAIL_HOME", home.path());
+    std::env::set_var("TRACEWISE_HOME", home.path());
     let other = TempDir::new().unwrap(); // a second machine's data folder: knows no pins
     let data = TempDir::new().unwrap();
     let d = batch(data.path(), "dev1");

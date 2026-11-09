@@ -209,7 +209,7 @@
 
         {#if c.hash_only}
           <div class="no-diff-box text-12 text-muted">
-            No text diff: Trail kept only a hash of this version (binary, large, a link or a file with a secret).
+            No text diff: Tracewise kept only a hash of this version (binary, large, a link or a file with a secret).
           </div>
         {:else if app.diffLoading}
           <div class="no-diff-box text-12 text-muted">

@@ -1,7 +1,7 @@
 import type { ChangeItem } from "./types";
 
 export interface UndoEntry {
-  /** The undo record itself (its id is what `trail redo` takes). */
+  /** The undo record itself (its id is what `tracewise redo` takes). */
   undo: ChangeItem;
   /** The change it put back, when Tracewise named it. */
   undid: string | null;

@@ -77,7 +77,7 @@ Options go after `sh -s --`, for example `| sh -s -- --login yes --fish`:
 
 ```bash
 tar -xzf tracewise-*-macos-*.tar.gz && cd tracewise-*
-./tracewise setup          # programs in ~/.trail/bin, one block in ~/.zshrc, the background watcher; no sudo
+./tracewise setup          # programs in ~/.tracewise/bin, one block in ~/.zshrc, the background watcher; no sudo
 tracewise doctor --all     # in a new terminal: check the installation
 ```
 

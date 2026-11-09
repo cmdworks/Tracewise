@@ -12,10 +12,6 @@ path = "src/lib.rs"
 name = "tracewise"
 path = "src/bin/tracewise.rs"
 
-[[bin]]
-name = "trail"
-path = "src/bin/trail.rs"
-
 [dependencies]
 tracewise-core = { path = "../tracewise-core" }
 tracewise-git = { path = "../tracewise-git" }

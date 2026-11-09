@@ -101,7 +101,7 @@ impl Database {
         let start = self.legacy_boundary().and_then(|id| changes.iter().position(|c| c.id == id)).map(|i| i + 1).unwrap_or(0);
         let mut expected_prev_hash: Option<String> = start.checked_sub(1).map(|i| Self::compute_change_hash(&changes[i]));
         for (i, change) in changes.iter().enumerate().skip(start) {
-            // after `trail prune`, a survivor may point at the last removed record; the `gap:` row for the survivor before it vouches for that
+            // after `tracewise prune`, a survivor may point at the last removed record; the `gap:` row for the survivor before it vouches for that
             let bridged = || {
                 let after = if i == 0 { "" } else { changes[i - 1].id.as_str() };
                 change.prev_hash.is_some() && self.gap_hash(after) == change.prev_hash

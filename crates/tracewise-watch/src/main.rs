@@ -1,9 +1,9 @@
-//! `trail-watchd`: the file watcher behind `trail daemon run`.
+//! `tracewise-watchd`: the file watcher behind `tracewise daemon run`.
 //!
-//! It is a separate program so that `trail` itself does not link CoreServices/CoreFoundation: hooks and shell
-//! commands start `trail` many times a second, and loading those frameworks costs about a millisecond each time.
-//! The watcher only notices changes; recording them is done by `trail daemon scan-paths`, `trail daemon sweep`
-//! and `trail scan`, which this program starts from the `trail` binary next to it.
+//! It is a separate program so that `tracewise` itself does not link CoreServices/CoreFoundation: hooks and shell
+//! commands start `tracewise` many times a second, and loading those frameworks costs about a millisecond each time.
+//! The watcher only notices changes; recording them is done by `tracewise daemon scan-paths`, `tracewise daemon sweep`
+//! and `tracewise scan`, which this program starts from the `tracewise` binary next to it.
 mod server;
 
 use std::io::Write;
@@ -13,43 +13,43 @@ use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
 use std::time::Duration;
 
-fn trail_home() -> PathBuf {
-    if let Ok(home) = std::env::var("TRAIL_HOME") {
+fn tracewise_home() -> PathBuf {
+    if let Ok(home) = std::env::var("TRACEWISE_HOME") {
         PathBuf::from(home)
     } else if let Ok(home) = std::env::var("HOME") {
-        PathBuf::from(home).join(".trail")
+        PathBuf::from(home).join(".tracewise")
     } else {
-        PathBuf::from(".trail")
+        PathBuf::from(".tracewise")
     }
 }
 
 extern "C" fn stop(_: i32) {
-    let _ = std::fs::remove_file(trail_home().join("daemon.pid"));
+    let _ = std::fs::remove_file(tracewise_home().join("daemon.pid"));
     std::process::exit(0);
 }
 
-/// `trail` next to this program (never searched on PATH: that could find a wrapper or another install).
-fn sibling_trail() -> Option<PathBuf> {
+/// `tracewise` next to this program (never searched on PATH: that could find a wrapper or another install).
+fn sibling_tracewise() -> Option<PathBuf> {
     let me = std::env::current_exe().ok()?.canonicalize().ok()?;
-    let trail = me.parent()?.join("trail");
-    trail.is_file().then_some(trail)
+    let tracewise = me.parent()?.join("tracewise");
+    tracewise.is_file().then_some(tracewise)
 }
 
 /// Size and modification time of the database and its write-ahead log: changes when anything was recorded.
 type DbStamp = Vec<(u64, std::time::SystemTime)>;
 
 fn db_stamp(data_dir: &Path) -> DbStamp {
-    ["trail.db", "trail.db-wal"]
+    ["tracewise.db", "tracewise.db-wal"]
         .iter()
         .filter_map(|f| std::fs::metadata(data_dir.join(f)).ok())
         .map(|m| (m.len(), m.modified().unwrap_or(std::time::UNIX_EPOCH)))
         .collect()
 }
 
-/// True when `trail` ran and exited 0.
-fn run(trail: &Path, work_tree: &Path, args: &[&str], stdin: Option<Vec<u8>>) -> bool {
-    let mut cmd = Command::new(trail);
-    cmd.arg("-C").arg(work_tree).args(args).env("TRAIL_GIT_DEPTH", "1").stdout(Stdio::null()).stderr(Stdio::inherit());
+/// True when `tracewise` ran and exited 0.
+fn run(tracewise: &Path, work_tree: &Path, args: &[&str], stdin: Option<Vec<u8>>) -> bool {
+    let mut cmd = Command::new(tracewise);
+    cmd.arg("-C").arg(work_tree).args(args).env("TRACEWISE_GIT_DEPTH", "1").stdout(Stdio::null()).stderr(Stdio::inherit());
     if stdin.is_some() {
         cmd.stdin(Stdio::piped());
     } else {
@@ -71,32 +71,32 @@ extern "C" fn hup(_: i32) {
 }
 
 /// Watches one repository for ever: a catch-up scan, then file events, plus the lock sweep.
-fn watch_repo(trail: PathBuf, work_tree: PathBuf, data_dir: PathBuf, sensor: Option<Arc<server::Server>>, debounce_ms: u64) {
+fn watch_repo(tracewise: PathBuf, work_tree: PathBuf, data_dir: PathBuf, sensor: Option<Arc<server::Server>>, debounce_ms: u64) {
     // Catch up on anything written while the daemon was not running. It runs just after the watcher is
     // listening, so a write cannot fall between the two; a file seen by both is recorded once.
     {
-        let (trail, wt) = (trail.clone(), work_tree.clone());
+        let (tracewise, wt) = (tracewise.clone(), work_tree.clone());
         std::thread::spawn(move || {
             std::thread::sleep(Duration::from_millis(250));
-            run(&trail, &wt, &["scan"], None);
+            run(&tracewise, &wt, &["scan"], None);
             // git apps that never run the wrapper are covered by git hooks; a repository that cannot have them (core.hooksPath)
             // just answers with an error, which is not a problem
-            if std::env::var("TRAIL_NO_GIT_HOOKS").as_deref() != Ok("1") {
-                run(&trail, &wt, &["git-hooks", "install"], None);
+            if std::env::var("TRACEWISE_NO_GIT_HOOKS").as_deref() != Ok("1") {
+                run(&tracewise, &wt, &["git-hooks", "install"], None);
             }
         });
     }
 
-    let (t1, w1) = (trail.clone(), work_tree.clone());
+    let (t1, w1) = (tracewise.clone(), work_tree.clone());
     let w2 = work_tree.clone();
     // An ignored path is dropped before it is queued, unless it was recorded before (its deletion or edit still counts).
     let skip = {
-        let (wt, db) = (work_tree.clone(), tracewise_core::Database::open_hot(&data_dir.join("trail.db")).ok());
+        let (wt, db) = (work_tree.clone(), tracewise_core::Database::open_hot(&data_dir.join("tracewise.db")).ok());
         let mut rules = tracewise_core::ignore_rules::IgnoreRules::load(&wt);
         move |p: &Path| {
             let Ok(rel) = p.strip_prefix(&wt) else { return false };
             // the rules are cached: an edited rules file is queued and starts them afresh
-            if matches!(rel.file_name().and_then(|n| n.to_str()), Some(".gitignore" | ".trailignore")) {
+            if matches!(rel.file_name().and_then(|n| n.to_str()), Some(".gitignore" | ".tracewiseignore")) {
                 rules = tracewise_core::ignore_rules::IgnoreRules::load(&wt);
                 return false;
             }
@@ -131,7 +131,7 @@ fn watch_repo(trail: PathBuf, work_tree: PathBuf, data_dir: PathBuf, sensor: Opt
         {
             // In this process, over one open connection: a sweep every 30 s must not start anything.
             // opened now, not at the first sweep: SQLite's one-time setup costs a burst of wake-ups
-            let db = tracewise_core::Database::open_hot(&data_dir.join("trail.db")).ok();
+            let db = tracewise_core::Database::open_hot(&data_dir.join("tracewise.db")).ok();
             // The database stamp at the last sweep that found no lock held: while it is unchanged nothing can have
             // been locked or have expired, so the tick only looks at two files and never reads the database
             // (a read that has to wait for a busy disk is a wake-up).
@@ -156,27 +156,27 @@ fn watch_repo(trail: PathBuf, work_tree: PathBuf, data_dir: PathBuf, sensor: Opt
     );
 }
 
-/// One daemon for every repository in `$TRAIL_HOME/repos`. A repository added later (`trail init`, `trail daemon
+/// One daemon for every repository in `$TRACEWISE_HOME/repos`. A repository added later (`tracewise init`, `tracewise daemon
 /// start`) sends SIGHUP and is picked up at once; with nothing to do this thread blocks in poll(2), no wake-ups.
 fn main() {
-    let Some(trail) = sibling_trail() else {
-        eprintln!("trail-watchd: the `trail` binary must be in the same folder");
+    let Some(tracewise) = sibling_tracewise() else {
+        eprintln!("tracewise-watchd: the `tracewise` binary must be in the same folder");
         std::process::exit(1);
     };
     let wake_pipe = tracewise_platform::signal::WakePipe::new().expect("wake pipe");
     WAKE_FD.store(wake_pipe.write_fd(), std::sync::atomic::Ordering::Relaxed);
     tracewise_platform::signal::setup_daemon_signals(stop, hup);
 
-    let debounce_ms = std::env::var("TRAIL_DEBOUNCE_MS").ok().and_then(|s| s.parse::<u64>().ok()).unwrap_or(300);
+    let debounce_ms = std::env::var("TRACEWISE_DEBOUNCE_MS").ok().and_then(|s| s.parse::<u64>().ok()).unwrap_or(300);
 
     // The strict sensor (opt-in, root, on demand): who wrote a file, when it can tell.
-    let sensor = server::Server::start(&trail);
+    let sensor = server::Server::start(&tracewise);
     let mut watched: std::collections::HashSet<PathBuf> = std::collections::HashSet::new();
     loop {
         let repos = tracewise_core::repos::list();
         for r in &repos {
             if watched.insert(r.work_tree.clone()) {
-                let (t, wt, dd, s) = (trail.clone(), r.work_tree.clone(), r.data_dir.clone(), sensor.clone());
+                let (t, wt, dd, s) = (tracewise.clone(), r.work_tree.clone(), r.data_dir.clone(), sensor.clone());
                 std::thread::spawn(move || watch_repo(t, wt, dd, s, debounce_ms));
             }
         }

@@ -24,7 +24,7 @@
   async function handleBatchSubmit(group: PendingGroup) {
     const text = (batchInputs[group.id] || "").trim();
     if (!text) return;
-    // keep the draft when Trail refuses it (too short or generic), so the person can fix it
+    // keep the draft when Tracewise refuses it (too short or generic), so the person can fix it
     if (await fx.submitBatchPendingNotes(group.items.map((i) => i.id), text)) batchInputs[group.id] = "";
   }
 </script>
@@ -75,7 +75,7 @@
     <!-- Sub-row info footer -->
     <div class="agents-status-subtext text-12 text-muted">
       <Icon name="brand" size={13} class="text-muted" />
-      <span>Trail coordinates lock prevention and attributes changes across configured AI agents.</span>
+      <span>Tracewise coordinates lock prevention and attributes changes across configured AI agents.</span>
     </div>
   </section>
 

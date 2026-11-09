@@ -11,13 +11,13 @@ pub fn fish_interactive() -> &'static str {
 }
 
 /// Non-interactive block for ~/.zshenv.
-pub fn zsh_non_interactive(trail_bin: &str) -> String {
-    tracewise_platform::shell::zsh_non_interactive(trail_bin)
+pub fn zsh_non_interactive(tracewise_bin: &str) -> String {
+    tracewise_platform::shell::zsh_non_interactive(tracewise_bin)
 }
 
 /// Non-interactive file for BASH_ENV.
-pub fn bash_non_interactive(trail_bin: &str) -> String {
-    tracewise_platform::shell::bash_non_interactive(trail_bin)
+pub fn bash_non_interactive(tracewise_bin: &str) -> String {
+    tracewise_platform::shell::bash_non_interactive(tracewise_bin)
 }
 
 #[cfg(test)]

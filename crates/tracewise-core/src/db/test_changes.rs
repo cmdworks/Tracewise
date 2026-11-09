@@ -3,7 +3,7 @@ use super::*;
 #[test]
 fn test_list_pending_changes() {
     let temp = tempfile::tempdir().unwrap();
-    let db = Database::open(&temp.path().join("trail.db")).unwrap();
+    let db = Database::open(&temp.path().join("tracewise.db")).unwrap();
 
     let make_change = |id: &str, path: &str, source: &str, intent: Option<&str>| Change {
         id: id.to_string(),
@@ -44,7 +44,7 @@ fn test_list_pending_changes() {
 #[test]
 fn test_shell_pending_count() {
     let temp = tempfile::tempdir().unwrap();
-    let db = Database::open(&temp.path().join("trail.db")).unwrap();
+    let db = Database::open(&temp.path().join("tracewise.db")).unwrap();
 
     assert_eq!(db.get_shell_pending_count("tty1").unwrap(), None);
     db.set_shell_pending_count("tty1", 3).unwrap();
@@ -56,7 +56,7 @@ fn test_shell_pending_count() {
 #[test]
 fn test_insert_and_get_change_undoes() {
     let temp = tempfile::tempdir().unwrap();
-    let db = Database::open(&temp.path().join("trail.db")).unwrap();
+    let db = Database::open(&temp.path().join("tracewise.db")).unwrap();
 
     let change = Change {
         id: "01JUNDO0000000000000000001".to_string(),
@@ -94,7 +94,7 @@ fn test_insert_and_get_change_undoes() {
 #[test]
 fn a_limited_path_history_never_exceeds_the_limit_for_the_baseline_fallback() {
     let temp = tempfile::tempdir().unwrap();
-    let db = Database::open(&temp.path().join("trail.db")).unwrap();
+    let db = Database::open(&temp.path().join("tracewise.db")).unwrap();
     let make = |id: &str, path: &str, op: &str| Change {
         id: id.to_string(),
         time: TimeRange { start: format!("2026-10-23T10:00:0{}.000Z", &id[1..]), end: format!("2026-10-23T10:00:0{}.500Z", &id[1..]) },

@@ -2,7 +2,7 @@
 use super::super::*;
 
 pub(crate) fn run_command_history(json: bool, repo_paths: &RepoPaths) {
-    let db_path = repo_paths.data_dir().join("trail.db");
+    let db_path = repo_paths.data_dir().join("tracewise.db");
     let cmds = if db_path.exists() { Database::open(&db_path).and_then(|db| db.list_commands()).unwrap_or_default() } else { Vec::new() };
 
     if json {
@@ -22,13 +22,13 @@ pub(crate) fn run_git_wrapper_install(json: bool, dir: PathBuf) {
     let self_exe = match std::env::current_exe() {
         Ok(e) => e,
         Err(e) => {
-            eprintln!("trail: failed to get current executable: {e}");
+            eprintln!("tracewise: failed to get current executable: {e}");
             process::exit(1);
         }
     };
 
     if let Err(e) = tracewise_platform::shims::create_shim_link(&self_exe, &symlink_path) {
-        eprintln!("trail: failed to create symlink: {e}");
+        eprintln!("tracewise: failed to create symlink: {e}");
         process::exit(1);
     }
 

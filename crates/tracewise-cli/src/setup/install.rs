@@ -1,4 +1,4 @@
-//! Installation and uninstallation logic for trail setup.
+//! Installation and uninstallation logic for tracewise setup.
 use super::*;
 
 /// The login shell's name (`zsh` when `$SHELL` is not set).
@@ -17,7 +17,7 @@ pub(crate) fn unsupported_shell() -> Option<String> {
 
 /// fish reads every file in `conf.d`, so Tracewise owns one file there instead of editing `config.fish`.
 pub(crate) fn fish_file(env: &Env) -> PathBuf {
-    env.home.join(".config/fish/conf.d/trail.fish")
+    env.home.join(".config/fish/conf.d/tracewise.fish")
 }
 
 /// fish is the login shell, or its config folder exists.
@@ -25,16 +25,16 @@ pub(crate) fn fish_installed(env: &Env) -> bool {
     user_shell() == "fish" || env.home.join(".config/fish").is_dir()
 }
 
-/// The whole `conf.d/trail.fish`: PATH for every fish, and the terminal hook for interactive ones.
+/// The whole `conf.d/tracewise.fish`: PATH for every fish, and the terminal hook for interactive ones.
 pub(crate) fn fish_block(env: &Env) -> String {
     let root = root_text(env);
-    let export = if root == "$HOME/.trail" { String::new() } else { format!("set -gx TRAIL_HOME \"{root}\"\n") };
+    let export = if root == "$HOME/.tracewise" { String::new() } else { format!("set -gx TRACEWISE_HOME \"{root}\"\n") };
     format!(
-        "{BLOCK_START}\n# managed by `trail setup`; `trail uninstall` removes this file\n{export}for d in \"{root}/shims\" \"{root}/bin\"\n    contains -- $d $PATH; or set -gx PATH $d $PATH\nend\nif status is-interactive\n    trail shell init fish | source\nend\n{BLOCK_END}\n"
+        "{BLOCK_START}\n# managed by `tracewise setup`; `tracewise uninstall` removes this file\n{export}for d in \"{root}/shims\" \"{root}/bin\"\n    contains -- $d $PATH; or set -gx PATH $d $PATH\nend\nif status is-interactive\n    tracewise shell init fish | source\nend\n{BLOCK_END}\n"
     )
 }
 
-/// Writes `conf.d/trail.fish` unless a file of the same name that is not ours is there. True when the file is Tracewise's.
+/// Writes `conf.d/tracewise.fish` unless a file of the same name that is not ours is there. True when the file is Tracewise's.
 pub(crate) fn write_fish_file(env: &Env) -> Result<bool, String> {
     let path = fish_file(env);
     let old = fs::read_to_string(&path).unwrap_or_default();
@@ -52,8 +52,8 @@ pub(crate) fn write_fish_file(env: &Env) -> Result<bool, String> {
 }
 
 pub(crate) fn root_text(env: &Env) -> String {
-    if env.root == env.home.join(".trail") {
-        "$HOME/.trail".to_string()
+    if env.root == env.home.join(".tracewise") {
+        "$HOME/.tracewise".to_string()
     } else {
         env.root.to_string_lossy().to_string()
     }
@@ -62,9 +62,9 @@ pub(crate) fn root_text(env: &Env) -> String {
 /// For `.zshenv`: where the programs and shims are, for every shell.
 pub(crate) fn env_block(env: &Env) -> String {
     let root = root_text(env);
-    let export = if root == "$HOME/.trail" { String::new() } else { format!("export TRAIL_HOME=\"{root}\"\n") };
+    let export = if root == "$HOME/.tracewise" { String::new() } else { format!("export TRACEWISE_HOME=\"{root}\"\n") };
     format!(
-        "{BLOCK_START}\n# managed by `trail setup`; `trail uninstall` removes this block\n{export}export PATH=\"{root}/bin:{root}/shims:$PATH\"\n{BLOCK_END}\n"
+        "{BLOCK_START}\n# managed by `tracewise setup`; `tracewise uninstall` removes this block\n{export}export PATH=\"{root}/bin:{root}/shims:$PATH\"\n{BLOCK_END}\n"
     )
 }
 
@@ -72,20 +72,20 @@ pub(crate) fn env_block(env: &Env) -> String {
 pub(crate) fn rc_block(env: &Env) -> String {
     let root = root_text(env);
     format!(
-        "{BLOCK_START}\n# managed by `trail setup`; `trail uninstall` removes this block\ntypeset -U path\npath=(\"{root}/bin\" \"{root}/shims\" $path)\neval \"$(trail shell init zsh)\"\n{BLOCK_END}\n"
+        "{BLOCK_START}\n# managed by `tracewise setup`; `tracewise uninstall` removes this block\ntypeset -U path\npath=(\"{root}/bin\" \"{root}/shims\" $path)\neval \"$(tracewise shell init zsh)\"\n{BLOCK_END}\n"
     )
 }
 
 /// Lines an older, hand-made Tracewise setup left in `.zshrc`.
 pub(crate) fn is_legacy_line(line: &str) -> bool {
     let t = line.trim();
-    t.starts_with("# Trail git wrapper and shell integration")
-        || (t.starts_with("export PATH=") && t.contains(".trail/bin"))
-        || t.contains("trail shell init zsh")
+    t.starts_with("# Tracewise git wrapper and shell integration")
+        || (t.starts_with("export PATH=") && t.contains(".tracewise/bin"))
+        || t.contains("tracewise shell init zsh")
 }
 
 /// `text` without the marked block and without legacy lines.
-pub(crate) fn strip_trail(text: &str) -> String {
+pub(crate) fn strip_tracewise(text: &str) -> String {
     let mut out: Vec<&str> = Vec::new();
     let mut inside = false;
     for line in text.lines() {
@@ -116,7 +116,7 @@ pub(crate) fn strip_trail(text: &str) -> String {
 
 /// `.zshrc` with Tracewise's lines replaced by the one block at the end.
 pub fn rewrite_zshrc(text: &str, block: &str) -> String {
-    let rest = strip_trail(text);
+    let rest = strip_tracewise(text);
     if rest.is_empty() {
         block.to_string()
     } else {
@@ -132,10 +132,10 @@ fn install_programs(env: &Env) -> Result<Vec<String>, String> {
         let src = env.src_dir.join(name);
         let dest = bin.join(name);
         if !src.is_file() {
-            if *name == "trail" {
+            if *name == "tracewise" {
                 return Err(format!("{} not found", src.display()));
             }
-            continue; // trail-sensor may not be built
+            continue; // tracewise-sensor may not be built
         }
         let same = src.canonicalize().ok() == dest.canonicalize().ok();
         if !same {
@@ -146,16 +146,13 @@ fn install_programs(env: &Env) -> Result<Vec<String>, String> {
         }
         done.push(name.to_string());
     }
-    // the checksums of a release candidate travel with the programs, so `trail doctor` can compare them later
+    // the checksums of a release candidate travel with the programs, so `tracewise doctor` can compare them later
     let sums = env.src_dir.join(CHECKSUM_FILE);
     if sums.is_file() {
         fs::copy(&sums, bin.join(CHECKSUM_FILE)).map_err(|e| format!("cannot copy {CHECKSUM_FILE}: {e}"))?;
     }
-    // the new command name points at the installed program
-    tracewise_platform::shims::create_shim_link(&bin.join("trail"), &bin.join("tracewise"))
-        .map_err(|e| format!("cannot link tracewise: {e}"))?;
     let link = bin.join("git");
-    tracewise_platform::shims::create_shim_link(&bin.join("trail-git"), &link).map_err(|e| format!("cannot link git: {e}"))?;
+    tracewise_platform::shims::create_shim_link(&bin.join("tracewise-git"), &link).map_err(|e| format!("cannot link git: {e}"))?;
     Ok(done)
 }
 
@@ -187,7 +184,7 @@ pub fn setup_in(env: &Env, opts: &SetupOptions) -> Result<Manifest, String> {
     let previous = read_manifest(env);
 
     let programs = install_programs(env)?;
-    let shims = crate::cmd_shims::install_shims(&env.shims(), &env.bin().join("trail-shim"))?.len();
+    let shims = crate::cmd_shims::install_shims(&env.shims(), &env.bin().join("tracewise-shim"))?.len();
 
     let cfg_path = env.root.join("config.toml");
     let cfg_text = format!("[profile]\nname = \"{}\"\n", opts.profile);
@@ -214,7 +211,7 @@ pub fn setup_in(env: &Env, opts: &SetupOptions) -> Result<Manifest, String> {
             if new != old {
                 if !old.is_empty() {
                     let name = path.file_name().and_then(|n| n.to_str()).unwrap_or("rc");
-                    let b = env.home.join(format!("{name}.trail-backup-{}", tracewise_core::clock::now().format("%Y%m%d-%H%M%S")));
+                    let b = env.home.join(format!("{name}.tracewise-backup-{}", tracewise_core::clock::now().format("%Y%m%d-%H%M%S")));
                     fs::write(&b, &old).map_err(|e| format!("cannot back up {name}: {e}"))?;
                     backup = Some(b.to_string_lossy().to_string());
                 }
@@ -228,7 +225,7 @@ pub fn setup_in(env: &Env, opts: &SetupOptions) -> Result<Manifest, String> {
     let zshrc_block = opts.shell_rc;
 
     let login = match opts.login {
-        Login::Ask => ask_yes_no("Start the Trail daemon at login?"),
+        Login::Ask => ask_yes_no("Start the Tracewise daemon at login?"),
         Login::Yes => true,
         Login::No => false,
     };
@@ -263,7 +260,7 @@ pub fn setup_in(env: &Env, opts: &SetupOptions) -> Result<Manifest, String> {
     write_manifest(env, &m)?;
 
     if opts.live && opts.start && !crate::util::is_daemon_running() {
-        let _ = Command::new(env.bin().join("trail")).args(["daemon", "start"]).output();
+        let _ = Command::new(env.bin().join("tracewise")).args(["daemon", "start"]).output();
     }
     Ok(m)
 }
@@ -289,17 +286,17 @@ pub fn uninstall_in(env: &Env, purge: bool, live: bool) -> Vec<String> {
     let rc_files = [env.zshrc(), env.zshenv(), env.home.join(".bashrc"), env.home.join(".bash_profile"), env.home.join(".profile")];
     for path in rc_files {
         if let Ok(old) = fs::read_to_string(&path) {
-            let new = strip_trail(&old);
+            let new = strip_tracewise(&old);
             if new != old {
                 // a file that held only Tracewise's block goes away instead of staying empty
                 let _ = if new.trim().is_empty() { fs::remove_file(&path) } else { fs::write(&path, new) };
-                removed.push(format!("Trail lines in {}", path.display()));
+                removed.push(format!("Tracewise lines in {}", path.display()));
             }
         }
     }
     // the fish file is wholly Tracewise's when it carries the block marker
     if fs::read_to_string(fish_file(env)).is_ok_and(|t| t.contains(BLOCK_START)) && fs::remove_file(fish_file(env)).is_ok() {
-        removed.push(format!("Trail file {}", fish_file(env).display()));
+        removed.push(format!("Tracewise file {}", fish_file(env).display()));
     }
     if env.shims().is_dir() {
         let n = crate::cmd_shims::uninstall_shims(&env.shims(), None);
@@ -312,7 +309,7 @@ pub fn uninstall_in(env: &Env, purge: bool, live: bool) -> Vec<String> {
         }
     }
     let programs = read_manifest(env).map(|m| m.programs).unwrap_or_else(|| PROGRAMS.iter().map(|s| s.to_string()).collect());
-    for name in programs.iter().map(String::as_str).chain(["git", "tracewise"]) {
+    for name in programs.iter().map(String::as_str).chain(["git", CHECKSUM_FILE]) {
         let p = env.bin().join(name);
         if p.is_symlink() || p.is_file() {
             let _ = fs::remove_file(&p);

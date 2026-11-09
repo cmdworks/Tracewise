@@ -4,7 +4,7 @@ use crate::db::{parse_retention_duration, read_command_retention};
 #[test]
 fn test_commands_crud() {
     let temp = tempfile::tempdir().unwrap();
-    let db_path = temp.path().join("trail.db");
+    let db_path = temp.path().join("tracewise.db");
     let db = Database::open(&db_path).unwrap();
 
     let cmd = CommandRecord {
@@ -30,7 +30,7 @@ fn test_commands_crud() {
 #[test]
 fn test_insert_command_caps_text_s07() {
     let temp = tempfile::tempdir().unwrap();
-    let db = Database::open(&temp.path().join("trail.db")).unwrap();
+    let db = Database::open(&temp.path().join("tracewise.db")).unwrap();
 
     let long_text = format!("git commit -m \"{}\"", "x".repeat(5000));
     let cmd = CommandRecord {
@@ -65,26 +65,26 @@ fn test_retention_duration_parsing_and_config() {
     assert_eq!(parse_retention_duration("off"), None);
     assert_eq!(parse_retention_duration("0"), None);
 
-    // Test reading from .trailconfig
+    // Test reading from .tracewiseconfig
     let temp = tempfile::tempdir().unwrap();
     let wt = temp.path();
 
     // Default 30 days when unset
     assert_eq!(read_command_retention(wt), Some(chrono::Duration::days(30)));
 
-    // Explicit 7d in .trailconfig
-    std::fs::write(wt.join(".trailconfig"), "[retention]\ncommands = 7d\n").unwrap();
+    // Explicit 7d in .tracewiseconfig
+    std::fs::write(wt.join(".tracewiseconfig"), "[retention]\ncommands = 7d\n").unwrap();
     assert_eq!(read_command_retention(wt), Some(chrono::Duration::days(7)));
 
     // Disabled via 'all'
-    std::fs::write(wt.join(".trailconfig"), "[retention]\ncommands = all\n").unwrap();
+    std::fs::write(wt.join(".tracewiseconfig"), "[retention]\ncommands = all\n").unwrap();
     assert_eq!(read_command_retention(wt), None);
 }
 
 #[test]
 fn test_purge_expired_commands_s08_s09() {
     let temp = tempfile::tempdir().unwrap();
-    let db_path = temp.path().join("trail.db");
+    let db_path = temp.path().join("tracewise.db");
     let db = Database::open(&db_path).unwrap();
 
     let now = chrono::Utc::now();

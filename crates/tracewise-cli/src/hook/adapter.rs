@@ -1,4 +1,4 @@
-//! Adapters as files: `<name>.toml` in `<repo>/.trail/adapters/` (wins) or `$TRAIL_HOME/adapters/` says how an
+//! Adapters as files: `<name>.toml` in `<repo>/.tracewise/adapters/` (wins) or `$TRACEWISE_HOME/adapters/` says how an
 //! agent's hook payload becomes Tracewise's events and what to answer. The file is data: nothing in it is ever run.
 use super::{execute_hook, HookInput, HookOutput};
 use serde_json::Value;
@@ -137,9 +137,9 @@ impl Adapter {
 fn adapter_dirs(work_tree: Option<&Path>) -> Vec<(&'static str, PathBuf)> {
     let mut dirs = Vec::new();
     if let Some(wt) = work_tree {
-        dirs.push(("project", wt.join(".trail").join("adapters")));
+        dirs.push(("project", wt.join(".tracewise").join("adapters")));
     }
-    dirs.push(("user", tracewise_core::get_trail_home().join("adapters")));
+    dirs.push(("user", tracewise_core::get_tracewise_home().join("adapters")));
     dirs
 }
 

@@ -31,7 +31,7 @@ fn chain_change(id: &str, path: &str) -> Change {
 #[test]
 fn the_chain_survives_edits_made_after_the_fact() {
     let temp = tempfile::tempdir().unwrap();
-    let db = Database::open(&temp.path().join("trail.db")).unwrap();
+    let db = Database::open(&temp.path().join("tracewise.db")).unwrap();
     for (i, p) in ["a.txt", "b.txt", "c.txt"].iter().enumerate() {
         db.insert_change(&chain_change(&format!("id{i}"), p)).unwrap();
     }
@@ -56,7 +56,7 @@ fn the_chain_survives_edits_made_after_the_fact() {
 #[test]
 fn deleting_the_newest_records_is_detected() {
     let dir = tempfile::tempdir().unwrap();
-    let path = dir.path().join("trail.db");
+    let path = dir.path().join("tracewise.db");
     let db = Database::open(&path).unwrap();
     for (i, p) in ["a.txt", "b.txt", "c.txt"].iter().enumerate() {
         db.insert_change(&chain_change(&format!("id{i}"), p)).unwrap();
@@ -70,7 +70,7 @@ fn deleting_the_newest_records_is_detected() {
 #[test]
 fn writers_in_different_processes_keep_one_chain() {
     let dir = tempfile::tempdir().unwrap();
-    let db_path = dir.path().join("trail.db");
+    let db_path = dir.path().join("tracewise.db");
     drop(Database::open(&db_path).unwrap());
     std::thread::scope(|scope| {
         for t in 0..6 {

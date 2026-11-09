@@ -14,7 +14,7 @@ test("the level follows what is running", () => {
   assert.equal(level({ ...base, coverage: { ...attributed, agents: { claude: false } } }).rank, 1);
 });
 
-test("alerts name the holes and carry Trail's own notices", () => {
+test("alerts name the holes and carry Tracewise's own notices", () => {
   const d = {
     ...base,
     problems: ["db is slow"],
@@ -23,7 +23,7 @@ test("alerts name the holes and carry Trail's own notices", () => {
   const notes = noticesFrom([
     { id: "1", kind: "git", text: "git status", start: "2026-11-07T01:00:00Z" },
     { id: "2", kind: "unhooked", text: "2 changes possibly by claude", start: "2026-11-07T02:00:00Z" },
-    { id: "3", kind: "gap", text: "Trail was not running", start: "2026-11-07T03:00:00Z" }
+    { id: "3", kind: "gap", text: "Tracewise was not running", start: "2026-11-07T03:00:00Z" }
   ]);
   assert.deepEqual(notes.map((n) => n.id), ["3", "2"]);
   const a = alerts(d, notes);

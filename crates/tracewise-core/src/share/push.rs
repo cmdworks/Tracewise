@@ -1,6 +1,6 @@
 //! Pushing unpushed changes to a companion git repository.
 use super::batch::{ensure_companion_repo, git_cmd, git_rev_parse, run_git, BatchMeta};
-use super::config::{contains_secret, is_remote_trusted, is_secret_path, read_trailconfig};
+use super::config::{contains_secret, is_remote_trusted, is_secret_path, read_tracewiseconfig};
 use crate::blob::BlobStore;
 use crate::db::Database;
 use crate::model::{Change, CommandRecord, Intent};
@@ -9,7 +9,7 @@ use std::io;
 use std::path::Path;
 
 pub fn push(repo_root: &Path, data_dir: &Path) -> io::Result<Option<(String, usize)>> {
-    let cfg = match read_trailconfig(repo_root) {
+    let cfg = match read_tracewiseconfig(repo_root) {
         Some(c) => c,
         None => return Ok(None),
     };
@@ -20,13 +20,13 @@ pub fn push(repo_root: &Path, data_dir: &Path) -> io::Result<Option<(String, usi
         return Err(io::Error::new(
             io::ErrorKind::PermissionDenied,
             format!(
-                "remote '{}' comes from .trailconfig and is not approved on this machine; check it, then run `trail share trust`",
+                "remote '{}' comes from .tracewiseconfig and is not approved on this machine; check it, then run `tracewise share trust`",
                 cfg.remote
             ),
         ));
     }
 
-    let db_path = data_dir.join("trail.db");
+    let db_path = data_dir.join("tracewise.db");
     let db = Database::open(&db_path).map_err(|e| io::Error::other(e.to_string()))?;
     let unpushed = db.get_unpushed_changes().map_err(|e| io::Error::other(e.to_string()))?;
     if unpushed.is_empty() {
@@ -63,7 +63,7 @@ pub fn push(repo_root: &Path, data_dir: &Path) -> io::Result<Option<(String, usi
 
     let remote_dir = data_dir.join("remote");
     ensure_companion_repo(&cfg.remote, &remote_dir)?;
-    let prefix = if cfg.hidden_refs { "refs/trail/device/" } else { "refs/heads/trail/device/" };
+    let prefix = if cfg.hidden_refs { "refs/tracewise/device/" } else { "refs/heads/tracewise/device/" };
     let branch_ref = format!("{prefix}{device_id}");
     // the companion repository holds no copy of the remote: learn this device's own previous batches first, so the new one has a parent
     let _ = run_git(&remote_dir, &["fetch", "origin", &format!("+{branch_ref}:{branch_ref}")]);
@@ -101,7 +101,7 @@ fn write_batch_changes(batch_dir: &Path, unpushed: &[Change]) -> io::Result<()> 
         }
     }
     if secret_detected {
-        eprintln!("trail: warning: secret files (.env*, *.pem, id_*) redacted from shared companion repository");
+        eprintln!("tracewise: warning: secret files (.env*, *.pem, id_*) redacted from shared companion repository");
     }
     let changes_raw = changes_lines.join("\n") + "\n";
     let changes_zst = zstd::encode_all(changes_raw.as_bytes(), 3)?;
@@ -215,10 +215,10 @@ fn commit_and_push_batch(remote_dir: &Path, batch_dir: &Path, branch_ref: &str, 
     }
     commit_cmd.args(["-m", &format!("batch {}", batch_id)]);
     commit_cmd
-        .env("GIT_AUTHOR_NAME", "trail")
-        .env("GIT_AUTHOR_EMAIL", "trail@local")
-        .env("GIT_COMMITTER_NAME", "trail")
-        .env("GIT_COMMITTER_EMAIL", "trail@local");
+        .env("GIT_AUTHOR_NAME", "tracewise")
+        .env("GIT_AUTHOR_EMAIL", "tracewise@local")
+        .env("GIT_COMMITTER_NAME", "tracewise")
+        .env("GIT_COMMITTER_EMAIL", "tracewise@local");
     let commit_out = commit_cmd.output()?;
     if !commit_out.status.success() {
         let stderr = String::from_utf8_lossy(&commit_out.stderr);
@@ -234,10 +234,10 @@ fn commit_and_push_batch(remote_dir: &Path, batch_dir: &Path, branch_ref: &str, 
 }
 
 /// Deletes this device's ref on the remote and in the companion copy, so the next push starts a fresh history for the device
-/// (`trail share key rekey --prune-old`). Batches already fetched by others stay in their data folders; the server may keep old objects.
+/// (`tracewise share key rekey --prune-old`). Batches already fetched by others stay in their data folders; the server may keep old objects.
 pub fn delete_own_ref(repo_root: &Path, data_dir: &Path) -> io::Result<()> {
-    let cfg = read_trailconfig(repo_root).ok_or_else(|| io::Error::other("sharing is not set up (.trailconfig)"))?;
-    let prefix = if cfg.hidden_refs { "refs/trail/device/" } else { "refs/heads/trail/device/" };
+    let cfg = read_tracewiseconfig(repo_root).ok_or_else(|| io::Error::other("sharing is not set up (.tracewiseconfig)"))?;
+    let prefix = if cfg.hidden_refs { "refs/tracewise/device/" } else { "refs/heads/tracewise/device/" };
     let branch_ref = format!("{prefix}{}", crate::identity::device_for(data_dir));
     let remote_dir = data_dir.join("remote");
     ensure_companion_repo(&cfg.remote, &remote_dir)?;

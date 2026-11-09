@@ -12,7 +12,7 @@ fn test_discover_standard_repo() {
     assert_eq!(discovered.work_tree, repo_dir.canonicalize().unwrap());
     assert_eq!(discovered.git_dir, repo_dir.join(".git").canonicalize().unwrap());
     assert_eq!(discovered.git_common_dir, repo_dir.join(".git").canonicalize().unwrap());
-    assert_eq!(discovered.data_dir(), repo_dir.join(".git").canonicalize().unwrap().join("trail"));
+    assert_eq!(discovered.data_dir(), repo_dir.join(".git").canonicalize().unwrap().join("tracewise"));
 }
 
 #[test]
@@ -32,7 +32,7 @@ fn test_discover_worktree() {
     assert_eq!(discovered.work_tree, wt_repo.canonicalize().unwrap());
     assert_eq!(discovered.git_dir, wt_git_dir.canonicalize().unwrap());
     assert_eq!(discovered.git_common_dir, main_git.canonicalize().unwrap());
-    assert_eq!(discovered.data_dir(), main_git.canonicalize().unwrap().join("trail"));
+    assert_eq!(discovered.data_dir(), main_git.canonicalize().unwrap().join("tracewise"));
 }
 
 #[test]
@@ -50,11 +50,11 @@ fn test_baseline_files_counting() {
     fs::write(repo.join("README.md"), "# Hello").unwrap();
     fs::write(repo.join(".gitignore"), "ignored.txt\n").unwrap();
     fs::write(repo.join("ignored.txt"), "secret").unwrap();
-    fs::write(repo.join(".trailignore"), "skip.txt\n").unwrap();
+    fs::write(repo.join(".tracewiseignore"), "skip.txt\n").unwrap();
     fs::write(repo.join("skip.txt"), "skipped").unwrap();
 
     let files = walk_baseline_files(repo);
-    assert_eq!(files, vec![PathBuf::from(".gitignore"), PathBuf::from(".trailignore"), PathBuf::from("README.md")]);
+    assert_eq!(files, vec![PathBuf::from(".gitignore"), PathBuf::from(".tracewiseignore"), PathBuf::from("README.md")]);
     assert_eq!(count_baseline_files(repo), 3);
 }
 

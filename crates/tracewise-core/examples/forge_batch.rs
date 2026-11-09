@@ -1,6 +1,6 @@
 //! Test data generator: writes companion-repository batches straight into a data folder (`<data>/batches/<id>/`), valid,
-//! hostile, duplicate or fuzzed, so a test can run `trail rebuild` and check what the program accepts.
-//!   cargo run --release -p trail-core --example forge_batch -- <repo> valid|hostile|duplicate|fuzz [seed]
+//! hostile, duplicate or fuzzed, so a test can run `tracewise rebuild` and check what the program accepts.
+//!   cargo run --release -p tracewise-core --example forge_batch -- <repo> valid|hostile|duplicate|fuzz [seed]
 use std::path::{Path, PathBuf};
 use tracewise_core::model::{Actor, Change, GitInfo, TimeRange};
 use tracewise_core::share::BatchMeta;
@@ -57,7 +57,7 @@ impl Rng {
 fn main() {
     let args: Vec<String> = std::env::args().skip(1).collect();
     let (repo, kind) = (PathBuf::from(&args[0]), args[1].as_str());
-    let data = repo.join(".git/trail");
+    let data = repo.join(".git/tracewise");
     match kind {
         "valid" => write(
             &data,
@@ -65,7 +65,8 @@ fn main() {
             &lines(&(0..5).map(|i| change(&format!("01FORGEVALID{i:014}"), &format!("ok{i}.txt"))).collect::<Vec<_>>()),
         ),
         "hostile" => {
-            let evil = ["../x.txt", "/etc/passwd", "a/../../b", "..", ".git/config", ".GIT/trail/trail.db", "a\0b", &"x/".repeat(3000)];
+            let evil =
+                ["../x.txt", "/etc/passwd", "a/../../b", "..", ".git/config", ".GIT/tracewise/tracewise.db", "a\0b", &"x/".repeat(3000)];
             let changes: Vec<Change> = evil.iter().enumerate().map(|(i, p)| change(&format!("01FORGEEVIL{i:015}"), p)).collect();
             write(&data, "forge-hostile-paths", &lines(&changes));
             write(

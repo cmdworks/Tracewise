@@ -19,14 +19,14 @@ fn test_profile_full() {
 }
 
 #[test]
-fn test_parse_trailconfig_profile() {
+fn test_parse_tracewiseconfig_profile() {
     let content = r#"
 [profile]
 coordination = true
 share = yes
 "#;
     let mut p = ProfileConfig::core();
-    ProfileConfig::parse_trailconfig_content(content, &mut p);
+    ProfileConfig::parse_tracewiseconfig_content(content, &mut p);
     assert!(p.coordination);
     assert!(p.share);
     assert!(!p.policy);
@@ -35,14 +35,14 @@ share = yes
 }
 
 #[test]
-fn test_parse_trailconfig_name_full() {
+fn test_parse_tracewiseconfig_name_full() {
     let content = r#"
 [profile]
 name = "full"
 share = false
 "#;
     let mut p = ProfileConfig::core();
-    ProfileConfig::parse_trailconfig_content(content, &mut p);
+    ProfileConfig::parse_tracewiseconfig_content(content, &mut p);
     assert!(p.coordination);
     assert!(p.policy);
     assert!(p.strict);

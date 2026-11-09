@@ -89,8 +89,8 @@ impl AgentTable {
         Self::default()
     }
 
-    pub fn load_from_dir(trail_home: &Path) -> Self {
-        let path = trail_home.join("agents.toml");
+    pub fn load_from_dir(tracewise_home: &Path) -> Self {
+        let path = tracewise_home.join("agents.toml");
         if let Ok(content) = fs::read_to_string(&path) {
             Self::load_from_content(&content)
         } else {
@@ -103,7 +103,7 @@ impl AgentTable {
     }
 
     pub fn load_default() -> Self {
-        Self::load_from_dir(&super::trail_home_dir())
+        Self::load_from_dir(&super::tracewise_home_dir())
     }
 
     pub fn match_signing_id(&self, id: &str) -> Option<String> {

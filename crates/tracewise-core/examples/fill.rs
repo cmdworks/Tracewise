@@ -1,6 +1,6 @@
-//! Test data generator (not part of the `trail` program): fills an initialised repository's history with many changes and
+//! Test data generator (not part of the `tracewise` program): fills an initialised repository's history with many changes and
 //! commands, with a valid hash chain, so scale and migration tests need no hours of scanning.
-//!   cargo run --release -p trail-core --example fill -- <repo> <changes> [commands] [files]
+//!   cargo run --release -p tracewise-core --example fill -- <repo> <changes> [commands] [files]
 use std::path::PathBuf;
 use tracewise_core::db::Database;
 use tracewise_core::model::{Actor, Change, CommandRecord, GitInfo, TimeRange};
@@ -10,7 +10,7 @@ fn main() {
     let repo = PathBuf::from(args.first().expect("usage: fill <repo> <changes> [commands] [files]"));
     let num = |i: usize, d: usize| args.get(i).and_then(|v| v.parse().ok()).unwrap_or(d);
     let (changes, commands, files) = (num(1, 1000), num(2, 0), num(3, 500).max(1));
-    let db = Database::open(&repo.join(".git/trail/trail.db")).expect("open: run `trail init` first");
+    let db = Database::open(&repo.join(".git/tracewise/tracewise.db")).expect("open: run `tracewise init` first");
     let actors = [
         Actor::agent("claude", "fill1"),
         Actor::agent("codex", "fill2"),

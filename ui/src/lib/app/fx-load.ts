@@ -1,11 +1,11 @@
-import { invokeTrail } from "$lib/api";
+import { invokeTracewise } from "$lib/api";
 import { parseJson } from "$lib/result";
 import { SEARCH_LIMIT } from "$lib/search";
 import { PENDING_SCAN, pendingFrom } from "$lib/pending";
 import { decideReload, formatRelativeTime, isStatusStale } from "$lib/live";
 import { noticesFrom } from "$lib/protection";
 import { rowsFrom, shareFrom, shareProfileOff } from "$lib/settings";
-import type { AgentStatus, ChangeItem, PendingItem, DoctorReport, TrailStatus } from "$lib/types";
+import type { AgentStatus, ChangeItem, PendingItem, DoctorReport, TracewiseStatus } from "$lib/types";
 import { app, TIMELINE_MAX, TIMELINE_PAGE } from "./state.svelte";
 import { addToast, loadFailed, loadOk } from "./fx-core";
 
@@ -16,7 +16,7 @@ export async function selectChange(c: ChangeItem) {
     app.currentDiff = "";
     app.diffLoading = true;
     try {
-      const res = await invokeTrail(["show", c.id, "--json"], app.currentRepo);
+      const res = await invokeTracewise(["show", c.id, "--json"], app.currentRepo);
       if (seq !== app.selectSeq) return;
       if (res.exit_code === 0 && res.stdout.trim()) {
         try {
@@ -43,7 +43,7 @@ export async function saveInlineNote(): Promise<boolean> {
     const repo = app.currentRepo;
     app.inlineNoteSaving = true;
     try {
-      const res = await invokeTrail(["note", id, text], repo);
+      const res = await invokeTracewise(["note", id, text], repo);
       if (res.exit_code !== 0) {
         addToast("error", res.stderr || "Failed to attach note");
         return false;
@@ -51,7 +51,7 @@ export async function saveInlineNote(): Promise<boolean> {
       addToast("success", target.why ? "Reason changed" : "Reason added");
       if (repo !== app.currentRepo) return true; // another project is open now: nothing of it to update
       // take the saved record (intent id and reason text) from Tracewise instead of guessing it locally
-      const saved = await invokeTrail(["show", id, "--json"], repo);
+      const saved = await invokeTracewise(["show", id, "--json"], repo);
       if (saved.exit_code === 0 && repo === app.currentRepo) {
         const rec = JSON.parse(saved.stdout);
         app.changes = app.changes.map((item) => (item.id === id ? { ...item, intent: rec.intent, why: rec.why } : item));
@@ -90,7 +90,7 @@ export async function fetchSearch(q: string = app.searchQuery.trim()) {
   const epoch = app.repoEpoch;
   app.searchLoading = true;
   try {
-    const res = await invokeTrail(["log", "--grep", q, "--limit", String(SEARCH_LIMIT), "--json"], app.currentRepo);
+    const res = await invokeTracewise(["log", "--grep", q, "--limit", String(SEARCH_LIMIT), "--json"], app.currentRepo);
     if (seq !== app.searchSeq || epoch !== app.repoEpoch) return;
     app.searchRows = parseJson<ChangeItem[]>("search", res);
     app.searchFor = q;
@@ -106,7 +106,7 @@ export async function fetchSearch(q: string = app.searchQuery.trim()) {
 export async function fetchFileHistory(path: string) {
   const epoch = app.repoEpoch;
   try {
-    const res = await invokeTrail(["log", path, "--limit", "200", "--json"], app.currentRepo);
+    const res = await invokeTracewise(["log", path, "--limit", "200", "--json"], app.currentRepo);
     if (epoch !== app.repoEpoch || app.selectedFilePath !== path) return;
     app.fileHistory = parseJson<ChangeItem[]>("file history", res);
     app.fileHistoryFor = path;
@@ -130,7 +130,7 @@ export async function openFileBlame(path: string) {
     const epoch = app.repoEpoch;
 
     try {
-      const res = await invokeTrail(["blame", path, "--json"], app.currentRepo);
+      const res = await invokeTracewise(["blame", path, "--json"], app.currentRepo);
       if (seq !== app.blameSeq || epoch !== app.repoEpoch) return;
       if (res.exit_code === 0 && res.stdout.trim()) {
         app.blameLines = JSON.parse(res.stdout);
@@ -138,7 +138,7 @@ export async function openFileBlame(path: string) {
         app.blameError = res.stderr || "Could not load blame for this file (it may be untracked or binary).";
       }
     } catch (e: any) {
-      if (seq === app.blameSeq) app.blameError = e?.toString() || "Failed to execute trail blame";
+      if (seq === app.blameSeq) app.blameError = e?.toString() || "Failed to execute tracewise blame";
     } finally {
       if (seq === app.blameSeq) app.blameLoading = false;
     }
@@ -152,7 +152,7 @@ export async function inspectBlameLine(lineNum: number) {
     const seq = ++app.whySeq;
     const epoch = app.repoEpoch;
     try {
-      const res = await invokeTrail(["why", `${app.selectedFilePath}:${lineNum}`, "--json"], app.currentRepo);
+      const res = await invokeTracewise(["why", `${app.selectedFilePath}:${lineNum}`, "--json"], app.currentRepo);
       if (seq !== app.whySeq || epoch !== app.repoEpoch) return;
       if (res.exit_code === 0 && res.stdout.trim()) {
         app.lineWhyData = JSON.parse(res.stdout);
@@ -168,8 +168,8 @@ export async function fetchPending(repoArg?: string) {
     app.pendingLoading = true;
     const epoch = app.repoEpoch;
     try {
-      // not `trail pending`: it has no limit and is huge on a big history (see lib/pending.ts)
-      const res = await invokeTrail(["log", "--limit", String(PENDING_SCAN), "--json"], repoArg || app.currentRepo);
+      // not `tracewise pending`: it has no limit and is huge on a big history (see lib/pending.ts)
+      const res = await invokeTracewise(["log", "--limit", String(PENDING_SCAN), "--json"], repoArg || app.currentRepo);
       if (epoch !== app.repoEpoch) return;
       const { items, more } = pendingFrom(parseJson<ChangeItem[]>("pending changes", res));
       app.pendingChanges = items;
@@ -187,7 +187,7 @@ export async function submitPendingNote(id: string) {
     if (!text) return;
     app.pendingSavingId = id;
     try {
-      const res = await invokeTrail(["note", id, text], app.currentRepo);
+      const res = await invokeTracewise(["note", id, text], app.currentRepo);
       if (res.exit_code === 0) {
         app.pendingChanges = app.pendingChanges.filter((p) => p.id !== id);
         addToast("success", "Reason saved to change");
@@ -208,7 +208,7 @@ export async function submitBatchPendingNotes(ids: string[], note: string): Prom
     let refusal = "";
     try {
       for (const id of ids) {
-        const res = await invokeTrail(["note", id, text], app.currentRepo);
+        const res = await invokeTracewise(["note", id, text], app.currentRepo);
         if (res.exit_code === 0) saved.add(id);
         else refusal = res.stderr || "Failed to save reason";
       }
@@ -217,7 +217,7 @@ export async function submitBatchPendingNotes(ids: string[], note: string): Prom
     } finally {
       app.busy = null;
     }
-    // only what Trail accepted leaves the list; a refused reason keeps its changes pending
+    // only what Tracewise accepted leaves the list; a refused reason keeps its changes pending
     if (saved.size > 0) {
       app.pendingChanges = app.pendingChanges.filter((p) => !saved.has(p.id));
       addToast("success", `Saved reason for ${saved.size} change${saved.size === 1 ? "" : "s"}`);
@@ -234,12 +234,12 @@ export async function fetchDoctor(repoArg?: string) {
     app.doctorLoading = true;
     const epoch = app.repoEpoch;
     try {
-      const res = await invokeTrail(["doctor", "--json"], repoArg || app.currentRepo);
+      const res = await invokeTracewise(["doctor", "--json"], repoArg || app.currentRepo);
       if (epoch !== app.repoEpoch) return;
       app.doctor = parseJson<DoctorReport>("health check", res);
       loadOk("doctor");
       // a failure here only hides the notices; the health check itself is already shown
-      invokeTrail(["commands", "--json"], repoArg || app.currentRepo)
+      invokeTracewise(["commands", "--json"], repoArg || app.currentRepo)
         .then((r) => {
           if (epoch === app.repoEpoch) app.notices = noticesFrom(parseJson<Array<{ id: string; kind: string; text: string; start: string }>>("commands", r));
         })
@@ -254,7 +254,7 @@ export async function fetchDoctor(repoArg?: string) {
 export async function loadRepoDetail(repoPath: string) {
     app.repoDetails[repoPath] = { ...(app.repoDetails[repoPath] || {}), loading: true, error: undefined };
     try {
-      const res = await invokeTrail(["status", "--json"], repoPath);
+      const res = await invokeTracewise(["status", "--json"], repoPath);
       if (res.exit_code === 0) {
         const s = JSON.parse(res.stdout);
         app.repoDetails[repoPath] = {
@@ -266,7 +266,7 @@ export async function loadRepoDetail(repoPath: string) {
       } else {
         app.repoDetails[repoPath] = {
           loading: false,
-          error: "Not accessible or not a trail project",
+          error: "Not accessible or not a tracewise project",
         };
       }
     } catch {
@@ -288,7 +288,7 @@ export async function registerNewProject() {
     const p = app.newProjectInput.trim();
     if (!p) return;
     try {
-      const res = await invokeTrail(["status", "--json"], p);
+      const res = await invokeTracewise(["status", "--json"], p);
       if (res.exit_code === 0) {
         if (!app.watchedRepos.includes(p)) {
           app.watchedRepos = [...app.watchedRepos, p];
@@ -297,7 +297,7 @@ export async function registerNewProject() {
         switchRepo(p);
         addToast("success", `Switched to project ${p.split("/").pop()}`);
       } else {
-        app.newProjectError = res.stderr || `Not a repository Tracewise tracks yet: run \`trail init\` there first (${res.exit_code})`;
+        app.newProjectError = res.stderr || `Not a repository Tracewise tracks yet: run \`tracewise init\` there first (${res.exit_code})`;
       }
     } catch (e: any) {
       app.newProjectError = e?.message || "Failed to inspect directory";
@@ -306,7 +306,7 @@ export async function registerNewProject() {
 
 export async function fetchDaemonStatus() {
     try {
-      const res = await invokeTrail(["daemon", "status", "--json"], null);
+      const res = await invokeTracewise(["daemon", "status", "--json"], null);
       const d = parseJson<any>("daemon status", res);
       if (d.repositories && Array.isArray(d.repositories)) {
         app.watchedRepos = d.repositories;
@@ -327,7 +327,7 @@ async function fallBackFromMissingProject() {
   const gone = app.currentRepo;
   app.repoRestored = false;
   try {
-    const res = await invokeTrail(["status", "--json"], null);
+    const res = await invokeTracewise(["status", "--json"], null);
     const there = res.exit_code === 0 ? (JSON.parse(res.stdout) as { repo?: string }).repo : undefined;
     if (there) {
       switchRepo(there);
@@ -346,7 +346,7 @@ export async function fetchStatus(repoArg?: string) {
     app.errorMsg = null;
     const epoch = app.repoEpoch;
     try {
-      const res = await invokeTrail(["status", "--json"], repoArg || app.currentRepo);
+      const res = await invokeTracewise(["status", "--json"], repoArg || app.currentRepo);
       if (epoch !== app.repoEpoch) return;
       if (res.exit_code === 0) {
         const now = new Date();
@@ -367,7 +367,7 @@ export async function fetchStatus(repoArg?: string) {
     } catch (err: any) {
       // the desktop side refuses a repository path by rejecting the call, not by a failed result
       if (epoch === app.repoEpoch && app.repoRestored && MISSING_PROJECT.test(String(err))) await fallBackFromMissingProject();
-      else if (epoch === app.repoEpoch) app.errorMsg = err?.toString() || "Failed to execute trail status";
+      else if (epoch === app.repoEpoch) app.errorMsg = err?.toString() || "Failed to execute tracewise status";
     } finally {
       if (epoch === app.repoEpoch) app.statusLoading = false;
     }
@@ -378,10 +378,10 @@ export async function pollStatus() {
   const epoch = app.repoEpoch;
   const now = new Date();
   try {
-    const res = await invokeTrail(["status", "--json"], app.currentRepo);
+    const res = await invokeTracewise(["status", "--json"], app.currentRepo);
     if (epoch !== app.repoEpoch) return;
     if (res.exit_code === 0) {
-      const nextStatus = JSON.parse(res.stdout) as TrailStatus;
+      const nextStatus = JSON.parse(res.stdout) as TracewiseStatus;
       const decision = decideReload(app.status, nextStatus, app.activeTab);
       app.status = nextStatus;
       app.lastStatusTime = now;
@@ -422,7 +422,7 @@ export async function fetchTimeline(repoArg?: string) {
     const seq = ++app.timelineSeq;
     app.timelineLoading = true;
     try {
-      const res = await invokeTrail(["log", "--limit", String(app.timelineLimit), "--json"], repoArg || app.currentRepo);
+      const res = await invokeTracewise(["log", "--limit", String(app.timelineLimit), "--json"], repoArg || app.currentRepo);
       if (seq !== app.timelineSeq) return;
       app.changes = parseJson<ChangeItem[]>("events", res);
       loadOk("timeline");
@@ -453,7 +453,7 @@ export async function fetchAgents(repoArg?: string) {
     app.agentsLoading = true;
     const epoch = app.repoEpoch;
     try {
-      const res = await invokeTrail(["agent", "status", "--json"], repoArg || app.currentRepo);
+      const res = await invokeTracewise(["agent", "status", "--json"], repoArg || app.currentRepo);
       if (epoch !== app.repoEpoch) return;
       app.agents = parseJson<AgentStatus[]>("agent status", res);
       loadOk("agents");
@@ -504,7 +504,7 @@ export function switchRepo(newRepo: string) {
 export async function fetchLocks() {
     const epoch = app.repoEpoch;
     try {
-      const res = await invokeTrail(["lock", "list", "--json"], app.currentRepo);
+      const res = await invokeTracewise(["lock", "list", "--json"], app.currentRepo);
       if (epoch !== app.repoEpoch) return;
       app.locks = parseJson<typeof app.locks>("locks", res);
       loadOk("locks");
@@ -516,7 +516,7 @@ export async function fetchLocks() {
 export async function fetchBackground() {
     const epoch = app.repoEpoch;
     try {
-      const res = await invokeTrail(["ps", "--json"], app.currentRepo);
+      const res = await invokeTracewise(["ps", "--json"], app.currentRepo);
       if (epoch !== app.repoEpoch) return;
       app.bgJobs = parseJson<typeof app.bgJobs>("background work", res);
       loadOk("background");
@@ -539,9 +539,9 @@ export async function fetchSettings() {
   app.settingsLoading = true;
   const epoch = app.repoEpoch;
   try {
-    const res = await invokeTrail(["config", "get", "--json"], app.currentRepo);
+    const res = await invokeTracewise(["config", "get", "--json"], app.currentRepo);
     if (epoch !== app.repoEpoch) return;
-    if (res.exit_code !== 0) throw new Error(res.stderr.trim() || "trail config failed");
+    if (res.exit_code !== 0) throw new Error(res.stderr.trim() || "tracewise config failed");
     app.settings = rowsFrom(JSON.parse(res.stdout));
   } catch (e) {
     if (epoch === app.repoEpoch) addToast("error", `Could not read the settings: ${e instanceof Error ? e.message : e}`);
@@ -553,7 +553,7 @@ export async function fetchSettings() {
 export async function fetchShare() {
   const epoch = app.repoEpoch;
   try {
-    const res = await invokeTrail(["share", "status", "--json"], app.currentRepo);
+    const res = await invokeTracewise(["share", "status", "--json"], app.currentRepo);
     if (epoch !== app.repoEpoch) return;
     app.shareProfileOff = res.exit_code !== 0 && shareProfileOff(res.stderr);
     if (res.exit_code === 0) app.share = shareFrom(JSON.parse(res.stdout));

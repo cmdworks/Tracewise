@@ -1,13 +1,13 @@
 import { defineConfig } from "vite";
 import { sveltekit } from "@sveltejs/kit/vite";
-import { trailBridge } from "./dev/trail-bridge.js";
+import { tracewiseBridge } from "./dev/tracewise-bridge.js";
 // @ts-expect-error type error without @types/node package
 import process from "node:process";
 const host = process.env.TAURI_DEV_HOST;
 
 // https://vite.dev/config/
 export default defineConfig(() => ({
-  plugins: [sveltekit(), trailBridge()],
+  plugins: [sveltekit(), tracewiseBridge()],
 
   // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
   //

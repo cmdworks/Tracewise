@@ -1,12 +1,12 @@
-//! `trail-sensor`: runs Apple's `eslogger` on behalf of one user and forwards the file events under that user's
-//! repositories to the user's daemon (`trail-watchd`). It is meant to run as root from a LaunchDaemon, but it
+//! `tracewise-sensor`: runs Apple's `eslogger` on behalf of one user and forwards the file events under that user's
+//! repositories to the user's daemon (`tracewise-watchd`). It is meant to run as root from a LaunchDaemon, but it
 //! keeps nothing and listens to nobody: it connects to the user's socket and does what the daemon says.
 //!
-//!   trail-sensor --socket PATH          run (reconnects forever)
-//!   trail-sensor --parse --prefix DIR   read eslogger lines on stdin, print the compact events (for tests)
+//!   tracewise-sensor --socket PATH          run (reconnects forever)
+//!   tracewise-sensor --parse --prefix DIR   read eslogger lines on stdin, print the compact events (for tests)
 //!
-//! Environment: `TRAIL_ESLOGGER` replaces /usr/bin/eslogger (tests; then root is not required),
-//! `TRAIL_SENSOR_BACKOFF_SECS` (30) pause after a failed start, `TRAIL_SENSOR_FORMAT_SECS` (600) pause after "format".
+//! Environment: `TRACEWISE_ESLOGGER` replaces /usr/bin/eslogger (tests; then root is not required),
+//! `TRACEWISE_SENSOR_BACKOFF_SECS` (30) pause after a failed start, `TRACEWISE_SENSOR_FORMAT_SECS` (600) pause after "format".
 use std::io::{BufRead, BufReader, Write};
 use std::os::unix::net::UnixStream;
 use std::path::Path;
@@ -20,7 +20,7 @@ fn arg_values(args: &[String], flag: &str) -> Vec<String> {
     args.windows(2).filter(|w| w[0] == flag).map(|w| w[1].clone()).collect()
 }
 
-/// The running `eslogger`, so that stopping the sensor (SIGTERM from launchd, `trail strict uninstall`) stops it too: it
+/// The running `eslogger`, so that stopping the sensor (SIGTERM from launchd, `tracewise strict uninstall`) stops it too: it
 /// would otherwise go on alone, at several percent of a core, with nobody reading it.
 static CHILD_PID: std::sync::atomic::AtomicI32 = std::sync::atomic::AtomicI32::new(0);
 
@@ -39,7 +39,7 @@ fn main() {
         std::process::exit(parse_mode(&args));
     }
     let Some(socket) = arg_values(&args, "--socket").pop() else {
-        eprintln!("usage: trail-sensor --socket PATH | --parse --prefix DIR [--events light|full]");
+        eprintln!("usage: tracewise-sensor --socket PATH | --parse --prefix DIR [--events light|full]");
         std::process::exit(2);
     };
     loop {
@@ -147,7 +147,7 @@ fn check_running_child(child: &mut Option<Child>, sh: &Shared, started: Instant,
         *sh.reason.lock().unwrap() = Some(reason);
         stop_child(child);
         sh.running.store(false, Ordering::SeqCst);
-        *pause_until = Instant::now() + env_secs("TRAIL_SENSOR_BACKOFF_SECS", 30);
+        *pause_until = Instant::now() + env_secs("TRACEWISE_SENSOR_BACKOFF_SECS", 30);
         *last_status -= Duration::from_secs(10);
     } else {
         // the format watchdog: lines that mention our folders but none of which we can read
@@ -156,7 +156,7 @@ fn check_running_child(child: &mut Option<Child>, sh: &Shared, started: Instant,
             stop_child(child);
             sh.running.store(false, Ordering::SeqCst);
             *sh.reason.lock().unwrap() = Some("format".to_string());
-            *pause_until = Instant::now() + env_secs("TRAIL_SENSOR_FORMAT_SECS", 600);
+            *pause_until = Instant::now() + env_secs("TRACEWISE_SENSOR_FORMAT_SECS", 600);
             *last_status -= Duration::from_secs(10);
         }
     }
@@ -225,7 +225,7 @@ fn spawn_and_attach(
         }
         Err(reason) => {
             *sh.reason.lock().unwrap() = Some(reason);
-            *pause_until = Instant::now() + env_secs("TRAIL_SENSOR_BACKOFF_SECS", 30);
+            *pause_until = Instant::now() + env_secs("TRACEWISE_SENSOR_BACKOFF_SECS", 30);
             *last_status -= Duration::from_secs(10);
             None
         }
@@ -298,7 +298,7 @@ fn serve(stream: UnixStream) {
 }
 
 fn spawn_eslogger(events: &[&str]) -> Result<Child, String> {
-    let (program, needs_root) = match std::env::var("TRAIL_ESLOGGER") {
+    let (program, needs_root) = match std::env::var("TRACEWISE_ESLOGGER") {
         Ok(p) if !p.is_empty() => (p, false),
         _ => ("/usr/bin/eslogger".to_string(), true),
     };

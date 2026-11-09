@@ -42,13 +42,13 @@ export function dismissToast(id: string) {
 
 export function toggleBlameWrap() {
   app.blameWrap = !app.blameWrap;
-  if (typeof localStorage !== "undefined") localStorage.setItem("trail-blame-wrap", app.blameWrap ? "1" : "0");
+  if (typeof localStorage !== "undefined") localStorage.setItem("tracewise-blame-wrap", app.blameWrap ? "1" : "0");
 }
 
 export function toggleSidebar() {
     app.sidebarCollapsed = !app.sidebarCollapsed;
     if (typeof localStorage !== "undefined") {
-      localStorage.setItem("trail-sidebar-collapsed", app.sidebarCollapsed ? "1" : "0");
+      localStorage.setItem("tracewise-sidebar-collapsed", app.sidebarCollapsed ? "1" : "0");
     }
   }
 

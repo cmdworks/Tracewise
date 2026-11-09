@@ -230,7 +230,7 @@ fn a_file_written_without_a_pause_is_sent_once_per_gap_and_the_last_write_wins()
     let t = temp.clone();
     let handle = std::thread::spawn(move || {
         // SAFETY of the test: the variable is read once, when the loop starts
-        std::env::set_var("TRAIL_MIN_GAP_MS", "1000");
+        std::env::set_var("TRACEWISE_MIN_GAP_MS", "1000");
         let _ = watch_loop(
             &t,
             50,

@@ -2,7 +2,7 @@
 name = "tracewise-platform"
 version = "0.1.0"
 edition = "2021"
-description = "Operating-system abstraction layer for Trail"
+description = "Operating-system abstraction layer for Tracewise"
 license = "MIT"
 authors = ["Asmat"]
 

@@ -26,9 +26,9 @@ fn window(kind: &str, who: Actor, paths: &[&str], start: String, end: Option<Str
 fn setup() -> (tempfile::TempDir, std::path::PathBuf, std::path::PathBuf, Database) {
     let tmp = tempdir().unwrap();
     let work = tmp.path().join("w");
-    let data = work.join(".git/trail");
+    let data = work.join(".git/tracewise");
     fs::create_dir_all(&data).unwrap();
-    let db = Database::open(&data.join("trail.db")).unwrap();
+    let db = Database::open(&data.join("tracewise.db")).unwrap();
     (tmp, work, data, db)
 }
 

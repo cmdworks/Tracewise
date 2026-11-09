@@ -16,8 +16,8 @@ flowchart LR
 
     core{{"tracewise-core"}} --> store
 
-    subgraph store [".git/trail/"]
-        db[("trail.db<br/>records, SQLite")]
+    subgraph store [".git/tracewise/"]
+        db[("tracewise.db<br/>records, SQLite")]
         objects[("objects/<br/>file versions")]
     end
 
@@ -61,11 +61,11 @@ A reason answers *why* a change was made, and is what `why` and `blame` show nex
 
 ## 4. Storage
 
-Everything lives in `.git/trail/` of the repository:
+Everything lives in `.git/tracewise/` of the repository:
 
 | | |
 |---|---|
-| `trail.db` | the records, in SQLite (WAL mode) |
+| `tracewise.db` | the records, in SQLite (WAL mode) |
 | `objects/` | the file versions, as git blobs. Versions already in your git history cost nothing extra; `tracewise gc` packs the rest with deltas |
 
 Git never shows or commits this folder, and all worktrees of a repository share it. Files are readable by you only. Measured sizes: 1,000 small edits take about 3 MB; 5,000 edits of 10–100 lines about 42 MB, with `log`, `blame` and `verify` each under 30 ms.
@@ -104,4 +104,4 @@ Tracewise **fails open**: if anything in it goes wrong, git, your shell and your
 
 ## 9. Privacy
 
-Nothing leaves your machine unless you turn on [sharing](sharing.md). Before anything is stored, known secret shapes (AWS keys, GitHub tokens, bearer tokens, passwords in URLs) are masked in command text and reasons, and a file that contains a known credential is recorded by hash only, so the key is in no stored version. Ignored files (`.gitignore`, `.trailignore`) are never recorded.
+Nothing leaves your machine unless you turn on [sharing](sharing.md). Before anything is stored, known secret shapes (AWS keys, GitHub tokens, bearer tokens, passwords in URLs) are masked in command text and reasons, and a file that contains a known credential is recorded by hash only, so the key is in no stored version. Ignored files (`.gitignore`, `.tracewiseignore`) are never recorded.

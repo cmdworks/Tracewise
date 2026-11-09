@@ -17,9 +17,9 @@ fn test_daemon_sweep_stuck_flags_after_crash() {
     let test_file = wt.join("test.txt");
     std::fs::write(&test_file, b"initial content").unwrap();
 
-    let data_dir = wt.join(".trail").join("data");
+    let data_dir = wt.join(".tracewise").join("data");
     std::fs::create_dir_all(&data_dir).unwrap();
-    let db_path = data_dir.join("trail.db");
+    let db_path = data_dir.join("tracewise.db");
     let db = Database::open(&db_path).unwrap();
 
     // Spawn a child process to act as the holder
@@ -35,9 +35,9 @@ fn test_daemon_sweep_stuck_flags_after_crash() {
     let _ = tracewise_platform::signal::kill_process(holder_pid as i32);
     let _ = child.wait();
 
-    // Start daemon loop with fast sweep (TRAIL_SWEEP_INTERVAL_SECS=1)
+    // Start daemon loop with fast sweep (TRACEWISE_SWEEP_INTERVAL_SECS=1)
     unsafe {
-        std::env::set_var("TRAIL_SWEEP_INTERVAL_SECS", "1");
+        std::env::set_var("TRACEWISE_SWEEP_INTERVAL_SECS", "1");
     }
     let running = Arc::new(AtomicBool::new(true));
     let r = running.clone();
@@ -52,7 +52,7 @@ fn test_daemon_sweep_stuck_flags_after_crash() {
             r,
             |_| true,
             move || {
-                let db_path = data_dir_clone.join("trail.db");
+                let db_path = data_dir_clone.join("tracewise.db");
                 if let Ok(db) = Database::open_hot(&db_path) {
                     let _ = db.clean_expired_locks(&sweep_wt);
                 }
@@ -78,6 +78,6 @@ fn test_daemon_sweep_stuck_flags_after_crash() {
     let _ = std::fs::write(wt.join("wake.txt"), b"wake");
     let _ = daemon_thread.join();
     unsafe {
-        std::env::remove_var("TRAIL_SWEEP_INTERVAL_SECS");
+        std::env::remove_var("TRACEWISE_SWEEP_INTERVAL_SECS");
     }
 }

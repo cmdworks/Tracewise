@@ -1,5 +1,5 @@
 //! Which paths Tracewise does not record: what `.gitignore` (the root's and the ones in the folders on the way), `.git/info/exclude`,
-//! the global git ignore file and `.trailignore` say, plus the files the operating system writes on its own. A full scan
+//! the global git ignore file and `.tracewiseignore` say, plus the files the operating system writes on its own. A full scan
 //! already honours them by walking the tree; the daemon, the git wrapper and the hooks name single paths, so they ask here.
 use ignore::gitignore::{Gitignore, GitignoreBuilder};
 use std::collections::HashMap;
@@ -10,7 +10,7 @@ pub struct IgnoreRules {
     dirs: HashMap<PathBuf, Option<Gitignore>>,
     exclude: Option<Gitignore>,
     global: Gitignore,
-    trail: Option<Gitignore>,
+    tracewise: Option<Gitignore>,
 }
 
 fn file_rules(dir: &Path, file: &Path) -> Option<Gitignore> {
@@ -30,7 +30,7 @@ impl IgnoreRules {
             dirs: HashMap::new(),
             exclude: file_rules(work_tree, &common.join("info").join("exclude")),
             global: Gitignore::global().0,
-            trail: file_rules(work_tree, &work_tree.join(".trailignore")),
+            tracewise: file_rules(work_tree, &work_tree.join(".tracewiseignore")),
         }
     }
 
@@ -60,7 +60,7 @@ impl IgnoreRules {
             }
         }
         let full = self.root.join(rel);
-        let mut in_tree = [self.exclude.as_ref(), self.trail.as_ref()].into_iter().flatten();
+        let mut in_tree = [self.exclude.as_ref(), self.tracewise.as_ref()].into_iter().flatten();
         in_tree.any(|g| matches!(g.matched_path_or_any_parents(&full, false), ignore::Match::Ignore(_)))
             // the global file has no root of its own: it takes the path relative to the work tree
             || matches!(self.global.matched_path_or_any_parents(rel, false), ignore::Match::Ignore(_))

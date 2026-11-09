@@ -67,7 +67,7 @@ impl Database {
         }
         let version: i64 = conn.pragma_query_value(None, "user_version", |row| row.get(0)).unwrap_or(0);
         if version > LATEST_SCHEMA_VERSION {
-            let msg = format!("this history was written by a newer Trail (schema {version}, this Trail knows {LATEST_SCHEMA_VERSION}); upgrade Trail to use it");
+            let msg = format!("this history was written by a newer Tracewise (schema {version}, this Tracewise knows {LATEST_SCHEMA_VERSION}); upgrade Tracewise to use it");
             return Err(rusqlite::Error::ToSqlConversionFailure(msg.into()));
         }
         Ok(conn)
@@ -99,7 +99,7 @@ impl Database {
         let conn = Connection::open_with_flags(format!("file:{encoded}?immutable=1"), flags)?;
         let version: i64 = conn.pragma_query_value(None, "user_version", |row| row.get(0)).unwrap_or(0);
         if version != LATEST_SCHEMA_VERSION {
-            let msg = format!("this history is read-only and is at schema {version}, this Trail needs {LATEST_SCHEMA_VERSION}; Trail does not migrate old histories");
+            let msg = format!("this history is read-only and is at schema {version}, this Tracewise needs {LATEST_SCHEMA_VERSION}; Tracewise does not migrate old histories");
             return Err(rusqlite::Error::ToSqlConversionFailure(msg.into()));
         }
         Ok(Self { conn, head_path: Some(db_path.with_file_name("chain-head")), pending_head: Default::default() })
@@ -118,14 +118,14 @@ impl Database {
     }
 
     /// Creates the schema in a new database. Tracewise has no migrations: a history at another schema is refused and must be
-    /// recreated (`rm -rf .git/trail && trail init`).
+    /// recreated (`rm -rf .git/tracewise && tracewise init`).
     fn migrate(&self) -> Result<()> {
         let version: i64 = self.conn.pragma_query_value(None, "user_version", |row| row.get(0))?;
         if version == LATEST_SCHEMA_VERSION {
             return Ok(());
         }
         if version != 0 {
-            let msg = format!("this history is at schema {version}, this Trail needs {LATEST_SCHEMA_VERSION}; Trail does not migrate old histories: remove .git/trail and run `trail init`");
+            let msg = format!("this history is at schema {version}, this Tracewise needs {LATEST_SCHEMA_VERSION}; Tracewise does not migrate old histories: remove .git/tracewise and run `tracewise init`");
             return Err(rusqlite::Error::ToSqlConversionFailure(msg.into()));
         }
         self.conn.execute_batch(include_str!("schema.sql"))?;

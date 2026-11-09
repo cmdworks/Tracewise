@@ -74,7 +74,7 @@ Needs the `coordination` profile.
 | Command | |
 |---|---|
 | `tracewise share init [--remote URL] [--level summary\|full\|off] [--encrypt]` | turn sharing on for the project |
-| `tracewise share trust` | approve the remote named in `.trailconfig` |
+| `tracewise share trust` | approve the remote named in `.tracewiseconfig` |
 | `tracewise share status` | how sharing is set up here |
 | `tracewise push` / `tracewise fetch` | send / import history |
 | `tracewise rebuild` | rebuild the database from the batches |
@@ -87,7 +87,7 @@ Needs the `coordination` profile.
 |---|---|
 | `tracewise verify` | check that no record was altered or removed |
 | `tracewise gc` | pack stored versions and clean up |
-| `tracewise ignore <patterns…>` | stop recording paths (writes `.trailignore`) |
+| `tracewise ignore <patterns…>` | stop recording paths (writes `.tracewiseignore`) |
 | `tracewise prune [--dry-run]` | remove the history of ignored paths |
 | `tracewise config get [key]` / `set [--global] <key> <value>` | read or change settings |
 | `tracewise repos` | repositories the watcher follows, with sizes |

@@ -49,7 +49,7 @@ fn post_edit_specific(
     let change_ids = match scan_specific_paths(&ctx.repo_paths.work_tree, data_dir, branch, head, &scan_opts, &path_bufs) {
         Ok(ids) => ids,
         Err(e) => {
-            eprintln!("trail post-edit scan_specific_paths error: {e}, spooling");
+            eprintln!("tracewise post-edit scan_specific_paths error: {e}, spooling");
             spool_post_edit(&ctx.repo_paths.work_tree, data_dir, ctx.actor, input_paths, ctx.repo_paths);
             Vec::new()
         }
@@ -85,7 +85,7 @@ fn post_edit_all(ctx: &HookContext, data_dir: &Path, branch: &str, head: &str, w
     let change_ids = match scan_repository(&ctx.repo_paths.work_tree, data_dir, branch, head, &scan_opts, &files) {
         Ok(ids) => ids,
         Err(e) => {
-            eprintln!("trail post-edit scan_repository error: {e}, spooling");
+            eprintln!("tracewise post-edit scan_repository error: {e}, spooling");
             let file_strs: Vec<String> = files.iter().map(|p| p.to_string_lossy().to_string()).collect();
             spool_post_edit(&ctx.repo_paths.work_tree, data_dir, ctx.actor, &file_strs, ctx.repo_paths);
             Vec::new()
@@ -113,7 +113,7 @@ fn post_edit_all(ctx: &HookContext, data_dir: &Path, branch: &str, head: &str, w
         for cid in &change_ids {
             if let Ok(Some(ch)) = ctx.db.get_change(cid) {
                 if ch.intent.is_none() {
-                    eprintln!("trail: {} changed ({}) without a reason. Add one: trail note {} \"<why>\"", ch.path, ch.id, ch.id);
+                    eprintln!("tracewise: {} changed ({}) without a reason. Add one: tracewise note {} \"<why>\"", ch.path, ch.id, ch.id);
                 }
             }
         }

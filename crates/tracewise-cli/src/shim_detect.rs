@@ -6,7 +6,7 @@ use tracewise_core::model::{Actor, CommandRecord, Intent};
 use tracewise_core::ScanOptions;
 use tracewise_git::{get_git_info, walk_baseline_files, RepoPaths};
 
-pub use tracewise_shim::{detect_write_targets, find_real_tool, is_read_only, is_trail_bin, is_trail_bin_name, WriteTargets};
+pub use tracewise_shim::{detect_write_targets, find_real_tool, is_read_only, is_tracewise_bin, is_tracewise_bin_name, WriteTargets};
 
 pub const SHIM_TOOLS: &[&str] = &["sed", "mv", "cp", "rm", "tee"];
 
@@ -14,13 +14,13 @@ pub fn try_fast_read_only_shim() -> bool {
     tracewise_platform::process::try_fast_read_only_sed_argv(|shim_dir| find_real_tool("sed", shim_dir))
 }
 
-pub fn strip_trail_why(args: &[String]) -> (Vec<String>, Option<String>) {
+pub fn strip_tracewise_why(args: &[String]) -> (Vec<String>, Option<String>) {
     let mut clean_args = Vec::new();
     let mut why = None;
     for a in args {
-        if let Some(w) = a.strip_prefix("--trail-why=") {
+        if let Some(w) = a.strip_prefix("--tracewise-why=") {
             why = Some(w.to_string());
-        } else if a == "--trail-why" {
+        } else if a == "--tracewise-why" {
             continue;
         } else {
             clean_args.push(a.clone());
@@ -30,7 +30,7 @@ pub fn strip_trail_why(args: &[String]) -> (Vec<String>, Option<String>) {
 }
 
 pub fn exec_real_tool(real_tool: &Path, args: &[String]) -> ! {
-    tracewise_platform::process::fast_exec(real_tool, args, None, Some(("TRAIL_SHIM_DEPTH", "1")), None);
+    tracewise_platform::process::fast_exec(real_tool, args, None, Some(("TRACEWISE_SHIM_DEPTH", "1")), None);
 }
 
 pub fn normalize_target_paths(work_tree: &Path, paths: &[PathBuf]) -> Vec<PathBuf> {
@@ -49,9 +49,10 @@ pub fn normalize_target_paths(work_tree: &Path, paths: &[PathBuf]) -> Vec<PathBu
 }
 
 pub fn log_shim_error(err: &str) {
-    let trail_home =
-        std::env::var_os("TRAIL_HOME").map(PathBuf::from).or_else(|| std::env::var_os("HOME").map(|h| PathBuf::from(h).join(".trail")));
-    if let Some(home) = trail_home {
+    let tracewise_home = std::env::var_os("TRACEWISE_HOME")
+        .map(PathBuf::from)
+        .or_else(|| std::env::var_os("HOME").map(|h| PathBuf::from(h).join(".tracewise")));
+    if let Some(home) = tracewise_home {
         let _ = fs::create_dir_all(&home);
         let log_file = home.join("shim.log");
         if let Ok(mut f) = fs::OpenOptions::new().create(true).append(true).open(log_file) {
@@ -72,10 +73,10 @@ fn check_shim_locks(db: &Database, rel_paths: &[PathBuf], actor: &Actor) {
             if !is_same_agent {
                 let holder_name = lock.holder.name.as_deref().unwrap_or("another session");
                 if actor.kind != "human" {
-                    eprintln!("trail: refused: {} is held by {}", p_str, holder_name);
+                    eprintln!("tracewise: refused: {} is held by {}", p_str, holder_name);
                     std::process::exit(1);
                 } else {
-                    eprintln!("trail: warning: {} is held by {}", p_str, holder_name);
+                    eprintln!("tracewise: warning: {} is held by {}", p_str, holder_name);
                 }
             }
         }
@@ -85,7 +86,7 @@ fn check_shim_locks(db: &Database, rel_paths: &[PathBuf], actor: &Actor) {
 fn check_shim_reasons(db: &Database, work_tree: &Path, actor: &Actor, rel_paths: &[PathBuf]) {
     let reasons_mode = reasons_mode_for(db, work_tree, actor);
     let mut has_explicit_why = false;
-    if let Ok(why_text) = std::env::var("TRAIL_WHY") {
+    if let Ok(why_text) = std::env::var("TRACEWISE_WHY") {
         if !why_text.trim().is_empty() {
             has_explicit_why = true;
         }
@@ -93,7 +94,7 @@ fn check_shim_reasons(db: &Database, work_tree: &Path, actor: &Actor, rel_paths:
 
     if !has_explicit_why && reasons_mode.should_enforce(actor) {
         if rel_paths.is_empty() {
-            eprintln!("trail: no intent declared; run trail intent add --why \"<why>\" <files>");
+            eprintln!("tracewise: no intent declared; run tracewise intent add --why \"<why>\" <files>");
             std::process::exit(1);
         }
         for p in rel_paths {
@@ -103,7 +104,7 @@ fn check_shim_reasons(db: &Database, work_tree: &Path, actor: &Actor, rel_paths:
                 .as_deref()
                 .and_then(|agent_name| db.find_covering_intent(agent_name, actor.session.as_deref(), &p_str).ok().flatten());
             if covered.is_none() {
-                eprintln!("trail: no intent declared for {}; run trail intent add --why \"<why>\" {}", p_str, p_str);
+                eprintln!("tracewise: no intent declared for {}; run tracewise intent add --why \"<why>\" {}", p_str, p_str);
                 std::process::exit(1);
             }
         }
@@ -162,7 +163,7 @@ fn record_shim_execution(
         WriteTargets::None => Vec::new(),
     };
 
-    if let Ok(why_text) = std::env::var("TRAIL_WHY") {
+    if let Ok(why_text) = std::env::var("TRACEWISE_WHY") {
         if !why_text.trim().is_empty() {
             let intent_id = ulid::Ulid::new().to_string();
             let intent = Intent {
@@ -197,7 +198,7 @@ fn record_shim_execution(
         for cid in &change_ids {
             if let Ok(Some(ch)) = db.get_change(cid) {
                 if ch.intent.is_none() {
-                    eprintln!("trail: {} changed ({}) without a reason. Add one: trail note {} \"<why>\"", ch.path, ch.id, ch.id);
+                    eprintln!("tracewise: {} changed ({}) without a reason. Add one: tracewise note {} \"<why>\"", ch.path, ch.id, ch.id);
                 }
             }
         }
@@ -228,7 +229,7 @@ pub fn run_mutating_shim(tool: &str, real_tool: &Path, clean_args: &[String], ta
         }
     };
 
-    let db_path = repo_paths.data_dir().join("trail.db");
+    let db_path = repo_paths.data_dir().join("tracewise.db");
     let mut db = match Database::open_hot(&db_path) {
         Ok(d) => d,
         Err(e) => {
@@ -242,7 +243,10 @@ pub fn run_mutating_shim(tool: &str, real_tool: &Path, clean_args: &[String], ta
 
     if actor.kind == "agent" {
         if let Some(dest) = export_destination(&repo_paths.work_tree, &current_dir, tool, clean_args) {
-            eprintln!("trail: copying out of the repository to {}: this copy is outside the repository and not tracked", dest.display());
+            eprintln!(
+                "tracewise: copying out of the repository to {}: this copy is outside the repository and not tracked",
+                dest.display()
+            );
             record_export(&db, &actor, tool, clean_args, &dest);
         }
     }
@@ -265,7 +269,7 @@ pub fn run_mutating_shim(tool: &str, real_tool: &Path, clean_args: &[String], ta
 
     let status_res = std::process::Command::new(real_tool)
         .args(clean_args)
-        .env("TRAIL_SHIM_DEPTH", "1")
+        .env("TRACEWISE_SHIM_DEPTH", "1")
         .stdin(std::process::Stdio::inherit())
         .stdout(std::process::Stdio::inherit())
         .stderr(std::process::Stdio::inherit())
@@ -289,7 +293,7 @@ pub fn run_mutating_shim(tool: &str, real_tool: &Path, clean_args: &[String], ta
 pub fn run_shim(tool: &str, raw_args: &[String]) -> ! {
     let parent = tracewise_platform::process::exe(tracewise_platform::process::parent_pid());
     if tracewise_shim::shim_guard_applies(
-        std::env::var_os("TRAIL_SHIM_DEPTH").is_some(),
+        std::env::var_os("TRACEWISE_SHIM_DEPTH").is_some(),
         parent.as_deref(),
         std::env::current_exe().ok().as_deref(),
     ) {
@@ -298,14 +302,14 @@ pub fn run_shim(tool: &str, raw_args: &[String]) -> ! {
         } else {
             PathBuf::from(format!("/bin/{tool}"))
         };
-        let (clean_args, _) = strip_trail_why(raw_args);
+        let (clean_args, _) = strip_tracewise_why(raw_args);
         exec_real_tool(&fallback, &clean_args);
     }
 
-    let (clean_args, why) = strip_trail_why(raw_args);
+    let (clean_args, why) = strip_tracewise_why(raw_args);
     if let Some(ref w) = why {
-        if std::env::var_os("TRAIL_WHY").is_none() {
-            std::env::set_var("TRAIL_WHY", w);
+        if std::env::var_os("TRACEWISE_WHY").is_none() {
+            std::env::set_var("TRACEWISE_WHY", w);
         }
     }
 

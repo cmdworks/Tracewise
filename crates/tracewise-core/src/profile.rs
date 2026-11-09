@@ -36,7 +36,7 @@ impl ProfileConfig {
 
     /// Read profile from a repository root, taking environment variables into account.
     pub fn from_root(root: &Path) -> Self {
-        if let Ok(env) = std::env::var("TRAIL_PROFILE") {
+        if let Ok(env) = std::env::var("TRACEWISE_PROFILE") {
             let lower = env.trim().to_lowercase();
             if lower == "full" {
                 return Self::full();
@@ -45,23 +45,23 @@ impl ProfileConfig {
             }
         }
 
-        let mut config = if std::env::var_os("TRAIL_LOCK_FLAGS").is_some() { Self::full() } else { Self::core() };
-        if let Ok(global_cfg) = std::fs::read_to_string(crate::get_trail_home().join("config.toml")) {
-            Self::parse_trailconfig_content(&global_cfg, &mut config);
+        let mut config = if std::env::var_os("TRACEWISE_LOCK_FLAGS").is_some() { Self::full() } else { Self::core() };
+        if let Ok(global_cfg) = std::fs::read_to_string(crate::get_tracewise_home().join("config.toml")) {
+            Self::parse_tracewiseconfig_content(&global_cfg, &mut config);
         }
-        let config_file = root.join(".trailconfig");
+        let config_file = root.join(".tracewiseconfig");
         let content = match std::fs::read_to_string(&config_file) {
             Ok(c) => c,
             Err(_) => return config,
         };
 
-        Self::parse_trailconfig_content(&content, &mut config);
+        Self::parse_tracewiseconfig_content(&content, &mut config);
         config
     }
 
     /// Read profile from the current working directory or nearest repository root.
     pub fn from_cwd() -> Self {
-        if let Ok(env) = std::env::var("TRAIL_PROFILE") {
+        if let Ok(env) = std::env::var("TRACEWISE_PROFILE") {
             let lower = env.trim().to_lowercase();
             if lower == "full" {
                 return Self::full();
@@ -73,22 +73,22 @@ impl ProfileConfig {
         if let Ok(cwd) = std::env::current_dir() {
             let mut curr: Option<PathBuf> = Some(cwd);
             while let Some(dir) = curr {
-                if dir.join(".trailconfig").is_file() || dir.join(".git").exists() {
+                if dir.join(".tracewiseconfig").is_file() || dir.join(".git").exists() {
                     return Self::from_root(&dir);
                 }
                 curr = dir.parent().map(|p| p.to_path_buf());
             }
         }
 
-        let mut config = if std::env::var_os("TRAIL_LOCK_FLAGS").is_some() { Self::full() } else { Self::core() };
-        if let Ok(global_cfg) = std::fs::read_to_string(crate::get_trail_home().join("config.toml")) {
-            Self::parse_trailconfig_content(&global_cfg, &mut config);
+        let mut config = if std::env::var_os("TRACEWISE_LOCK_FLAGS").is_some() { Self::full() } else { Self::core() };
+        if let Ok(global_cfg) = std::fs::read_to_string(crate::get_tracewise_home().join("config.toml")) {
+            Self::parse_tracewiseconfig_content(&global_cfg, &mut config);
         }
         config
     }
 
-    /// Parse `[profile]` section from `.trailconfig` content.
-    pub fn parse_trailconfig_content(content: &str, config: &mut Self) {
+    /// Parse `[profile]` section from `.tracewiseconfig` content.
+    pub fn parse_tracewiseconfig_content(content: &str, config: &mut Self) {
         let mut in_profile_section = false;
         for line in content.lines() {
             let trimmed = line.trim();

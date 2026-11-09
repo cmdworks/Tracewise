@@ -324,7 +324,7 @@ pub fn try_fast_read_only_sed_argv<F>(find_real_sed: F) -> bool
 where
     F: FnOnce(Option<&Path>) -> std::path::PathBuf,
 {
-    if std::env::var_os("TRAIL_SHIM_DEPTH").is_some() {
+    if std::env::var_os("TRACEWISE_SHIM_DEPTH").is_some() {
         return false;
     }
 
@@ -363,7 +363,7 @@ where
             use std::ffi::CString;
             if let Ok(c_prog) = CString::new(real_tool.as_os_str().as_encoded_bytes()) {
                 unsafe {
-                    libc::setenv(c"TRAIL_SHIM_DEPTH".as_ptr(), c"1".as_ptr(), 1);
+                    libc::setenv(c"TRACEWISE_SHIM_DEPTH".as_ptr(), c"1".as_ptr(), 1);
                     static SED_ARG0: &std::ffi::CStr = c"sed";
                     argv[0] = SED_ARG0.as_ptr() as *mut libc::c_char;
                     libc::execv(c_prog.as_ptr(), argv.as_ptr() as *const *const libc::c_char);

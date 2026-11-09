@@ -3,7 +3,7 @@ use super::*;
 #[test]
 fn test_intent_coverage_for_agent_without_session() {
     let temp = tempfile::tempdir().unwrap();
-    let db_path = temp.path().join("trail.db");
+    let db_path = temp.path().join("tracewise.db");
     let db = Database::open(&db_path).unwrap();
 
     // Intent with agent name and NO session

@@ -4,7 +4,7 @@ use crate::model::{Actor, Change, CommandRecord, GitInfo, TimeRange};
 #[test]
 fn test_db_init_and_crud() {
     let temp = tempfile::tempdir().unwrap();
-    let db = Database::open(&temp.path().join("trail.db")).unwrap();
+    let db = Database::open(&temp.path().join("tracewise.db")).unwrap();
 
     let change = Change {
         id: "01JBZ6Q4K7X8V2N3M4P5Q6R7S8".to_string(),
@@ -45,8 +45,8 @@ fn test_db_init_and_crud() {
 #[test]
 fn test_db_gc_truncates_wal_and_vacuums_s10_s11() {
     let temp = tempfile::tempdir().unwrap();
-    let db_path = temp.path().join("trail.db");
-    let wal_path = temp.path().join("trail.db-wal");
+    let db_path = temp.path().join("tracewise.db");
+    let wal_path = temp.path().join("tracewise.db-wal");
 
     let db = Database::open(&db_path).unwrap();
 
@@ -111,7 +111,7 @@ fn test_db_gc_truncates_wal_and_vacuums_s10_s11() {
 #[test]
 fn gc_keeps_recent_commands() {
     let temp = tempfile::tempdir().unwrap();
-    let db = Database::open(&temp.path().join("trail.db")).unwrap();
+    let db = Database::open(&temp.path().join("tracewise.db")).unwrap();
     let now = chrono::Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Millis, true);
     let recent = CommandRecord {
         id: "git_ro_recent".to_string(),
@@ -132,7 +132,7 @@ fn gc_keeps_recent_commands() {
 #[test]
 fn a_new_history_gets_the_schema_and_an_old_one_is_refused_not_migrated() {
     let dir = tempfile::tempdir().unwrap();
-    let path = dir.path().join("trail.db");
+    let path = dir.path().join("tracewise.db");
     drop(Database::open(&path).unwrap());
     let conn = rusqlite::Connection::open(&path).unwrap();
     let v: i64 = conn.pragma_query_value(None, "user_version", |r| r.get(0)).unwrap();
@@ -140,7 +140,7 @@ fn a_new_history_gets_the_schema_and_an_old_one_is_refused_not_migrated() {
     conn.pragma_update(None, "user_version", 9).unwrap();
     drop(conn);
     let err = Database::open(&path).err().expect("an old schema must be refused").to_string();
-    assert!(err.contains("does not migrate") && err.contains("trail init"), "{err}");
+    assert!(err.contains("does not migrate") && err.contains("tracewise init"), "{err}");
     let conn = rusqlite::Connection::open(&path).unwrap();
     let v: i64 = conn.pragma_query_value(None, "user_version", |r| r.get(0)).unwrap();
     assert_eq!(v, 9, "the refused history is left as it was");

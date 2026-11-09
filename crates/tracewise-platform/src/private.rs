@@ -78,7 +78,7 @@ mod imp {
 /// `set_mode` and `symlink` are the unix-only operations the tests of other crates need, kept here with the rest of the OS code.
 pub use imp::{create_dir_all, fsync, set_mode, strip, symlink, write};
 
-/// `strip` for a folder and everything under it (used by `trail gc`, which also covers git's own pack files).
+/// `strip` for a folder and everything under it (used by `tracewise gc`, which also covers git's own pack files).
 pub fn strip_tree(root: &Path) {
     let _ = strip(root);
     for entry in std::fs::read_dir(root).into_iter().flatten().flatten() {

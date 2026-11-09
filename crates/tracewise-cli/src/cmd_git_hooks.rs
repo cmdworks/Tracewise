@@ -1,9 +1,9 @@
-//! Git hooks for the git clients that never run `~/.trail/bin/git` (GitHub Desktop, Tower, Fork, the git built into editors).
+//! Git hooks for the git clients that never run `~/.tracewise/bin/git` (GitHub Desktop, Tower, Fork, the git built into editors).
 //!
-//! `trail git-hooks install` writes five small scripts into the repository's hooks folder; each one calls `trail git-hook <name>`.
-//! The wrapper sets `TRAIL_GIT_DEPTH` for the git it starts, and the scripts do nothing when it is set, so a change made from a terminal
+//! `tracewise git-hooks install` writes five small scripts into the repository's hooks folder; each one calls `tracewise git-hook <name>`.
+//! The wrapper sets `TRACEWISE_GIT_DEPTH` for the git it starts, and the scripts do nothing when it is set, so a change made from a terminal
 //! is recorded once (by the wrapper) and a change made from a git app is recorded once (by the hook). A hook that was already there is
-//! kept as `<name>.pre-trail` and still runs after Tracewise's part; `uninstall` puts it back.
+//! kept as `<name>.pre-tracewise` and still runs after Tracewise's part; `uninstall` puts it back.
 use crate::wrapper::{self, GitCommandRecordArgs, GitPreState};
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -12,15 +12,15 @@ use tracewise_core::ScanOptions;
 use tracewise_git::{get_git_info, RepoPaths};
 
 const HOOKS: [&str; 5] = ["pre-commit", "post-commit", "post-checkout", "post-merge", "post-rewrite"];
-const MARK: &str = "# trail-managed git hook";
+const MARK: &str = "# tracewise-managed git hook";
 
-/// What the hook script for `name` is, with Tracewise at `trail_bin`.
-pub(crate) fn script(name: &str, trail_bin: &str) -> String {
-    let quoted = trail_bin.replace('\'', r"'\''");
+/// What the hook script for `name` is, with Tracewise at `tracewise_bin`.
+pub(crate) fn script(name: &str, tracewise_bin: &str) -> String {
+    let quoted = tracewise_bin.replace('\'', r"'\''");
     // only the commit gate may stop git; every other outcome of Tracewise lets git go on (fail open)
     let gate = if name == "pre-commit" { "  [ \"$rc\" -eq 1 ] && exit 1\n" } else { "" };
     format!(
-        "#!/bin/sh\n{MARK}: `trail git-hooks uninstall` removes this file and puts back {name}.pre-trail\nT='{quoted}'\n[ -x \"$T\" ] || T=$(command -v trail 2>/dev/null)\nif [ -n \"$T\" ] && [ -z \"$TRAIL_GIT_DEPTH\" ]; then\n  \"$T\" git-hook {name} \"$@\"\n  rc=$?\n{gate}fi\nP=\"$(dirname \"$0\")/{name}.pre-trail\"\n[ -x \"$P\" ] && exec \"$P\" \"$@\"\nexit 0\n"
+        "#!/bin/sh\n{MARK}: `tracewise git-hooks uninstall` removes this file and puts back {name}.pre-tracewise\nT='{quoted}'\n[ -x \"$T\" ] || T=$(command -v tracewise 2>/dev/null)\nif [ -n \"$T\" ] && [ -z \"$TRACEWISE_GIT_DEPTH\" ]; then\n  \"$T\" git-hook {name} \"$@\"\n  rc=$?\n{gate}fi\nP=\"$(dirname \"$0\")/{name}.pre-tracewise\"\n[ -x \"$P\" ] && exec \"$P\" \"$@\"\nexit 0\n"
     )
 }
 
@@ -39,20 +39,20 @@ fn custom_hooks_path(repo: &RepoPaths) -> Option<String> {
         .arg("-C")
         .arg(&repo.work_tree)
         .args(["config", "--get", "core.hooksPath"])
-        .env("TRAIL_GIT_DEPTH", "1")
+        .env("TRACEWISE_GIT_DEPTH", "1")
         .output()
         .ok()?;
     let v = String::from_utf8_lossy(&out.stdout).trim().to_string();
     (out.status.success() && !v.is_empty()).then_some(v)
 }
 
-fn trail_binary() -> String {
-    let installed = crate::setup::Env::current().bin().join("trail");
-    let exe = if installed.is_file() { installed } else { std::env::current_exe().unwrap_or_else(|_| PathBuf::from("trail")) };
+fn tracewise_binary() -> String {
+    let installed = crate::setup::Env::current().bin().join("tracewise");
+    let exe = if installed.is_file() { installed } else { std::env::current_exe().unwrap_or_else(|_| PathBuf::from("tracewise")) };
     exe.to_string_lossy().to_string()
 }
 
-/// How each hook stands: `trail`, `trail+previous` (a hook that was there still runs), `other` (someone else's, not chained) or `none`.
+/// How each hook stands: `tracewise`, `tracewise+previous` (a hook that was there still runs), `other` (someone else's, not chained) or `none`.
 pub(crate) fn status(repo: &RepoPaths) -> Vec<(&'static str, &'static str)> {
     let dir = hooks_dir(repo);
     HOOKS
@@ -60,10 +60,10 @@ pub(crate) fn status(repo: &RepoPaths) -> Vec<(&'static str, &'static str)> {
         .map(|&name| {
             let p = dir.join(name);
             let s = if is_ours(&p) {
-                if dir.join(format!("{name}.pre-trail")).is_file() {
-                    "trail+previous"
+                if dir.join(format!("{name}.pre-tracewise")).is_file() {
+                    "tracewise+previous"
                 } else {
-                    "trail"
+                    "tracewise"
                 }
             } else if p.is_file() {
                 "other"
@@ -75,19 +75,19 @@ pub(crate) fn status(repo: &RepoPaths) -> Vec<(&'static str, &'static str)> {
         .collect()
 }
 
-/// Writes the five hooks. An existing hook of the person's is moved to `<name>.pre-trail` first. Idempotent.
+/// Writes the five hooks. An existing hook of the person's is moved to `<name>.pre-tracewise` first. Idempotent.
 pub(crate) fn install(repo: &RepoPaths) -> Result<(), String> {
     if let Some(p) = custom_hooks_path(repo) {
-        return Err(format!("core.hooksPath is set ({p}): Trail does not edit hooks there"));
+        return Err(format!("core.hooksPath is set ({p}): Tracewise does not edit hooks there"));
     }
     let dir = hooks_dir(repo);
     fs::create_dir_all(&dir).map_err(|e| format!("cannot create {}: {e}", dir.display()))?;
-    let bin = trail_binary();
+    let bin = tracewise_binary();
     for name in HOOKS {
         let path = dir.join(name);
         let new = script(name, &bin);
         if path.is_file() && !is_ours(&path) {
-            let keep = dir.join(format!("{name}.pre-trail"));
+            let keep = dir.join(format!("{name}.pre-tracewise"));
             if !keep.exists() {
                 fs::rename(&path, &keep).map_err(|e| format!("cannot keep the existing {name} hook: {e}"))?;
             }
@@ -107,7 +107,7 @@ pub(crate) fn uninstall(repo: &RepoPaths) {
         let path = dir.join(name);
         if is_ours(&path) {
             let _ = fs::remove_file(&path);
-            let keep = dir.join(format!("{name}.pre-trail"));
+            let keep = dir.join(format!("{name}.pre-tracewise"));
             if keep.is_file() {
                 let _ = fs::rename(&keep, &path);
             }
@@ -126,7 +126,7 @@ pub(crate) fn run(json: bool, repo: &RepoPaths, action: &crate::cli::GitHooksAct
         A::Status => Ok(()),
     };
     if let Err(e) = &result {
-        eprintln!("trail: {e}");
+        eprintln!("tracewise: {e}");
     }
     let rows = status(repo);
     if json {
@@ -143,17 +143,17 @@ pub(crate) fn run(json: bool, repo: &RepoPaths, action: &crate::cli::GitHooksAct
 }
 
 fn git_out(git: &Path, work_tree: &Path, args: &[&str]) -> Option<String> {
-    let out = std::process::Command::new(git).arg("-C").arg(work_tree).args(args).env("TRAIL_GIT_DEPTH", "1").output().ok()?;
+    let out = std::process::Command::new(git).arg("-C").arg(work_tree).args(args).env("TRACEWISE_GIT_DEPTH", "1").output().ok()?;
     out.status.success().then(|| String::from_utf8_lossy(&out.stdout).trim().to_string()).filter(|s| !s.is_empty())
 }
 
 /// Called by the hook scripts. Never fails, except `pre-commit` when the commit gate refuses (exit 1).
 pub(crate) fn run_hook(repo: &RepoPaths, name: &str, args: &[String]) {
     // the wrapper started this git and records it itself
-    if std::env::var("TRAIL_GIT_DEPTH").is_ok() {
+    if std::env::var("TRACEWISE_GIT_DEPTH").is_ok() {
         return;
     }
-    let db_path = repo.data_dir().join("trail.db");
+    let db_path = repo.data_dir().join("tracewise.db");
     if !db_path.is_file() {
         return;
     }

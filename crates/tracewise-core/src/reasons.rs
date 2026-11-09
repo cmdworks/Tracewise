@@ -37,16 +37,16 @@ impl ReasonsMode {
     }
 }
 
-/// Parse `.trailconfig` in `root` to find `[reasons] mode = "..."`.
+/// Parse `.tracewiseconfig` in `root` to find `[reasons] mode = "..."`.
 pub fn read_reasons_mode_from_file(root: &Path) -> Option<ReasonsMode> {
     ReasonsMode::parse(&config_value(root, "reasons", "mode")?)
 }
 
-/// The value of `key` in `[section]` of `.trailconfig` in `root`, else of the global `$TRAIL_HOME/config.toml`
+/// The value of `key` in `[section]` of `.tracewiseconfig` in `root`, else of the global `$TRACEWISE_HOME/config.toml`
 /// (the project's file wins; quotes and `#` comments removed).
 pub fn config_value(root: &Path, section: &str, key: &str) -> Option<String> {
-    let project = fs::read_to_string(root.join(".trailconfig")).ok().and_then(|c| value_in(&c, section, key));
-    project.or_else(|| fs::read_to_string(crate::get_trail_home().join("config.toml")).ok().and_then(|c| value_in(&c, section, key)))
+    let project = fs::read_to_string(root.join(".tracewiseconfig")).ok().and_then(|c| value_in(&c, section, key));
+    project.or_else(|| fs::read_to_string(crate::get_tracewise_home().join("config.toml")).ok().and_then(|c| value_in(&c, section, key)))
 }
 
 fn value_in(content: &str, section: &str, key: &str) -> Option<String> {
@@ -93,11 +93,11 @@ fn value_in(content: &str, section: &str, key: &str) -> Option<String> {
 }
 
 /// Resolve effective reasons mode:
-/// 1. `TRAIL_REASONS` env var (`off`, `warn`, `enforce`)
-/// 2. `.trailconfig` `[reasons] mode`
+/// 1. `TRACEWISE_REASONS` env var (`off`, `warn`, `enforce`)
+/// 2. `.tracewiseconfig` `[reasons] mode`
 /// 3. Default: `warn`
 pub fn get_reasons_mode(root: &Path) -> ReasonsMode {
-    if let Ok(env_val) = std::env::var("TRAIL_REASONS") {
+    if let Ok(env_val) = std::env::var("TRACEWISE_REASONS") {
         let trimmed = env_val.trim();
         if !trimmed.is_empty() {
             if let Some(mode) = ReasonsMode::parse(trimmed) {
@@ -108,7 +108,7 @@ pub fn get_reasons_mode(root: &Path) -> ReasonsMode {
     read_reasons_mode_from_file(root).unwrap_or(ReasonsMode::Warn)
 }
 
-/// Like `get_reasons_mode`, but an agent can only make the mode stricter with `TRAIL_REASONS`, never looser.
+/// Like `get_reasons_mode`, but an agent can only make the mode stricter with `TRACEWISE_REASONS`, never looser.
 pub fn get_reasons_mode_for(root: &Path, actor: &Actor) -> ReasonsMode {
     let requested = get_reasons_mode(root);
     if actor.kind != "agent" {

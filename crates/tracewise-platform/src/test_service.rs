@@ -2,8 +2,8 @@ use super::*;
 
 #[test]
 fn test_daemon_plist_criteria() {
-    let bin = Path::new("/Users/test/.trail/bin/trail");
-    let log = Path::new("/Users/test/.trail/daemon.log");
+    let bin = Path::new("/Users/test/.tracewise/bin/tracewise");
+    let log = Path::new("/Users/test/.tracewise/daemon.log");
     let xml = daemon_plist(bin, log);
 
     assert!(xml.contains("<key>KeepAlive</key><true/>"));
@@ -15,10 +15,10 @@ fn test_daemon_plist_criteria() {
 
 #[test]
 fn test_sensor_plist_generation() {
-    let bin = Path::new("/usr/local/libexec/trail/trail-sensor");
-    let sock = Path::new("/var/run/trail.sock");
+    let bin = Path::new("/usr/local/libexec/tracewise/tracewise-sensor");
+    let sock = Path::new("/var/run/tracewise.sock");
     let xml = sensor_plist(bin, sock);
 
-    assert!(xml.contains("dev.trail.sensor"));
+    assert!(xml.contains("dev.tracewise.sensor"));
     assert!(xml.contains("--socket"));
 }

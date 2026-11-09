@@ -4,7 +4,7 @@ use crate::model::{Change, GitInfo, TimeRange};
 #[test]
 fn test_windows_and_upgrade() {
     let temp = tempfile::tempdir().unwrap();
-    let db = Database::open(&temp.path().join("trail.db")).unwrap();
+    let db = Database::open(&temp.path().join("tracewise.db")).unwrap();
 
     let window = Window {
         id: "01JBZ6Q4K7X8V2N3M4P5Q6R7S9".to_string(),

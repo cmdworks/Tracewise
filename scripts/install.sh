@@ -70,7 +70,7 @@ case "$PROFILE" in core | full) ;; *) die "--profile must be core or full" ;; es
 # setup can only ask when someone can answer (curl | sh has no terminal on stdin)
 if [ "$LOGIN" = ask ] && [ ! -t 0 ]; then LOGIN=no; fi
 
-TRAIL_HOME=${TRAIL_HOME:-$HOME/.trail}
+TRACEWISE_HOME=${TRACEWISE_HOME:-$HOME/.tracewise}
 for agent in $(echo "$AGENTS" | tr ',' ' '); do
   case "$agent" in claude | codex | cursor | gemini | antigravity) ;; *) die "unknown agent '$agent'" ;; esac
 done
@@ -79,8 +79,8 @@ if [ -n "$AGENTS" ] && ! git rev-parse --show-toplevel >/dev/null 2>&1; then
 fi
 
 if [ "$UNINSTALL" = 1 ]; then
-  if command -v tracewise >/dev/null 2>&1; then tracewise uninstall; elif [ -x "$TRAIL_HOME/bin/trail" ]; then "$TRAIL_HOME/bin/trail" uninstall; fi
-  say "Tracewise removed. Each project's history stays in its .git/trail folder."
+  if command -v tracewise >/dev/null 2>&1; then tracewise uninstall; elif [ -x "$TRACEWISE_HOME/bin/tracewise" ]; then "$TRACEWISE_HOME/bin/tracewise" uninstall; fi
+  say "Tracewise removed. Each project's history stays in its .git/tracewise folder."
   exit 0
 fi
 
@@ -126,6 +126,12 @@ DIR=$(find "$WORK" -mindepth 1 -maxdepth 1 -type d -name 'tracewise-*' | head -1
 # releases are not notarized yet; the download flag would make macOS refuse to run them
 xattr -dr com.apple.quarantine "$DIR" 2>/dev/null || true
 
+# Tracewise used to be called Trail; its wrappers, shell blocks and watcher would run beside the new ones
+if [ -x "$HOME/.trail/bin/trail" ]; then
+  say "Removing the old Trail install (its project histories in .git/trail stay)"
+  "$HOME/.trail/bin/trail" uninstall >/dev/null 2>&1 || say "could not remove it; run: ~/.trail/bin/trail uninstall"
+fi
+
 say "Installing programs, command wrappers, git wrapper and watcher"
 set -- --login "$LOGIN" --profile "$PROFILE"
 [ "$START" = 0 ] && set -- "$@" --no-start
@@ -135,11 +141,11 @@ set -- --login "$LOGIN" --profile "$PROFILE"
 [ "$FISH" = 1 ] && [ "$SHELL_RC" = 1 ] && mkdir -p "$HOME/.config/fish"
 "$DIR/tracewise" setup "$@"
 
-BIN="$TRAIL_HOME/bin"
+BIN="$TRACEWISE_HOME/bin"
 if [ -n "$AGENTS" ]; then
-  "$BIN/trail" init >/dev/null 2>&1 || true
+  "$BIN/tracewise" init >/dev/null 2>&1 || true
   for agent in $(echo "$AGENTS" | tr ',' ' '); do
-    "$BIN/trail" agent install "$agent" >/dev/null && say "hooks for $agent installed in $(git rev-parse --show-toplevel)"
+    "$BIN/tracewise" agent install "$agent" >/dev/null && say "hooks for $agent installed in $(git rev-parse --show-toplevel)"
   done
 fi
 

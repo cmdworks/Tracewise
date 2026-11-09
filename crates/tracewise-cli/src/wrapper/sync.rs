@@ -6,7 +6,7 @@ pub(crate) fn dirty_paths(git: &Path, work_tree: &Path) -> Vec<PathBuf> {
         .arg("-C")
         .arg(work_tree)
         .args(["status", "--porcelain", "-uall"])
-        .env("TRAIL_GIT_DEPTH", "1")
+        .env("TRACEWISE_GIT_DEPTH", "1")
         .output();
     let Ok(o) = out else { return Vec::new() };
     String::from_utf8_lossy(&o.stdout)
@@ -26,13 +26,13 @@ pub(crate) fn handle_clone_sync(git_args: &[String], exit_code: i32, current_dir
             if let Some(target) = find_clone_target(git_args) {
                 let target_dir = if target.is_absolute() { target } else { current_dir.join(target) };
                 if let Some(cloned_repo) = RepoPaths::discover(&target_dir) {
-                    if cloned_repo.work_tree.join(".trailconfig").is_file() {
+                    if cloned_repo.work_tree.join(".tracewiseconfig").is_file() {
                         let data_dir = cloned_repo.data_dir();
                         let _ = fs::create_dir_all(&data_dir);
-                        let db_path = data_dir.join("trail.db");
+                        let db_path = data_dir.join("tracewise.db");
                         let _ = Database::open(&db_path);
                         if let Err(e) = tracewise_core::share::fetch(&cloned_repo.work_tree, &data_dir) {
-                            eprintln!("trail: not syncing history: {e}");
+                            eprintln!("tracewise: not syncing history: {e}");
                         }
                     }
                 }
@@ -85,7 +85,7 @@ pub(crate) fn scan_diff_tree(
         .arg(&repo_paths.work_tree)
         .args(["diff-tree", "-r", "--name-only", "--no-commit-id"])
         .args(extra_args)
-        .env("TRAIL_GIT_DEPTH", "1");
+        .env("TRACEWISE_GIT_DEPTH", "1");
     let Ok(o) = cmd.output() else {
         return Vec::new();
     };
@@ -112,7 +112,7 @@ pub(crate) fn scan_status_changes(
         .arg("-C")
         .arg(&repo_paths.work_tree)
         .args(["status", "--porcelain", "-uall"])
-        .env("TRAIL_GIT_DEPTH", "1")
+        .env("TRACEWISE_GIT_DEPTH", "1")
         .output();
     let mut paths = pre.dirty_before.to_vec();
     for arg in git_args {

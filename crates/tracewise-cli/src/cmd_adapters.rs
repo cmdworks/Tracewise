@@ -1,4 +1,4 @@
-//! `trail agent list`, `trail agent check` and install/uninstall for agents described by adapter files.
+//! `tracewise agent list`, `tracewise agent check` and install/uninstall for agents described by adapter files.
 use crate::hook::adapter::{self, Adapter, BUILTIN};
 use crate::RepoPaths;
 use serde_json::{json, Value};
@@ -21,10 +21,10 @@ pub fn handle_agent_list(repo_paths: &RepoPaths, json: bool) -> Res {
     Ok(())
 }
 
-/// `trail agent check <file> <payload.json>`: what the payload would become, without running the agent.
+/// `tracewise agent check <file> <payload.json>`: what the payload would become, without running the agent.
 pub fn handle_agent_check(file: &Path, payload: &Path, json: bool) -> Res {
     let fail = |msg: String| -> Res {
-        eprintln!("trail: {msg}");
+        eprintln!("tracewise: {msg}");
         std::process::exit(1)
     };
     let body = match fs::read_to_string(file) {
@@ -98,9 +98,11 @@ fn unmerge(dst: &mut Value, src: &Value) -> bool {
 
 /// Installs an agent that is described by an adapter file; `Ok(false)` when `name` is not one.
 pub fn install(repo_paths: &RepoPaths, name: &str, json: bool) -> Result<bool, Box<dyn std::error::Error>> {
-    let Some((adapter, _)) = adapter::find(name, Some(&repo_paths.work_tree)).map_err(|e| format!("trail: {e}"))? else { return Ok(false) };
+    let Some((adapter, _)) = adapter::find(name, Some(&repo_paths.work_tree)).map_err(|e| format!("tracewise: {e}"))? else {
+        return Ok(false);
+    };
     let Some((file, content)) = adapter.install else {
-        eprintln!("trail: adapter {name} has no [install] section; nothing to write");
+        eprintln!("tracewise: adapter {name} has no [install] section; nothing to write");
         std::process::exit(1);
     };
     let target = repo_paths.work_tree.join(&file);
@@ -118,14 +120,16 @@ pub fn install(repo_paths: &RepoPaths, name: &str, json: bool) -> Result<bool, B
     if json {
         println!("{}", json!({"agent": name, "files": files}));
     } else {
-        println!("Installed trail adapter for {name}:");
+        println!("Installed tracewise adapter for {name}:");
         files.iter().for_each(|f| println!("  - {f}"));
     }
     Ok(true)
 }
 
 pub fn uninstall(repo_paths: &RepoPaths, name: &str, json: bool) -> Result<bool, Box<dyn std::error::Error>> {
-    let Some((adapter, _)) = adapter::find(name, Some(&repo_paths.work_tree)).map_err(|e| format!("trail: {e}"))? else { return Ok(false) };
+    let Some((adapter, _)) = adapter::find(name, Some(&repo_paths.work_tree)).map_err(|e| format!("tracewise: {e}"))? else {
+        return Ok(false);
+    };
     if let Some((file, content)) = adapter.install {
         let target = repo_paths.work_tree.join(file);
         if let Some(mut current) = fs::read_to_string(&target).ok().and_then(|t| serde_json::from_str::<Value>(&t).ok()) {
@@ -140,7 +144,7 @@ pub fn uninstall(repo_paths: &RepoPaths, name: &str, json: bool) -> Result<bool,
     if json {
         println!("{}", json!({"agent": name, "uninstalled": true}));
     } else {
-        println!("Uninstalled trail adapter for {name}");
+        println!("Uninstalled tracewise adapter for {name}");
     }
     Ok(true)
 }

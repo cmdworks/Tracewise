@@ -1,8 +1,8 @@
 // @ts-nocheck (a Node dev tool, not part of the app)
-// Dev-only bridge: lets `vite dev` serve the UI in an ordinary browser against the real `trail` binary, the way the desktop app's
-// `trail` command does (same allow-list, only repositories Trail knows, bounded output). Enabled by TRAIL_UI_BRIDGE=1; nothing
+// Dev-only bridge: lets `vite dev` serve the UI in an ordinary browser against the real `tracewise` binary, the way the desktop app's
+// `tracewise` command does (same allow-list, only repositories Tracewise knows, bounded output). Enabled by TRACEWISE_UI_BRIDGE=1; nothing
 // of it is in the production build or the desktop app.
-//   TRAIL_UI_BRIDGE=1 TRAIL_BIN=/path/to/trail TRAIL_HOME=/path/to/home pnpm dev
+//   TRACEWISE_UI_BRIDGE=1 TRACEWISE_BIN=/path/to/tracewise TRACEWISE_HOME=/path/to/home pnpm dev
 import { execFile } from "node:child_process";
 import { readFileSync, realpathSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -33,7 +33,7 @@ if (typeof window !== "undefined" && !window.__TAURI_INTERNALS__) {
     metadata: { currentWindow: { label: "main" }, currentWebview: { label: "main", windowLabel: "main" } },
     transformCallback: () => 0,
     invoke: async (cmd, args) => {
-      const r = await fetch("/__trail", { method: "POST", body: JSON.stringify({ cmd, args }) });
+      const r = await fetch("/__tracewise", { method: "POST", body: JSON.stringify({ cmd, args }) });
       const j = await r.json();
       if (j.error) throw j.error;
       return j.result;
@@ -48,14 +48,14 @@ if (typeof window !== "undefined" && !window.__TAURI_INTERNALS__) {
 }
 `;
 
-export function trailBridge() {
-  if (process.env.TRAIL_UI_BRIDGE !== "1") return { name: "trail-bridge-off" };
-  const bin = process.env.TRAIL_BIN;
-  const home = process.env.TRAIL_HOME;
-  if (!bin || !home) throw new Error("TRAIL_UI_BRIDGE=1 needs TRAIL_BIN and TRAIL_HOME");
+export function tracewiseBridge() {
+  if (process.env.TRACEWISE_UI_BRIDGE !== "1") return { name: "tracewise-bridge-off" };
+  const bin = process.env.TRACEWISE_BIN;
+  const home = process.env.TRACEWISE_HOME;
+  if (!bin || !home) throw new Error("TRACEWISE_UI_BRIDGE=1 needs TRACEWISE_BIN and TRACEWISE_HOME");
   const allowed = allowList();
   return {
-    name: "trail-bridge",
+    name: "tracewise-bridge",
     // SvelteKit renders the HTML itself, so the stand-in is put in front of the one module that calls Tauri
     transform(code, id) {
       return id.replace(/\\/g, "/").endsWith("/src/lib/api.ts") ? INJECT + code : null;
@@ -77,7 +77,7 @@ export function trailBridge() {
           res.end(JSON.stringify({ path }));
         });
       });
-      server.middlewares.use("/__trail", (req, res) => {
+      server.middlewares.use("/__tracewise", (req, res) => {
         let body = "";
         req.on("data", (c) => (body += c));
         req.on("end", () => {
@@ -87,11 +87,11 @@ export function trailBridge() {
           };
           try {
             const { cmd, args } = JSON.parse(body);
-            if (cmd !== "trail") return reply({ result: null });
+            if (cmd !== "tracewise") return reply({ result: null });
             const argv = args.args ?? [];
             if (!allowed.includes(argv[0])) return reply({ error: `subcommand not permitted: '${argv[0]}'` });
             let cwd = registered(home)[0] ?? process.cwd(); // like the app, a call without a repository uses a known one
-            // like the desktop side: a repository that is given must exist and be one Trail knows; an empty one does not exist
+            // like the desktop side: a repository that is given must exist and be one Tracewise knows; an empty one does not exist
             if (args.repo !== null && args.repo !== undefined) {
               let real;
               try {
@@ -99,12 +99,12 @@ export function trailBridge() {
               } catch {
                 return reply({ error: `repository path does not exist: '${args.repo}'` });
               }
-              if (!registered(home).includes(real)) return reply({ error: `not a repository Trail knows: ${args.repo}` });
+              if (!registered(home).includes(real)) return reply({ error: `not a repository Tracewise knows: ${args.repo}` });
               cwd = real;
             }
             // the desktop app is a person: nothing from an agent session that happens to start the dev server may leak in
-            const env = { ...process.env, TRAIL_HOME: home };
-            for (const k of ["CLAUDECODE", "CLAUDE_CODE_SESSION_ID", "ANTIGRAVITY_AGENT", "ANTIGRAVITY_CONVERSATION_ID", "TRAIL_ACTOR", "TRAIL_WHY"]) delete env[k];
+            const env = { ...process.env, TRACEWISE_HOME: home };
+            for (const k of ["CLAUDECODE", "CLAUDE_CODE_SESSION_ID", "ANTIGRAVITY_AGENT", "ANTIGRAVITY_CONVERSATION_ID", "TRACEWISE_ACTOR", "TRACEWISE_WHY"]) delete env[k];
             execFile(bin, argv, { cwd, env, timeout: 120000, maxBuffer: 8 << 20 }, (err, stdout, stderr) => {
               reply({ result: { stdout, stderr, exit_code: err ? (typeof err.code === "number" ? err.code : 1) : 0 } });
             });

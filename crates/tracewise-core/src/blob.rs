@@ -131,7 +131,7 @@ pub(crate) fn holds_secret(data: &[u8]) -> bool {
 }
 
 /// Content that is recorded by hash only: binary (a NUL byte), over 5 MB, or holding a known secret (a key must not
-/// land in `.git/trail/objects`). Undo and restore then say "recorded by hash only", as for any binary file.
+/// land in `.git/tracewise/objects`). Undo and restore then say "recorded by hash only", as for any binary file.
 pub fn is_binary_or_large(data: &[u8]) -> bool {
     data.len() as u64 > MAX_DIFF_SIZE || data.contains(&0) || holds_secret(data)
 }
@@ -175,7 +175,7 @@ fn pack_indexes_contain(pack_dir: &Path, hash: &str) -> Option<bool> {
     Some(false)
 }
 
-/// Blob store located at `<git common dir>/trail/objects/` with git alternates.
+/// Blob store located at `<git common dir>/tracewise/objects/` with git alternates.
 #[derive(Debug, Clone)]
 pub struct BlobStore {
     root: PathBuf,
@@ -188,7 +188,7 @@ impl BlobStore {
         let root = data_dir.join("objects");
         let git_objects_dir = if let Some(parent) = data_dir.parent() {
             let candidate = parent.join("objects");
-            if candidate.is_dir() || data_dir.file_name() == Some(std::ffi::OsStr::new("trail")) {
+            if candidate.is_dir() || data_dir.file_name() == Some(std::ffi::OsStr::new("tracewise")) {
                 Some(candidate)
             } else {
                 None
@@ -260,7 +260,7 @@ impl BlobStore {
     }
 
     fn real_git_cmd() -> std::process::Command {
-        let git_path = if let Ok(real) = std::env::var("TRAIL_REAL_GIT") {
+        let git_path = if let Ok(real) = std::env::var("TRACEWISE_REAL_GIT") {
             PathBuf::from(real)
         } else if Path::new("/usr/bin/git").is_file() {
             PathBuf::from("/usr/bin/git")
@@ -268,7 +268,7 @@ impl BlobStore {
             PathBuf::from("git")
         };
         let mut cmd = std::process::Command::new(git_path);
-        cmd.env("TRAIL_GIT_DEPTH", "1");
+        cmd.env("TRACEWISE_GIT_DEPTH", "1");
         cmd
     }
 
@@ -316,7 +316,7 @@ impl BlobStore {
     }
 
     /// Stores the raw bytes as a git blob.
-    /// Skips storing if content is binary or large, or if already in git objects or trail objects.
+    /// Skips storing if content is binary or large, or if already in git objects or tracewise objects.
     /// Returns the git object id.
     pub fn store(&self, data: &[u8]) -> io::Result<String> {
         let hash = hash_bytes(data);
@@ -362,9 +362,9 @@ impl BlobStore {
     /// Reads and decompresses the blob by its hash.
     pub fn read(&self, hash: &str) -> io::Result<Vec<u8>> {
         let (prefix, rest) = hash.split_at(2.min(hash.len()));
-        let trail_loose = self.root.join(prefix).join(rest);
-        if trail_loose.is_file() {
-            return Self::read_loose(&trail_loose);
+        let tracewise_loose = self.root.join(prefix).join(rest);
+        if tracewise_loose.is_file() {
+            return Self::read_loose(&tracewise_loose);
         }
 
         if let Some(ref git_objs) = self.git_objects_dir {

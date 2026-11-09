@@ -1,5 +1,5 @@
 //! recovery drills, run on throw-away repositories: a write that fails half way, a history folder that cannot be written,
-//! and backup then restore. Each ends with `trail verify` and the same history; none loses a change or reports false success.
+//! and backup then restore. Each ends with `tracewise verify` and the same history; none loses a change or reports false success.
 mod common;
 use common::Repo;
 use std::os::unix::fs::PermissionsExt;
@@ -26,10 +26,10 @@ fn a_write_that_fails_half_way_records_nothing_and_the_next_scan_recovers() {
     let big: String = (0..4000).map(|i| format!("line number {i} of the big file\n")).collect();
     repo.write("big.txt", &big);
     let failed = Command::new("sh")
-        .args(["-c", &format!("ulimit -f 4; exec {} scan", env!("CARGO_BIN_EXE_trail"))])
+        .args(["-c", &format!("ulimit -f 4; exec {} scan", env!("CARGO_BIN_EXE_tracewise"))])
         .current_dir(repo.dir())
-        .env("TRAIL_HOME", repo.home())
-        .env("TRAIL_ACTOR", "human:me")
+        .env("TRACEWISE_HOME", repo.home())
+        .env("TRACEWISE_ACTOR", "human:me")
         .env_remove("CLAUDECODE")
         .env_remove("CLAUDE_CODE_SESSION_ID")
         .output()
@@ -54,7 +54,7 @@ fn a_read_only_history_folder_can_be_read_but_not_written_and_recovers() {
     let repo = Repo::new("");
     repo.edit_as("human:me", "a.txt", "one\n");
     let before = count(&repo);
-    let data = repo.dir().join(".git/trail");
+    let data = repo.dir().join(".git/tracewise");
     let set = |mode| std::fs::set_permissions(&data, std::fs::Permissions::from_mode(mode)).unwrap();
     set(0o500);
     let read = repo.me(&["log", "--json"]);
@@ -82,14 +82,14 @@ fn a_backup_restores_the_whole_history() {
     repo.edit_as("human:me", "a.txt", "one\n");
     repo.edit_as("agent:codex:s1", "a.txt", "one\ntwo\n");
     repo.edit_as("human:me", "b.txt", "bee\n");
-    let (rows_before, head_before) = (repo.rows(&[]), std::fs::read_to_string(repo.dir().join(".git/trail/chain-head")).unwrap());
-    let data = repo.dir().join(".git/trail");
+    let (rows_before, head_before) = (repo.rows(&[]), std::fs::read_to_string(repo.dir().join(".git/tracewise/chain-head")).unwrap());
+    let data = repo.dir().join(".git/tracewise");
     let backup = tempfile::tempdir().unwrap();
-    copy_dir(&data, &backup.path().join("trail"));
+    copy_dir(&data, &backup.path().join("tracewise"));
 
     std::fs::remove_dir_all(&data).unwrap();
     assert!(!repo.me(&["verify"]).ok() || count(&repo) == 0, "with the history gone there is nothing to verify");
-    copy_dir(&backup.path().join("trail"), &data);
+    copy_dir(&backup.path().join("tracewise"), &data);
 
     assert!(repo.me(&["verify"]).ok(), "the restored history verifies");
     assert_eq!(repo.rows(&[]), rows_before, "every change is back, unchanged");
@@ -104,11 +104,11 @@ fn a_backup_restores_the_whole_history() {
 fn a_damaged_backup_is_detected_on_restore() {
     let repo = Repo::new("");
     repo.edit_as("human:me", "a.txt", "one\n");
-    let data = repo.dir().join(".git/trail");
+    let data = repo.dir().join(".git/tracewise");
     let backup = tempfile::tempdir().unwrap();
-    copy_dir(&data, &backup.path().join("trail"));
-    std::fs::remove_dir_all(backup.path().join("trail/objects")).unwrap();
+    copy_dir(&data, &backup.path().join("tracewise"));
+    std::fs::remove_dir_all(backup.path().join("tracewise/objects")).unwrap();
     std::fs::remove_dir_all(&data).unwrap();
-    copy_dir(&backup.path().join("trail"), &data);
+    copy_dir(&backup.path().join("tracewise"), &data);
     assert!(!repo.me(&["verify"]).ok(), "a restore that lost its blobs must not verify");
 }

@@ -16,7 +16,7 @@ export interface TimelineChangeItem {
 export type TimelineListItem = TimelineHeaderItem | TimelineChangeItem;
 
 /**
- * Shortens a file path from the front (e.g. "crates/trail-cli/src/cmd_history/revert.rs" -> "…/cmd_history/revert.rs")
+ * Shortens a file path from the front (e.g. "crates/tracewise-cli/src/cmd_history/revert.rs" -> "…/cmd_history/revert.rs")
  * preserving the last `maxSegments` segments.
  */
 export function shortenPathFront(path: string, maxSegments = 2): string {

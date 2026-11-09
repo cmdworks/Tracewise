@@ -1,13 +1,13 @@
-//! `trail report`: one task (a session, an intent, an actor) as Markdown, for a code review or a hand-off.
+//! `tracewise report`: one task (a session, an intent, an actor) as Markdown, for a code review or a hand-off.
 use super::inspect::{actor_label, reason_text};
 use super::revert::Target;
 use super::*;
 
 pub(crate) fn run_report(json: bool, repo_paths: &RepoPaths, target: Target, since: Option<String>) {
-    let db = match Database::open(&repo_paths.data_dir().join("trail.db")) {
+    let db = match Database::open(&repo_paths.data_dir().join("tracewise.db")) {
         Ok(d) => d,
         Err(e) => {
-            eprintln!("trail: cannot read the history: {e}");
+            eprintln!("tracewise: cannot read the history: {e}");
             process::exit(1);
         }
     };
@@ -20,7 +20,7 @@ pub(crate) fn run_report(json: bool, repo_paths: &RepoPaths, target: Target, sin
         .collect();
     changes.sort_by(|a, b| a.time.start.cmp(&b.time.start));
     if changes.is_empty() {
-        eprintln!("trail: nothing matches (give --session, --intent or --actor)");
+        eprintln!("tracewise: nothing matches (give --session, --intent or --actor)");
         process::exit(1);
     }
     if json {
@@ -42,7 +42,7 @@ fn markdown(db: &Database, changes: &[Change]) -> String {
     let mut files: Vec<&str> = changes.iter().map(|c| c.path.as_str()).collect();
     files.sort();
     files.dedup();
-    let mut out = String::from("# Trail report\n\n");
+    let mut out = String::from("# Tracewise report\n\n");
     out.push_str(&format!(
         "{} change{} in {} file{}, {} to {}.\n\n",
         changes.len(),

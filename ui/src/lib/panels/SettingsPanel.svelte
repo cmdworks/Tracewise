@@ -50,7 +50,7 @@
   <section class="card">
     <h2 class="card-title">Settings</h2>
     <p class="section-sub">
-      Saved with <code>trail config set</code>. A person can change these; an agent cannot.
+      Saved with <code>tracewise config set</code>. A person can change these; an agent cannot.
     </p>
     <label class="scope">
       <input type="checkbox" bind:checked={global} />
@@ -101,7 +101,7 @@
 
   <section class="card share-card" id="share">
     <h2 class="card-title">Sharing</h2>
-    <p class="section-sub">Send the history to a git remote so other machines and people can read it. Saved with <code>trail share</code>.</p>
+    <p class="section-sub">Send the history to a git remote so other machines and people can read it. Saved with <code>tracewise share</code>.</p>
 
     {#if app.shareProfileOff}
       <p class="note">Sharing belongs to the full profile. Set <strong>Profile</strong> above to <code>full</code>, save, and come back.</p>
@@ -129,9 +129,9 @@
       <dl class="share-facts">
         <dt>Where</dt><dd>{app.share.store === "origin" ? "This project's own remote" : "A separate repository"} <span class="muted">({app.share.remote})</span></dd>
         <dt>Shared</dt><dd>{SHARE_LEVELS.find((l) => l.value === app.share?.level)?.label ?? app.share.level}</dd>
-        <dt>Hidden refs</dt><dd>{app.share.refs === "hidden" ? "Yes: no branches added on the remote" : "No: batches are branches named trail/device/…"}</dd>
+        <dt>Hidden refs</dt><dd>{app.share.refs === "hidden" ? "Yes: no branches added on the remote" : "No: batches are branches named tracewise/device/…"}</dd>
         <dt>Encryption</dt><dd>{app.share.encrypt ? `On, key ${app.share.key_id ?? "missing"}` : "Off"}</dd>
-        <dt>Remote approved</dt><dd>{app.share.trusted ? "Yes" : "No: run trail share trust"}</dd>
+        <dt>Remote approved</dt><dd>{app.share.trusted ? "Yes" : "No: run tracewise share trust"}</dd>
       </dl>
       {#each app.share.warnings as w}
         <p class="warn" role="note">{w}</p>
@@ -165,7 +165,7 @@
       <div class="setting">
         <label class="setting-label" for="share-import">Have a key from someone else?</label>
         <div class="setting-edit">
-          <input id="share-import" type="text" bind:value={importText} placeholder="trailkey1:…" />
+          <input id="share-import" type="text" bind:value={importText} placeholder="tracewisekey1:…" />
           <button type="button" class="btn btn-secondary" disabled={!importText.trim()} onclick={async () => { if (await fx.importKey(importText, importCurrent)) importText = ""; }}>Import</button>
         </div>
         <label class="scope"><input type="checkbox" bind:checked={importCurrent} /><span>Use it for new batches too (after a rotation)</span></label>

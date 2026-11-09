@@ -4,10 +4,10 @@ use tracewise_core::model::{Actor, Window};
 use tracewise_proc::ProcWhoResult;
 
 #[test]
-fn test_agent_session_stopped_then_trail_run_is_person() {
+fn test_agent_session_stopped_then_tracewise_run_is_person() {
     let _guard = crate::TEST_MUTEX.lock().unwrap();
     let temp = tempfile::tempdir().unwrap();
-    let db = Database::open(&temp.path().join("trail.db")).unwrap();
+    let db = Database::open(&temp.path().join("tracewise.db")).unwrap();
 
     // 1. Agent command window opened and closed (stopped)
     let window = Window {
@@ -35,10 +35,10 @@ fn test_agent_session_stopped_then_trail_run_is_person() {
 }
 
 #[test]
-fn test_agent_command_window_open_trail_run_is_agent() {
+fn test_agent_command_window_open_tracewise_run_is_agent() {
     let _guard = crate::TEST_MUTEX.lock().unwrap();
     let temp = tempfile::tempdir().unwrap();
-    let db = Database::open(&temp.path().join("trail.db")).unwrap();
+    let db = Database::open(&temp.path().join("tracewise.db")).unwrap();
 
     // Agent command window is currently open (end is None)
     let window = Window {
@@ -49,7 +49,7 @@ fn test_agent_command_window_open_trail_run_is_agent() {
         cwd: None,
         start: "2026-10-26T00:00:00.000Z".to_string(),
         end: None,
-        command: Some("trail run ...".to_string()),
+        command: Some("tracewise run ...".to_string()),
     };
     db.open_window(&window).unwrap();
 
@@ -71,7 +71,7 @@ fn test_agent_command_window_open_trail_run_is_agent() {
 fn test_agent_direct_run_without_prior_session_stays_agent() {
     let _guard = crate::TEST_MUTEX.lock().unwrap();
     let temp = tempfile::tempdir().unwrap();
-    let db = Database::open(&temp.path().join("trail.db")).unwrap();
+    let db = Database::open(&temp.path().join("tracewise.db")).unwrap();
 
     let who = ProcWhoResult {
         kind: "agent".to_string(),

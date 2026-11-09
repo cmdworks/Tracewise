@@ -1,19 +1,15 @@
 //! Git binary location, argument inspection, and read-only fast path.
 use super::*;
 
-pub(crate) fn is_trail_bin_name(name: &str) -> bool {
-    name == "trail"
-        || name == "tracewise"
+pub(crate) fn is_tracewise_bin_name(name: &str) -> bool {
+    name == "tracewise"
         || name == "tracewise.exe"
-        || name == "trail.exe"
-        || name == "agent-trail"
-        || name == "agent-trail.exe"
-        || name == "trail-git"
-        || name == "trail-git.exe"
+        || name == "tracewise-git"
+        || name == "tracewise-git.exe"
 }
 
 pub fn find_real_git_inner(path_var: Option<&str>, wrapper_dir: Option<&Path>) -> PathBuf {
-    if let Ok(p) = std::env::var("TRAIL_REAL_GIT") {
+    if let Ok(p) = std::env::var("TRACEWISE_REAL_GIT") {
         let pb = PathBuf::from(&p);
         if pb.is_file() {
             return pb;
@@ -44,14 +40,14 @@ pub fn find_real_git_inner(path_var: Option<&str>, wrapper_dir: Option<&Path>) -
                         }
                     }
                     if let Some(name) = canon.file_name().and_then(|n| n.to_str()) {
-                        if is_trail_bin_name(name) {
+                        if is_tracewise_bin_name(name) {
                             continue;
                         }
                     }
                 }
                 if let Ok(target) = fs::read_link(&candidate) {
                     if let Some(name) = target.file_name().and_then(|n| n.to_str()) {
-                        if is_trail_bin_name(name) {
+                        if is_tracewise_bin_name(name) {
                             continue;
                         }
                     }
@@ -157,7 +153,7 @@ pub(crate) fn fast_read_only_git_exec(git_args: &[String]) {
 }
 
 pub(crate) fn handle_git_depth_fallback(git_args: &[String]) {
-    if std::env::var("TRAIL_GIT_DEPTH").is_ok() {
+    if std::env::var("TRACEWISE_GIT_DEPTH").is_ok() {
         let fallback = Path::new("/usr/bin/git");
         let target = if fallback.is_file() { fallback } else { Path::new("git") };
         tracewise_platform::process::fast_exec(target, git_args, None, None, None);

@@ -1,7 +1,7 @@
 //! The daemon's side of the strict sensor: a socket that only root may talk to, on-demand start and stop of the
 //! sensor, and the answer to "which agent (if any) wrote this file".
 //!
-//! Trust: the socket is 0600 and a peer is accepted only when it is root. (`TRAIL_SENSOR_ALLOW_USER=1`, read from
+//! Trust: the socket is 0600 and a peer is accepted only when it is root. (`TRACEWISE_SENSOR_ALLOW_USER=1`, read from
 //! the daemon's own environment, lets the same user connect: for tests with a fake eslogger. An agent cannot set the
 //! daemon's environment.)
 use std::collections::HashMap;
@@ -38,7 +38,7 @@ struct Counters {
 pub struct Server {
     /// (work tree, data folder) of every repository the daemon watches
     repos: Mutex<Vec<(PathBuf, PathBuf)>>,
-    trail: PathBuf,
+    tracewise: PathBuf,
     home: PathBuf,
     hints: Mutex<HashMap<String, Hint>>,
     counters: Mutex<Counters>,
@@ -77,20 +77,20 @@ fn send(stream: &mut UnixStream, msg: &ToSensor) -> bool {
 }
 
 impl Server {
-    pub fn start(trail: &Path) -> Option<Arc<Server>> {
-        if std::env::var("TRAIL_SENSOR_DISABLE").as_deref() == Ok("1") {
+    pub fn start(tracewise: &Path) -> Option<Arc<Server>> {
+        if std::env::var("TRACEWISE_SENSOR_DISABLE").as_deref() == Ok("1") {
             return None;
         }
-        let home = std::env::var("TRAIL_HOME")
+        let home = std::env::var("TRACEWISE_HOME")
             .map(PathBuf::from)
-            .or_else(|_| std::env::var("HOME").map(|h| PathBuf::from(h).join(".trail")))
+            .or_else(|_| std::env::var("HOME").map(|h| PathBuf::from(h).join(".tracewise")))
             .ok()?;
         let _ = std::fs::create_dir_all(&home);
         let sock = home.join("sensor.sock");
         let listener = tracewise_platform::socket::listen_restricted(&sock, 0o600).ok()?;
         let srv = Arc::new(Server {
             repos: Mutex::new(Vec::new()),
-            trail: trail.to_path_buf(),
+            tracewise: tracewise.to_path_buf(),
             home,
             hints: Mutex::new(HashMap::new()),
             counters: Mutex::new(Counters::default()),
@@ -120,7 +120,7 @@ impl Server {
         let me = tracewise_platform::socket::current_uid();
         let ok = match peer_uid(&stream) {
             Some(0) => true,
-            Some(uid) => uid == me && std::env::var("TRAIL_SENSOR_ALLOW_USER").as_deref() == Ok("1"),
+            Some(uid) => uid == me && std::env::var("TRACEWISE_SENSOR_ALLOW_USER").as_deref() == Ok("1"),
             None => false,
         };
         if !ok {
@@ -132,14 +132,14 @@ impl Server {
             self.write_status();
             return;
         }
-        let events = std::env::var("TRAIL_SENSOR_EVENTS")
+        let events = std::env::var("TRACEWISE_SENSOR_EVENTS")
             .ok()
             .or_else(|| {
-                // `trail strict install --events full` leaves its choice here
-                let home = std::env::var("TRAIL_HOME")
+                // `tracewise strict install --events full` leaves its choice here
+                let home = std::env::var("TRACEWISE_HOME")
                     .map(std::path::PathBuf::from)
                     .ok()
-                    .or_else(|| std::env::var("HOME").ok().map(|h| std::path::Path::new(&h).join(".trail")))?;
+                    .or_else(|| std::env::var("HOME").ok().map(|h| std::path::Path::new(&h).join(".tracewise")))?;
                 std::fs::read_to_string(home.join("sensor-events")).ok().map(|s| s.trim().to_string())
             })
             .unwrap_or_else(|| "light".into());
@@ -218,8 +218,8 @@ impl Server {
             let Some(wt) = self.repo_for(&path) else {
                 continue;
             };
-            let trail = self.trail.clone();
-            std::thread::spawn(move || run_scan_paths(&trail, &wt, &line));
+            let tracewise = self.tracewise.clone();
+            std::thread::spawn(move || run_scan_paths(&tracewise, &wt, &line));
         }
     }
 
@@ -236,8 +236,8 @@ impl Server {
 
     /// Start the sensor while an agent works (or a background job is alive), stop it a while after.
     fn control_loop(self: Arc<Self>) {
-        let hold = Duration::from_secs(std::env::var("TRAIL_SENSOR_HOLD_SECS").ok().and_then(|v| v.parse().ok()).unwrap_or(120));
-        let always = std::env::var("TRAIL_SENSOR_ALWAYS").as_deref() == Ok("1");
+        let hold = Duration::from_secs(std::env::var("TRACEWISE_SENSOR_HOLD_SECS").ok().and_then(|v| v.parse().ok()).unwrap_or(120));
+        let always = std::env::var("TRACEWISE_SENSOR_ALWAYS").as_deref() == Ok("1");
         let mut last_true: Option<Instant> = None;
         loop {
             {
@@ -247,7 +247,9 @@ impl Server {
                     conn = self.connected.wait(conn).unwrap();
                 }
             }
-            std::thread::sleep(Duration::from_secs(std::env::var("TRAIL_SENSOR_POLL_SECS").ok().and_then(|v| v.parse().ok()).unwrap_or(2)));
+            std::thread::sleep(Duration::from_secs(
+                std::env::var("TRACEWISE_SENSOR_POLL_SECS").ok().and_then(|v| v.parse().ok()).unwrap_or(2),
+            ));
             if self.conn.lock().unwrap().is_none() {
                 continue; // no sensor connected: nothing to switch, and no polling
             }
@@ -270,7 +272,7 @@ impl Server {
     fn agent_active(&self) -> bool {
         let repos: Vec<PathBuf> = self.repos.lock().unwrap().iter().map(|(wt, _)| wt.clone()).collect();
         repos.iter().any(|wt| {
-            Command::new(&self.trail)
+            Command::new(&self.tracewise)
                 .arg("-C")
                 .arg(wt)
                 .args(["daemon", "active"])
@@ -338,13 +340,13 @@ impl Server {
     }
 }
 
-/// `trail -C <work tree> daemon scan-paths`, one JSON line per path on stdin. True when it exited 0.
-pub fn run_scan_paths(trail: &Path, work_tree: &Path, lines: &str) -> bool {
-    let mut cmd = Command::new(trail);
+/// `tracewise -C <work tree> daemon scan-paths`, one JSON line per path on stdin. True when it exited 0.
+pub fn run_scan_paths(tracewise: &Path, work_tree: &Path, lines: &str) -> bool {
+    let mut cmd = Command::new(tracewise);
     cmd.arg("-C")
         .arg(work_tree)
         .args(["daemon", "scan-paths"])
-        .env("TRAIL_GIT_DEPTH", "1")
+        .env("TRACEWISE_GIT_DEPTH", "1")
         .stdin(Stdio::piped())
         .stdout(Stdio::null())
         .stderr(Stdio::inherit());

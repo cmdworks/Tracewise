@@ -1,4 +1,4 @@
-//! Hot path of `trail shell begin/end/preexec/precmd`: answers before clap is built.
+//! Hot path of `tracewise shell begin/end/preexec/precmd`: answers before clap is built.
 use super::*;
 
 pub(crate) fn try_fast_shell(args: &[String]) -> bool {
@@ -94,7 +94,7 @@ pub(crate) fn fast_shell_begin(pid: u32, command: Vec<String>) -> Result<(), ()>
     };
     let dot_git = current_dir.join(".git");
     let (work_tree, data_dir) = if dot_git.is_dir() {
-        (current_dir.clone(), dot_git.join("trail"))
+        (current_dir.clone(), dot_git.join("tracewise"))
     } else {
         match RepoPaths::discover(&current_dir) {
             Some(r) => (r.work_tree.clone(), r.data_dir()),
@@ -102,7 +102,7 @@ pub(crate) fn fast_shell_begin(pid: u32, command: Vec<String>) -> Result<(), ()>
         }
     };
 
-    let db_path = data_dir.join("trail.db");
+    let db_path = data_dir.join("tracewise.db");
     if !db_path.exists() {
         return Ok(());
     }
@@ -136,7 +136,7 @@ pub(crate) fn fast_shell_begin(pid: u32, command: Vec<String>) -> Result<(), ()>
     let who = tracewise_proc::who(Some(pid), None);
     let actor = Actor { kind: who.kind, name: if who.name.is_empty() { None } else { Some(who.name) }, session: who.session };
 
-    handle_trail_why(&db, &actor, &rel_predicted);
+    handle_tracewise_why(&db, &actor, &rel_predicted);
 
     // Enforce mode refusal if any predicted path is uncovered
     check_reasons_enforce(&db, &work_tree, &actor, &rel_predicted)?;
@@ -157,8 +157,8 @@ pub(crate) fn fast_shell_begin(pid: u32, command: Vec<String>) -> Result<(), ()>
     Ok(())
 }
 
-fn handle_trail_why(db: &Database, actor: &Actor, rel_predicted: &[String]) {
-    if let Ok(why_env) = std::env::var("TRAIL_WHY") {
+fn handle_tracewise_why(db: &Database, actor: &Actor, rel_predicted: &[String]) {
+    if let Ok(why_env) = std::env::var("TRACEWISE_WHY") {
         let trimmed = why_env.trim();
         if !trimmed.is_empty() {
             match validate_why(trimmed) {
@@ -182,7 +182,7 @@ fn handle_trail_why(db: &Database, actor: &Actor, rel_predicted: &[String]) {
                     let _ = db.insert_intent(&intent);
                 }
                 Err(e) => {
-                    eprintln!("trail: {}", e);
+                    eprintln!("tracewise: {}", e);
                 }
             }
         }
@@ -199,7 +199,7 @@ fn check_reasons_enforce(db: &Database, work_tree: &Path, actor: &Actor, rel_pre
                 false
             };
             if !covered {
-                eprintln!("trail: no intent declared for {}; run trail intent add --why <reason> {}", p, p);
+                eprintln!("tracewise: no intent declared for {}; run tracewise intent add --why <reason> {}", p, p);
                 return Err(());
             }
         }
@@ -215,7 +215,7 @@ pub(crate) fn fast_shell_end(pid: u32, exit: Option<i32>) {
     let dot_git = current_dir.join(".git");
     let (repo_paths, work_tree, data_dir) = if dot_git.is_dir() {
         let repo = RepoPaths { work_tree: current_dir.clone(), git_dir: dot_git.clone(), git_common_dir: dot_git.clone() };
-        (repo, current_dir.clone(), dot_git.join("trail"))
+        (repo, current_dir.clone(), dot_git.join("tracewise"))
     } else {
         match RepoPaths::discover(&current_dir) {
             Some(r) => {
@@ -227,7 +227,7 @@ pub(crate) fn fast_shell_end(pid: u32, exit: Option<i32>) {
         }
     };
 
-    let db_path = data_dir.join("trail.db");
+    let db_path = data_dir.join("tracewise.db");
     if !db_path.exists() {
         return;
     }
@@ -299,7 +299,7 @@ pub(crate) fn fast_shell_end(pid: u32, exit: Option<i32>) {
         for cid in &change_ids {
             if let Ok(Some(ch)) = db.get_change(cid) {
                 if ch.intent.is_none() {
-                    eprintln!("trail: {} changed ({}) without a reason. Add one: trail note {} \"<why>\"", ch.path, ch.id, ch.id);
+                    eprintln!("tracewise: {} changed ({}) without a reason. Add one: tracewise note {} \"<why>\"", ch.path, ch.id, ch.id);
                 }
             }
         }

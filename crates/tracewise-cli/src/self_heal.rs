@@ -1,6 +1,6 @@
 //! Self-healing: the daemon's sweep puts back agent hooks that were removed, and records a stretch in which Tracewise was not running.
 //!
-//! `trail agent install <agent>` writes the agent's name into `hooks-wanted.json` in the data folder and `agent uninstall` takes it out, so
+//! `tracewise agent install <agent>` writes the agent's name into `hooks-wanted.json` in the data folder and `agent uninstall` takes it out, so
 //! a person who removes the hooks on purpose is never fought: only hooks that are *wanted* and missing are restored. The sweep also writes
 //! `heartbeat.json` (the daemon's pid and the time). When the pid changed and the last beat is older than `GAP_SECS`, the daemon was
 //! stopped or killed and restarted (launchd's `KeepAlive`), and the stretch is recorded; the catch-up scan at the restart has already
@@ -65,7 +65,7 @@ fn note(db: &Database, kind: &str, text: String, start: &str) {
         kind: kind.to_string(),
         text,
         cwd: None,
-        actor: Actor { kind: "script".to_string(), name: Some("trail".to_string()), session: None },
+        actor: Actor { kind: "script".to_string(), name: Some("tracewise".to_string()), session: None },
         start: start.to_string(),
         end: now,
         exit_code: 0,
@@ -80,7 +80,7 @@ pub(crate) fn repair_hooks(repo: &RepoPaths, db: &Database) -> Vec<String> {
     for name in wanted(repo) {
         if hooks_missing(repo, &name) && install_agent_quiet(repo, &name).is_ok() {
             let now = tracewise_core::clock::now().to_rfc3339_opts(chrono::SecondsFormat::Millis, true);
-            note(db, "repair", format!("{name}'s Trail hooks were missing from its config; Trail put them back"), &now);
+            note(db, "repair", format!("{name}'s Tracewise hooks were missing from its config; Tracewise put them back"), &now);
             fixed.push(name);
         }
     }
@@ -105,7 +105,7 @@ pub(crate) fn heartbeat(repo: &RepoPaths, db: &Database, pid: u32) {
             note(
                 db,
                 "gap",
-                format!("Trail was not running from {from} to {to}; what changed in between was picked up by the catch-up scan"),
+                format!("Tracewise was not running from {from} to {to}; what changed in between was picked up by the catch-up scan"),
                 &from,
             );
         }
@@ -114,10 +114,10 @@ pub(crate) fn heartbeat(repo: &RepoPaths, db: &Database, pid: u32) {
     let _ = tracewise_platform::private::write(&path, serde_json::to_string(&beat).unwrap_or_default());
 }
 
-/// Called by `trail daemon sweep` for each repository (never prints: the daemon reads the sweep's output). Fails open.
+/// Called by `tracewise daemon sweep` for each repository (never prints: the daemon reads the sweep's output). Fails open.
 pub(crate) fn on_sweep(repo: &RepoPaths, db: &Database) {
     if let Some(pid) =
-        fs::read_to_string(tracewise_core::get_trail_home().join("daemon.pid")).ok().and_then(|t| t.trim().parse::<u32>().ok())
+        fs::read_to_string(tracewise_core::get_tracewise_home().join("daemon.pid")).ok().and_then(|t| t.trim().parse::<u32>().ok())
     {
         heartbeat(repo, db, pid);
     }

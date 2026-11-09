@@ -17,7 +17,7 @@ fn hash_only_ids(blobs: &BlobStore, changes: &[Change]) -> HashSet<String> {
     candidates.into_iter().filter(|c| c.after.as_ref().is_some_and(|h| missing.contains(h))).map(|c| c.id.clone()).collect()
 }
 
-/// What `trail log` shows besides the path and limit: `--actor`, `--since`, `--grep` filter; `--group` clusters by task.
+/// What `tracewise log` shows besides the path and limit: `--actor`, `--since`, `--grep` filter; `--group` clusters by task.
 pub(crate) struct LogFilter {
     pub actor: Option<String>,
     pub since: Option<String>,
@@ -68,7 +68,7 @@ fn grouped(changes: Vec<Change>) -> Vec<Change> {
 }
 
 pub(crate) fn run_log(json: bool, repo_paths: &RepoPaths, path: Option<String>, limit: Option<usize>, filter: LogFilter) {
-    let db_path = repo_paths.data_dir().join("trail.db");
+    let db_path = repo_paths.data_dir().join("tracewise.db");
     let db = Database::open(&db_path).ok();
     let mut changes = if db_path.is_file() {
         // a filter is applied before the limit, so `--limit 5 --actor x` is the last five of x
@@ -76,7 +76,7 @@ pub(crate) fn run_log(json: bool, repo_paths: &RepoPaths, path: Option<String>, 
         match Database::open(&db_path).and_then(|d| d.list_changes(path.as_deref(), fetch_limit)) {
             Ok(c) => c,
             Err(e) => {
-                eprintln!("trail: cannot read the history: {e}");
+                eprintln!("tracewise: cannot read the history: {e}");
                 process::exit(1);
             }
         }
@@ -139,10 +139,10 @@ pub(crate) fn run_log(json: bool, repo_paths: &RepoPaths, path: Option<String>, 
 pub(crate) fn run_file(json: bool, repo_paths: &RepoPaths, path: String, limit: usize) {
     // `./a.txt` and an absolute path name the same file as `a.txt`
     let path = crate::util::normalize_and_validate_path(&path, &repo_paths.work_tree).unwrap_or(path);
-    let db = match Database::open(&repo_paths.data_dir().join("trail.db")) {
+    let db = match Database::open(&repo_paths.data_dir().join("tracewise.db")) {
         Ok(d) => d,
         Err(e) => {
-            eprintln!("trail: cannot read the history: {e}");
+            eprintln!("tracewise: cannot read the history: {e}");
             process::exit(1);
         }
     };
@@ -178,16 +178,16 @@ pub(crate) fn run_file(json: bool, repo_paths: &RepoPaths, path: String, limit: 
 }
 
 pub(crate) fn run_show(json: bool, repo_paths: &RepoPaths, id: String) {
-    let db_path = repo_paths.data_dir().join("trail.db");
+    let db_path = repo_paths.data_dir().join("tracewise.db");
     if !db_path.is_file() {
-        eprintln!("trail: change not found: {id}");
+        eprintln!("tracewise: change not found: {id}");
         process::exit(1);
     }
 
     let db = match Database::open(&db_path) {
         Ok(d) => d,
         Err(_) => {
-            eprintln!("trail: change not found: {id}");
+            eprintln!("tracewise: change not found: {id}");
             process::exit(1);
         }
     };
@@ -221,7 +221,7 @@ pub(crate) fn run_show(json: bool, repo_paths: &RepoPaths, id: String) {
             println!("\n{}", diff_text);
         }
     } else {
-        eprintln!("trail: change not found: {id}");
+        eprintln!("tracewise: change not found: {id}");
         process::exit(1);
     }
 }
@@ -271,11 +271,11 @@ pub(crate) fn replay_blame(
 }
 
 pub(crate) fn run_blame(json: bool, repo_paths: &RepoPaths, path: String, at: Option<String>) {
-    let db_path = repo_paths.data_dir().join("trail.db");
+    let db_path = repo_paths.data_dir().join("tracewise.db");
     let db = match Database::open(&db_path) {
         Ok(d) => d,
         Err(e) => {
-            eprintln!("trail: blame failed: {e}");
+            eprintln!("tracewise: blame failed: {e}");
             process::exit(1);
         }
     };
@@ -289,7 +289,7 @@ pub(crate) fn run_blame(json: bool, repo_paths: &RepoPaths, path: String, at: Op
         match replay_blame(&changes, &at, &read) {
             Ok((text, ids)) => (text, ids.into_iter().enumerate().map(|(i, id)| (i + 1, id)).collect()),
             Err(e) => {
-                eprintln!("trail: blame --at failed: {e}");
+                eprintln!("tracewise: blame --at failed: {e}");
                 process::exit(1);
             }
         }
@@ -298,7 +298,7 @@ pub(crate) fn run_blame(json: bool, repo_paths: &RepoPaths, path: String, at: Op
         let content = match fs::read(&file_path).map(|b| String::from_utf8_lossy(&b).into_owned()) {
             Ok(c) => c,
             Err(e) => {
-                eprintln!("trail: cannot read file: {e}");
+                eprintln!("tracewise: cannot read file: {e}");
                 process::exit(1);
             }
         };
@@ -398,23 +398,23 @@ fn baseline_change_for(path: &str) -> tracewise_core::model::Change {
 }
 
 pub(crate) fn run_why(json: bool, repo_paths: &RepoPaths, target: String) {
-    let db_path = repo_paths.data_dir().join("trail.db");
+    let db_path = repo_paths.data_dir().join("tracewise.db");
     let db = match Database::open(&db_path) {
         Ok(d) => d,
         Err(e) => {
-            eprintln!("trail: why failed: {e}");
+            eprintln!("tracewise: why failed: {e}");
             process::exit(1);
         }
     };
 
     let parts: Vec<&str> = target.split(':').collect();
     if parts.len() != 2 {
-        eprintln!("trail: why target must be <path>:<line>");
+        eprintln!("tracewise: why target must be <path>:<line>");
         process::exit(1);
     }
     let path = parts[0];
     let Ok(line_num) = parts[1].parse::<usize>() else {
-        eprintln!("trail: invalid line number");
+        eprintln!("tracewise: invalid line number");
         process::exit(1);
     };
 
@@ -426,7 +426,7 @@ pub(crate) fn run_why(json: bool, repo_paths: &RepoPaths, target: String) {
             if fs::read(&file_path).is_ok_and(|b| line_num >= 1 && line_num <= String::from_utf8_lossy(&b).lines().count()) {
                 "baseline".to_string()
             } else {
-                eprintln!("trail: line not found");
+                eprintln!("tracewise: line not found");
                 process::exit(1);
             }
         }
@@ -438,7 +438,7 @@ pub(crate) fn run_why(json: bool, repo_paths: &RepoPaths, target: String) {
         match db.get_change(&change_id) {
             Ok(Some(c)) => c,
             _ => {
-                eprintln!("trail: change not found");
+                eprintln!("tracewise: change not found");
                 process::exit(1);
             }
         }
@@ -492,7 +492,7 @@ pub(crate) fn run_why(json: bool, repo_paths: &RepoPaths, target: String) {
         if change.actor.kind == "baseline" {
             let authors = git_line_authors(&repo_paths.work_tree, path);
             if let Some(Some(a)) = authors.get(line_num - 1) {
-                println!("Git author: {a} (written before Trail started)");
+                println!("Git author: {a} (written before Tracewise started)");
             }
         }
         for h in history.iter().take(5) {
@@ -508,7 +508,7 @@ fn stored_text(blobs: &BlobStore, hash: Option<&str>, change: &tracewise_core::m
     let h = hash?;
     blobs.read(h).ok().or_else(|| {
         if !change.hunks.is_empty() {
-            eprintln!("trail: the stored version {h} of {} is missing or unreadable", change.path);
+            eprintln!("tracewise: the stored version {h} of {} is missing or unreadable", change.path);
             process::exit(1);
         }
         None
@@ -518,14 +518,14 @@ fn stored_text(blobs: &BlobStore, hash: Option<&str>, change: &tracewise_core::m
 pub(crate) fn run_diff(_json: bool, repo_paths: &RepoPaths, since: Option<String>, path: Option<String>) {
     crate::util::require_valid_since(since.as_deref());
     if since.is_none() && path.is_none() {
-        eprintln!("trail: diff needs a <path>, or --since to look at every file changed since then");
+        eprintln!("tracewise: diff needs a <path>, or --since to look at every file changed since then");
         process::exit(2);
     }
     let exit = |e: &dyn std::fmt::Display| -> ! {
-        eprintln!("trail: diff failed: {e}");
+        eprintln!("tracewise: diff failed: {e}");
         process::exit(1)
     };
-    let db = Database::open(&repo_paths.data_dir().join("trail.db")).unwrap_or_else(|e| exit(&e));
+    let db = Database::open(&repo_paths.data_dir().join("tracewise.db")).unwrap_or_else(|e| exit(&e));
     let blobs = BlobStore::new(&repo_paths.data_dir());
     let cutoff = since.as_deref().and_then(crate::util::parse_since);
 
@@ -576,7 +576,7 @@ pub(crate) fn git_line_authors(work_tree: &std::path::Path, path: &str) -> Vec<O
         .arg("-C")
         .arg(work_tree)
         .args(["blame", "--porcelain", "--", path])
-        .env("TRAIL_GIT_DEPTH", "1")
+        .env("TRACEWISE_GIT_DEPTH", "1")
         .output();
     let Ok(o) = out else { return Vec::new() };
     let mut by_sha: std::collections::HashMap<String, String> = std::collections::HashMap::new();

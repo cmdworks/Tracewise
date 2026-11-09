@@ -1,4 +1,4 @@
-//! an agent cannot switch a shim off by setting `TRAIL_SHIM_DEPTH` itself.
+//! an agent cannot switch a shim off by setting `TRACEWISE_SHIM_DEPTH` itself.
 //! a shimmed command that fails half way still has its real changes recorded and keeps its own exit status.
 mod common;
 use common::Repo;
@@ -9,8 +9,8 @@ fn a_caller_set_loop_guard_does_not_skip_recording() {
     repo.write("f.txt", "alpha\n");
     assert!(repo.me(&["init"]).ok());
 
-    // `trail` started as `sed`, with the guard set by its caller (this test, not Tracewise)
-    let out = repo.as_program("sed", &["-i", "", "s/alpha/beta/", "f.txt"], &[("TRAIL_SHIM_DEPTH", "1")]);
+    // `tracewise` started as `sed`, with the guard set by its caller (this test, not Tracewise)
+    let out = repo.as_program("sed", &["-i", "", "s/alpha/beta/", "f.txt"], &[("TRACEWISE_SHIM_DEPTH", "1")]);
     assert!(out.ok(), "{}", out.err);
     assert_eq!(repo.read("f.txt"), "beta\n");
 

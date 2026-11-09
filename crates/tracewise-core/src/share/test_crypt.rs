@@ -40,7 +40,7 @@ fn a_wrong_key_a_missing_key_and_a_changed_file_are_refused() {
     let id = encrypt_batch(data.path(), &d).unwrap();
     let out = work.path().join("plain");
     let missing = decrypt_batch(other.path(), &d, &id, &out).unwrap_err().to_string();
-    assert!(missing.contains("trail share key import"), "{missing}");
+    assert!(missing.contains("tracewise share key import"), "{missing}");
     add_new_key(other.path()).unwrap();
     let ring = load(other.path());
     // the other machine knows a key with a different id: still refused as missing; with the id forced it fails to decrypt
@@ -73,7 +73,7 @@ fn an_exported_key_imports_elsewhere_and_a_forged_one_is_refused() {
     let (a, b) = (TempDir::new().unwrap(), TempDir::new().unwrap());
     let id = ensure_key(a.path()).unwrap();
     let text = export_key(a.path(), None).unwrap();
-    assert!(text.starts_with("trailkey1:") && text.contains(&id));
+    assert!(text.starts_with("tracewisekey1:") && text.contains(&id));
     assert_eq!(import_key(b.path(), &text, false).unwrap(), id);
     assert_eq!(load(b.path()).current.as_deref(), Some(id.as_str()), "the first key imported becomes current");
     // a later import does not take over unless asked
@@ -83,7 +83,7 @@ fn an_exported_key_imports_elsewhere_and_a_forged_one_is_refused() {
     assert_eq!(load(b.path()).current.as_deref(), Some(id.as_str()));
     import_key(b.path(), &t2, true).unwrap();
     assert_eq!((load(b.path()).current.as_deref(), load(b.path()).keys.len()), (Some(second.as_str()), 2));
-    assert!(import_key(b.path(), "trailkey1:0000000000000000:".to_string().as_str(), false).is_err());
+    assert!(import_key(b.path(), "tracewisekey1:0000000000000000:".to_string().as_str(), false).is_err());
     let forged = text.replace(&id, "ffffffffffffffff");
     assert!(import_key(b.path(), &forged, false).is_err());
     assert!(export_key(TempDir::new().unwrap().path(), None).is_err());

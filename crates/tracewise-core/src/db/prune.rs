@@ -1,4 +1,4 @@
-//! `trail prune`: removes records from the history and leaves the proof that keeps `verify` passing.
+//! `tracewise prune`: removes records from the history and leaves the proof that keeps `verify` passing.
 //! A run of removed records between two survivors becomes one `chain_meta` row `gap:<id of the survivor before>` holding the
 //! hash of the last removed record, which is what the next survivor's `prev_hash` points at. Each prune also leaves a
 //! `prune:<ulid>` row saying what was removed, by whom and from which folders.
@@ -155,7 +155,7 @@ impl Database {
         Ok(rows)
     }
 
-    /// Writes a copy of the database to `file` (which must not exist), for `trail prune --backup`.
+    /// Writes a copy of the database to `file` (which must not exist), for `tracewise prune --backup`.
     pub fn backup_to(&self, file: &std::path::Path) -> Result<()> {
         self.conn.execute("VACUUM INTO ?1", [file.to_string_lossy().as_ref()])?;
         Ok(())

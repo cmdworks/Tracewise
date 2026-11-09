@@ -4,8 +4,8 @@ use super::*;
 fn test_shims_install_and_uninstall() {
     let tmp = tempfile::tempdir().unwrap();
     let shims_dir = tmp.path().join("shims");
-    let fake_bin = tmp.path().join("trail");
-    fs::write(&fake_bin, b"mock trail binary").unwrap();
+    let fake_bin = tmp.path().join("tracewise");
+    fs::write(&fake_bin, b"mock tracewise binary").unwrap();
 
     // 1. Install
     let tools = install_shims(&shims_dir, &fake_bin).unwrap();
@@ -17,7 +17,7 @@ fn test_shims_install_and_uninstall() {
         assert_eq!(p.canonicalize().unwrap(), fake_bin.canonicalize().unwrap());
     }
 
-    // Add a non-trail symlink and non-trail regular file
+    // Add a non-tracewise symlink and non-tracewise regular file
     let foreign_target = tmp.path().join("foreign");
     fs::write(&foreign_target, b"foreign").unwrap();
     let foreign_link = shims_dir.join("foreign_tool");
@@ -29,7 +29,7 @@ fn test_shims_install_and_uninstall() {
     let removed = uninstall_shims(&shims_dir, Some(&fake_bin));
     assert_eq!(removed, SHIM_TOOLS.len());
 
-    // All trail shims removed
+    // All tracewise shims removed
     for &t in SHIM_TOOLS {
         assert!(!shims_dir.join(t).exists());
     }
@@ -47,17 +47,17 @@ fn test_shims_install_target_resolution() {
     fs::create_dir_all(&bin_dir).unwrap();
     fs::create_dir_all(&shims_dir).unwrap();
 
-    let trail_bin = bin_dir.join("trail");
-    fs::write(&trail_bin, b"mock trail binary").unwrap();
+    let tracewise_bin = bin_dir.join("tracewise");
+    fs::write(&tracewise_bin, b"mock tracewise binary").unwrap();
 
-    // 1. trail-shim missing -> falls back to trail
-    let target1 = trail_bin.parent().map(|p| p.join("trail-shim")).filter(|p| p.is_file()).unwrap_or_else(|| trail_bin.clone());
-    assert_eq!(target1, trail_bin);
+    // 1. tracewise-shim missing -> falls back to tracewise
+    let target1 = tracewise_bin.parent().map(|p| p.join("tracewise-shim")).filter(|p| p.is_file()).unwrap_or_else(|| tracewise_bin.clone());
+    assert_eq!(target1, tracewise_bin);
 
-    // 2. trail-shim present -> selects trail-shim
-    let tracewise_shim = bin_dir.join("trail-shim");
-    fs::write(&tracewise_shim, b"mock trail-shim binary").unwrap();
-    let target2 = trail_bin.parent().map(|p| p.join("trail-shim")).filter(|p| p.is_file()).unwrap_or_else(|| trail_bin.clone());
+    // 2. tracewise-shim present -> selects tracewise-shim
+    let tracewise_shim = bin_dir.join("tracewise-shim");
+    fs::write(&tracewise_shim, b"mock tracewise-shim binary").unwrap();
+    let target2 = tracewise_bin.parent().map(|p| p.join("tracewise-shim")).filter(|p| p.is_file()).unwrap_or_else(|| tracewise_bin.clone());
     assert_eq!(target2, tracewise_shim);
 }
 
@@ -65,8 +65,8 @@ fn test_shims_install_target_resolution() {
 fn test_shims_install_idempotent() {
     let tmp = tempfile::tempdir().unwrap();
     let shims_dir = tmp.path().join("shims");
-    let fake_bin = tmp.path().join("trail");
-    fs::write(&fake_bin, b"mock trail binary").unwrap();
+    let fake_bin = tmp.path().join("tracewise");
+    fs::write(&fake_bin, b"mock tracewise binary").unwrap();
 
     let tools1 = install_shims(&shims_dir, &fake_bin).unwrap();
     let tools2 = install_shims(&shims_dir, &fake_bin).unwrap();

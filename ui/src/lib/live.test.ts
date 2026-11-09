@@ -1,12 +1,12 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { decideReload, formatRelativeTime, isStatusStale } from "./live.ts";
-import type { TrailStatus } from "./types";
+import type { TracewiseStatus } from "./types";
 
-function mockStatus(overrides: Partial<TrailStatus> = {}): TrailStatus {
+function mockStatus(overrides: Partial<TracewiseStatus> = {}): TracewiseStatus {
   return {
     repo: "/path/to/repo",
-    data_dir: "/path/to/repo/.git/trail",
+    data_dir: "/path/to/repo/.git/tracewise",
     changes: 10,
     locks: 0,
     daemon: "running",

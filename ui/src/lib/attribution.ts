@@ -1,4 +1,4 @@
-/** What `trail doctor --json` says about how the last days of changes are credited. */
+/** What `tracewise doctor --json` says about how the last days of changes are credited. */
 export interface AttributionSummary {
   days: number;
   changes: number;
@@ -53,7 +53,7 @@ export function unnamedPercent(a: AttributionSummary | null | undefined): number
   return Math.round((((a.confidence.unknown ?? 0) + (a.confidence.ambiguous ?? 0)) * 100) / a.changes);
 }
 
-/** The same threshold `trail doctor` uses before it suggests installing hooks. */
+/** The same threshold `tracewise doctor` uses before it suggests installing hooks. */
 export const UNNAMED_WARN_PERCENT = 30;
 
 /** "165 by agents, 11 by you" from the actor kinds. */

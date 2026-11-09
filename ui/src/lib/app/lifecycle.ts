@@ -8,9 +8,9 @@ import { openUndoModal } from "./fx-act";
 /** Starts the page: reads the saved layout, loads everything, listens for keys. Returns what stops it. */
 export function start(): () => void {
     if (typeof localStorage !== "undefined") {
-      const savedCollapsed = localStorage.getItem("trail-sidebar-collapsed");
+      const savedCollapsed = localStorage.getItem("tracewise-sidebar-collapsed");
       if (savedCollapsed === "1") app.sidebarCollapsed = true;
-      app.blameWrap = localStorage.getItem("trail-blame-wrap") !== "0";
+      app.blameWrap = localStorage.getItem("tracewise-blame-wrap") !== "0";
     }
     // come back to where the last session (or the last hot reload) left off: the same project and tab, and the open file
     const saved = parseSession(typeof localStorage === "undefined" ? null : localStorage.getItem(SESSION_KEY));
@@ -98,7 +98,7 @@ export function start(): () => void {
     // Collapsing or expanding it by hand saves a choice, and from then on the width no longer decides.
     const narrow = window.matchMedia("(max-width: 1099px)");
     const followWidth = () => {
-      if (localStorage.getItem("trail-sidebar-collapsed") === null) app.sidebarCollapsed = narrow.matches;
+      if (localStorage.getItem("tracewise-sidebar-collapsed") === null) app.sidebarCollapsed = narrow.matches;
     };
     followWidth();
     narrow.addEventListener("change", followWidth);

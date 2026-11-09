@@ -12,7 +12,7 @@ import type { ChangeItem } from "./types.ts";
 describe("timeline-view helpers", () => {
   it("shortenPathFront truncates leading path segments keeping last 2", () => {
     assert.equal(
-      shortenPathFront("crates/trail-cli/src/cmd_history/revert.rs"),
+      shortenPathFront("crates/tracewise-cli/src/cmd_history/revert.rs"),
       "…/cmd_history/revert.rs"
     );
     assert.equal(shortenPathFront("ui/src/lib/theme.css"), "…/lib/theme.css");
@@ -56,7 +56,7 @@ describe("timeline-view helpers", () => {
       {
         id: "c1",
         op: "modify",
-        path: "crates/trail-cli/src/main.rs",
+        path: "crates/tracewise-cli/src/main.rs",
         actor: { kind: "claude", name: "Claude" },
         time: { start: "2026-11-06T11:30:00Z", end: "2026-11-06T11:30:00Z" },
         why: "Fix bug",

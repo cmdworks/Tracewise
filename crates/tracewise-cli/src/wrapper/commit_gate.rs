@@ -7,7 +7,7 @@ pub(crate) fn check_commit_gate(repo_paths_before: &Option<RepoPaths>, git_args:
         return;
     }
 
-    let skip_requested = std::env::var("TRAIL_SKIP_GATE").as_deref() == Ok("1");
+    let skip_requested = std::env::var("TRACEWISE_SKIP_GATE").as_deref() == Ok("1");
     // A person may skip the commit gate; an agent may not.
     let skip_who = if skip_requested { Some(tracewise_proc::who(None, None)) } else { None };
     let skip_gate = skip_who.as_ref().is_some_and(|w| w.kind != "agent");
@@ -18,7 +18,7 @@ pub(crate) fn check_commit_gate(repo_paths_before: &Option<RepoPaths>, git_args:
     let Some(ref repo_paths) = repo_paths_before else {
         return;
     };
-    let db_path = repo_paths.data_dir().join("trail.db");
+    let db_path = repo_paths.data_dir().join("tracewise.db");
     if !db_path.exists() {
         return;
     }
@@ -28,7 +28,7 @@ pub(crate) fn check_commit_gate(repo_paths_before: &Option<RepoPaths>, git_args:
 
     if let Some(w) = skip_who.as_ref().filter(|w| w.kind == "agent") {
         let actor = Actor { kind: w.kind.clone(), name: Some(w.name.clone()), session: w.session.clone() };
-        crate::util::record_ignored_switch(&db, &actor, "TRAIL_SKIP_GATE=1");
+        crate::util::record_ignored_switch(&db, &actor, "TRACEWISE_SKIP_GATE=1");
     }
 
     let (branch, _head) = get_git_info(repo_paths);
@@ -46,7 +46,7 @@ pub(crate) fn check_commit_gate(repo_paths_before: &Option<RepoPaths>, git_args:
             }
         }
         if !uncovered.is_empty() {
-            eprintln!("trail: {} agent change(s) have no reason:", uncovered.len());
+            eprintln!("tracewise: {} agent change(s) have no reason:", uncovered.len());
             for p in &uncovered {
                 eprintln!("  {p}");
             }
@@ -57,7 +57,7 @@ pub(crate) fn check_commit_gate(repo_paths_before: &Option<RepoPaths>, git_args:
 
 pub(crate) fn link_commit_subject(real_git: &Path, work_tree: &Path, db: &Database) {
     let run = |args: &[&str]| -> Option<String> {
-        let out = std::process::Command::new(real_git).arg("-C").arg(work_tree).args(args).env("TRAIL_GIT_DEPTH", "1").output().ok()?;
+        let out = std::process::Command::new(real_git).arg("-C").arg(work_tree).args(args).env("TRACEWISE_GIT_DEPTH", "1").output().ok()?;
         if out.status.success() {
             Some(String::from_utf8_lossy(&out.stdout).to_string())
         } else {

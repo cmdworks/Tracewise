@@ -28,10 +28,10 @@ pub fn run_git_wrapper(git_args: &[String]) {
     let real_git = find_real_git(None);
     let pre = prepare_git_pre_state(&real_git, git_args);
 
-    std::env::set_var("TRAIL_GIT_DEPTH", "1");
+    std::env::set_var("TRACEWISE_GIT_DEPTH", "1");
     let status = std::process::Command::new(&real_git)
         .args(git_args)
-        .env("TRAIL_GIT_DEPTH", "1")
+        .env("TRACEWISE_GIT_DEPTH", "1")
         .stdin(std::process::Stdio::inherit())
         .stdout(std::process::Stdio::inherit())
         .stderr(std::process::Stdio::inherit())
@@ -54,7 +54,7 @@ pub fn run_git_wrapper(git_args: &[String]) {
         }
     };
     let data_dir = repo_paths.data_dir();
-    let db_path = data_dir.join("trail.db");
+    let db_path = data_dir.join("tracewise.db");
     if !db_path.exists() {
         process::exit(exit_code);
     }

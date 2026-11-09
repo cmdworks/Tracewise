@@ -6,9 +6,9 @@ import { errorText, failureText, parseJson } from "./result.ts";
 const ok = (stdout: string) => ({ stdout, stderr: "", exit_code: 0 });
 
 test("a failed call is an error with Tracewise's own words, not an empty list", () => {
-  const res = { stdout: "", stderr: "trail: this repository has no Tracewise history yet; run `trail init` first\n", exit_code: 1 };
+  const res = { stdout: "", stderr: "tracewise: this repository has no Tracewise history yet; run `tracewise init` first\n", exit_code: 1 };
   assert.throws(() => parseJson("events", res), /no Tracewise history yet/);
-  assert.equal(failureText("events", res).startsWith("trail:"), false, "the prefix is dropped");
+  assert.equal(failureText("events", res).startsWith("tracewise:"), false, "the prefix is dropped");
 });
 
 test("a failure without a message names the call and the exit code", () => {

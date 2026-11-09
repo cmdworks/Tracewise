@@ -33,7 +33,7 @@ fn shell_init(shell: &str) {
             print!("{}", tracewise_platform::shell::nu_interactive());
         }
         _ => {
-            eprintln!("trail: unsupported shell {shell}");
+            eprintln!("tracewise: unsupported shell {shell}");
         }
     }
 }
@@ -56,7 +56,7 @@ fn shell_preexec(repo_paths: &RepoPaths, id: String, command: Vec<String>) {
         command: Some(cmd_text),
     };
 
-    let db_path = repo_paths.data_dir().join("trail.db");
+    let db_path = repo_paths.data_dir().join("tracewise.db");
     if db_path.exists() {
         if let Ok(db) = Database::open_hot(&db_path) {
             let _ = db.open_window(&window);
@@ -65,7 +65,7 @@ fn shell_preexec(repo_paths: &RepoPaths, id: String, command: Vec<String>) {
 }
 
 fn shell_precmd(repo_paths: &RepoPaths, id: String, exit: i32) {
-    let db_path = repo_paths.data_dir().join("trail.db");
+    let db_path = repo_paths.data_dir().join("tracewise.db");
     if !db_path.exists() {
         return;
     }
@@ -148,11 +148,11 @@ fn shell_precmd(repo_paths: &RepoPaths, id: String, exit: i32) {
     prompt_line(&db, repo_paths, &id);
 }
 
-/// Opt-in prompt line (`[shell] prompt_line = "on"` or `TRAIL_PROMPT_LINE=1`): one line on stderr when someone else changed files
-/// since this shell's previous prompt, e.g. `trail: 3 changes in 2 files by claude, cursor since your last prompt`.
+/// Opt-in prompt line (`[shell] prompt_line = "on"` or `TRACEWISE_PROMPT_LINE=1`): one line on stderr when someone else changed files
+/// since this shell's previous prompt, e.g. `tracewise: 3 changes in 2 files by claude, cursor since your last prompt`.
 /// The time of the previous prompt is a tiny per-shell file; nothing is written to the database.
 fn prompt_line(db: &Database, repo_paths: &RepoPaths, shell_id: &str) {
-    let on = std::env::var("TRAIL_PROMPT_LINE")
+    let on = std::env::var("TRACEWISE_PROMPT_LINE")
         .ok()
         .or_else(|| tracewise_core::reasons::config_value(&repo_paths.work_tree, "shell", "prompt_line"));
     if !matches!(on.as_deref().map(str::trim), Some("1" | "on")) {
@@ -176,7 +176,7 @@ fn prompt_line(db: &Database, repo_paths: &RepoPaths, shell_id: &str) {
     who.sort();
     who.dedup();
     eprintln!(
-        "trail: {} change{} in {} file{} by {} since your last prompt",
+        "tracewise: {} change{} in {} file{} by {} since your last prompt",
         others.len(),
         if others.len() == 1 { "" } else { "s" },
         files.len(),
@@ -217,7 +217,7 @@ fn check_held_file_failure(db: &Database, repo_paths: &RepoPaths, failed_command
             let session = lock.holder.session.as_deref().map(|s| format!(", session {s}")).unwrap_or_default();
             let until = chrono::DateTime::parse_from_rfc3339(&lock.expires).map(local_hhmm).unwrap_or_else(|_| lock.expires.clone());
             eprintln!(
-                "trail: {rel} is held by {who}{session} until {until}; `trail lock list` shows it, `trail lock release {rel}` frees it"
+                "tracewise: {rel} is held by {who}{session} until {until}; `tracewise lock list` shows it, `tracewise lock release {rel}` frees it"
             );
         }
     }
@@ -229,6 +229,6 @@ fn check_human_pending_reminder(db: &Database, shell_id: &str) {
     let prev_count = db.get_shell_pending_count(shell_id).unwrap_or(None).unwrap_or(0);
     let _ = db.set_shell_pending_count(shell_id, human_pending_count);
     if human_pending_count > prev_count && human_pending_count > 0 {
-        eprintln!("trail: {} change(s) need a reason: trail note --last \"...\"", human_pending_count);
+        eprintln!("tracewise: {} change(s) need a reason: tracewise note --last \"...\"", human_pending_count);
     }
 }

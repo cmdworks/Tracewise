@@ -129,14 +129,14 @@ fn handle_early_commands(cli: &Cli) -> bool {
 }
 
 fn handle_shell_init(shell: &str, non_interactive: bool) {
-    let trail_bin = std::env::current_exe().map(|p| p.to_string_lossy().to_string()).unwrap_or_else(|_| "trail".to_string());
+    let tracewise_bin = std::env::current_exe().map(|p| p.to_string_lossy().to_string()).unwrap_or_else(|_| "tracewise".to_string());
 
     if non_interactive {
         match shell {
-            "zsh" => print!("{}", tracewise_shell::zsh_non_interactive(&trail_bin)),
-            "bash" => print!("{}", tracewise_shell::bash_non_interactive(&trail_bin)),
+            "zsh" => print!("{}", tracewise_shell::zsh_non_interactive(&tracewise_bin)),
+            "bash" => print!("{}", tracewise_shell::bash_non_interactive(&tracewise_bin)),
             _ => {
-                eprintln!("trail: unsupported shell '{}'", shell);
+                eprintln!("tracewise: unsupported shell '{}'", shell);
                 process::exit(1);
             }
         }
@@ -149,7 +149,7 @@ fn handle_shell_init(shell: &str, non_interactive: bool) {
         "pwsh" | "powershell" => print!("{}", tracewise_platform::shell::pwsh_interactive()),
         "nu" | "nushell" => print!("{}", tracewise_platform::shell::nu_interactive()),
         _ => {
-            eprintln!("trail: unsupported shell '{}'", shell);
+            eprintln!("tracewise: unsupported shell '{}'", shell);
             process::exit(1);
         }
     }
@@ -163,15 +163,15 @@ fn install_git_wrapper(json: bool, dir: &Path) {
     let self_exe = match std::env::current_exe() {
         Ok(e) => e,
         Err(e) => {
-            eprintln!("trail: failed to get current executable: {e}");
+            eprintln!("tracewise: failed to get current executable: {e}");
             process::exit(1);
         }
     };
 
-    let target_bin = self_exe.parent().map(|p| p.join("trail-git")).filter(|p| p.is_file()).unwrap_or_else(|| self_exe.clone());
+    let target_bin = self_exe.parent().map(|p| p.join("tracewise-git")).filter(|p| p.is_file()).unwrap_or_else(|| self_exe.clone());
 
     if let Err(e) = tracewise_platform::shims::create_shim_link(&target_bin, &symlink_path) {
-        eprintln!("trail: failed to create symlink: {e}");
+        eprintln!("tracewise: failed to create symlink: {e}");
         process::exit(1);
     }
 
@@ -216,7 +216,7 @@ fn handle_proc_action(json: bool, action: &ProcAction) {
     }
 }
 
-/// Commands that read or change the history: without `trail init` they have nothing to work on.
+/// Commands that read or change the history: without `tracewise init` they have nothing to work on.
 fn needs_history(command: &Commands) -> bool {
     matches!(
         command,
@@ -240,8 +240,8 @@ fn needs_history(command: &Commands) -> bool {
 }
 
 fn dispatch_repo_command(json: bool, repo_paths: &RepoPaths, command: Commands) {
-    if needs_history(&command) && !repo_paths.data_dir().join("trail.db").is_file() {
-        eprintln!("trail: this repository has no Trail history yet; run `trail init` first");
+    if needs_history(&command) && !repo_paths.data_dir().join("tracewise.db").is_file() {
+        eprintln!("tracewise: this repository has no Tracewise history yet; run `tracewise init` first");
         process::exit(1);
     }
     match command {
@@ -283,7 +283,7 @@ fn dispatch_repo_command(json: bool, repo_paths: &RepoPaths, command: Commands) 
         Commands::Agent { action } => match action {
             AgentAction::Install { name, scope } => {
                 if let Err(e) = cmd_agents::handle_agent_install(repo_paths, &name, &scope, json) {
-                    eprintln!("trail: {e}");
+                    eprintln!("tracewise: {e}");
                     process::exit(1);
                 }
             }
@@ -306,7 +306,7 @@ fn dispatch_repo_command(json: bool, repo_paths: &RepoPaths, command: Commands) 
     }
 }
 
-/// The whole command line; `tracewise` and its old name `trail` both run this.
+/// The whole command line; `tracewise` and its old name `tracewise` both run this.
 pub fn main() {
     tracewise_platform::signal::reset_sigpipe();
     if cmd_shims::try_fast_read_only_shim() {
@@ -341,7 +341,7 @@ pub fn main() {
 
     if let Some(ref dir) = cli.directory {
         if std::env::set_current_dir(dir).is_err() {
-            eprintln!("trail: not a git repository");
+            eprintln!("tracewise: not a git repository");
             process::exit(2);
         }
     }
@@ -349,7 +349,7 @@ pub fn main() {
     let current_dir = match std::env::current_dir() {
         Ok(d) => d,
         Err(_) => {
-            eprintln!("trail: not a git repository");
+            eprintln!("tracewise: not a git repository");
             process::exit(2);
         }
     };
@@ -357,12 +357,12 @@ pub fn main() {
     let repo_paths = match RepoPaths::discover(&current_dir) {
         Some(paths) => paths,
         None => {
-            eprintln!("trail: not a git repository");
+            eprintln!("tracewise: not a git repository");
             process::exit(2);
         }
     };
 
-    let db_path = repo_paths.data_dir().join("trail.db");
+    let db_path = repo_paths.data_dir().join("tracewise.db");
     if db_path.exists() {
         if let Ok(db) = Database::open(&db_path) {
             let _ = db.import_spool(&repo_paths.data_dir());
@@ -373,8 +373,8 @@ pub fn main() {
     if !matches!(cli.command, Some(Commands::AdoptCopy)) {
         if let Some(original) = util::copy_of(&repo_paths) {
             eprintln!(
-                "trail: this folder is a copy of {} (same trail id); its history is separate from now on. \
-                 Run `trail adopt-copy` to give it its own id before pushing.",
+                "tracewise: this folder is a copy of {} (same tracewise id); its history is separate from now on. \
+                 Run `tracewise adopt-copy` to give it its own id before pushing.",
                 original.display()
             );
         }
@@ -384,7 +384,7 @@ pub fn main() {
     match cli.command {
         Some(command) => dispatch_repo_command(json, &repo_paths, command),
         None => {
-            let _ = named_command().print_help();
+            let _ = Cli::command().print_help();
             println!();
         }
     }
@@ -397,14 +397,7 @@ pub static TEST_MUTEX: std::sync::Mutex<()> = std::sync::Mutex::new(());
 #[path = "test_main.rs"]
 mod tests;
 
-/// The command line under the name it was started with: `tracewise`, or `trail` for scripts that still call the old name.
-fn named_command() -> clap::Command {
-    let started_as = std::env::args_os().next().and_then(|a| Path::new(&a).file_stem().map(|s| s.to_string_lossy().into_owned()));
-    let name = if started_as.as_deref() == Some("tracewise") { "tracewise" } else { "trail" };
-    Cli::command().name(name).bin_name(name)
-}
-
 fn parse_cli() -> Cli {
-    use clap::FromArgMatches;
-    Cli::from_arg_matches(&named_command().get_matches()).unwrap_or_else(|e| e.exit())
+    use clap::Parser;
+    Cli::parse()
 }

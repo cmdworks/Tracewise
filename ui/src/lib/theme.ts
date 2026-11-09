@@ -1,7 +1,7 @@
 export type Theme = "system" | "light" | "dark";
 
 export const THEMES: Theme[] = ["system", "light", "dark"];
-const KEY = "trail-theme";
+const KEY = "tracewise-theme";
 
 /** The theme the page shows for a choice; `system` follows the operating system. */
 export function resolve(theme: Theme, prefersDark: boolean): "light" | "dark" {

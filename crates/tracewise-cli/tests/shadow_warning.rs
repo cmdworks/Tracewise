@@ -20,7 +20,7 @@ fn other_changes_a_file(config: &str) -> Repo {
 
 /// The review lines of this warning (the file also holds the digest and overlap lines of `awareness.rs`).
 fn shadow(repo: &Repo) -> String {
-    let all = std::fs::read_to_string(repo.dir().join(".git/trail/shadow-warnings.jsonl")).unwrap_or_default();
+    let all = std::fs::read_to_string(repo.dir().join(".git/tracewise/shadow-warnings.jsonl")).unwrap_or_default();
     all.lines().filter(|l| l.contains("\"kind\":\"edit\"")).collect::<Vec<_>>().join("\n")
 }
 
@@ -77,7 +77,7 @@ fn with_warn_shadow_or_off_the_agent_hears_nothing() {
 #[test]
 fn the_environment_variable_overrides_the_config() {
     let repo = other_changes_a_file(&format!("{COORD}[hooks]\nwarn = \"off\"\n"));
-    let out = repo.with("agent:claude:s1", &["hook", "PreToolUse", "--from", "claude"], Some(CLAUDE_PRE), &[("TRAIL_WARN", "on")]).out;
+    let out = repo.with("agent:claude:s1", &["hook", "PreToolUse", "--from", "claude"], Some(CLAUDE_PRE), &[("TRACEWISE_WARN", "on")]).out;
     assert!(out.contains("a.txt was changed by"), "{out}");
 }
 

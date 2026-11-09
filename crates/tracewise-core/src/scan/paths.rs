@@ -19,7 +19,7 @@ pub fn scan_specific_paths(
     options: &ScanOptions,
     paths: &[PathBuf],
 ) -> io::Result<Vec<String>> {
-    let mut db = Database::open_hot(&data_dir.join("trail.db")).map_err(|e| io::Error::other(e.to_string()))?;
+    let mut db = Database::open_hot(&data_dir.join("tracewise.db")).map_err(|e| io::Error::other(e.to_string()))?;
     scan_specific_paths_with_db(work_tree, data_dir, branch, head, options, paths, &mut db)
 }
 

@@ -40,7 +40,7 @@ pub fn scan_repository(
     options: &ScanOptions,
     discovered_files: &[PathBuf],
 ) -> io::Result<Vec<String>> {
-    let mut db = Database::open(&data_dir.join("trail.db")).map_err(|e| io::Error::other(e.to_string()))?;
+    let mut db = Database::open(&data_dir.join("tracewise.db")).map_err(|e| io::Error::other(e.to_string()))?;
     scan_repository_with_db(work_tree, data_dir, branch, head, options, discovered_files, &mut db)
 }
 

@@ -18,7 +18,7 @@ fn notice(v: &serde_json::Value) -> String {
 }
 
 fn review_lines(repo: &Repo, kind: &str) -> usize {
-    std::fs::read_to_string(repo.dir().join(".git/trail/shadow-warnings.jsonl"))
+    std::fs::read_to_string(repo.dir().join(".git/tracewise/shadow-warnings.jsonl"))
         .unwrap_or_default()
         .lines()
         .filter(|l| l.contains(&format!("\"kind\":\"{kind}\"")))
@@ -38,7 +38,7 @@ fn others_changed_things_since_claude_left(config: &str) -> Repo {
 fn the_first_prompt_gets_a_digest_of_what_others_changed_while_the_agent_was_away() {
     let repo = others_changed_things_since_claude_left(ON);
     let first = notice(&hook(&repo, "claude", "s1", "prompt", &[]));
-    assert!(first.starts_with("Trail digest: since claude last worked here, 2 files changed by"), "{first}");
+    assert!(first.starts_with("Tracewise digest: since claude last worked here, 2 files changed by"), "{first}");
     assert!(first.contains("b.txt") && first.contains("c.txt") && first.contains("codex"), "{first}");
     assert!(!first.contains("a.txt"), "claude's own change is not reported: {first}");
     assert_eq!(notice(&hook(&repo, "claude", "s1", "prompt", &[])), "", "said once, not at the second prompt");
@@ -80,7 +80,7 @@ fn an_overlap_is_told_to_both_sessions_once() {
     let answer = hook(&repo, "claude", "s1", "pre-edit", &["a.txt"]);
     assert_eq!(answer["decision"], "allow", "an overlap never blocks: {answer}");
     let told = notice(&hook(&repo, "claude", "s1", "prompt", &[]));
-    assert!(told.contains("Trail overlap: claude and codex are both editing a.txt"), "{told}");
+    assert!(told.contains("Tracewise overlap: claude and codex are both editing a.txt"), "{told}");
     hook(&repo, "claude", "s1", "pre-edit", &["a.txt"]);
     assert_eq!(review_lines(&repo, "overlap"), 1, "once per pair of sessions and file");
     assert_eq!(notice(&hook(&repo, "claude", "s1", "prompt", &[])), "", "not repeated at the next prompt");
@@ -92,7 +92,7 @@ fn the_other_session_hears_of_the_overlap_too() {
     repo.edit_as("agent:claude:s2", "a.txt", "one\n");
     hook(&repo, "claude", "s1", "pre-edit", &["a.txt"]);
     let other = notice(&hook(&repo, "claude", "s2", "prompt", &[]));
-    assert!(other.contains("Trail overlap:") && other.contains("a.txt"), "{other}");
+    assert!(other.contains("Tracewise overlap:") && other.contains("a.txt"), "{other}");
 }
 
 #[test]
@@ -111,7 +111,7 @@ fn overlaps_are_logged_in_shadow_mode_and_told_to_nobody() {
     hook(&repo, "claude", "s1", "pre-edit", &["a.txt"]);
     assert_eq!(review_lines(&repo, "overlap"), 1);
     assert_eq!(notice(&hook(&repo, "claude", "s1", "prompt", &[])), "");
-    assert!(!repo.dir().join(".git/trail/overlaps.jsonl").exists(), "nothing is queued for delivery");
+    assert!(!repo.dir().join(".git/tracewise/overlaps.jsonl").exists(), "nothing is queued for delivery");
 }
 
 #[test]
@@ -119,7 +119,7 @@ fn claude_sees_the_digest_as_it_is_not_under_the_since_your_last_prompt_header()
     let repo = others_changed_things_since_claude_left(ON);
     let body = r#"{"hook_event_name":"UserPromptSubmit","session_id":"s1"}"#;
     let out = repo.with("agent:claude:s1", &["hook", "UserPromptSubmit", "--from", "claude"], Some(body), &[]).out;
-    assert!(out.contains("additionalContext") && out.contains("Trail digest: since claude last worked here"), "{out}");
+    assert!(out.contains("additionalContext") && out.contains("Tracewise digest: since claude last worked here"), "{out}");
     assert!(!out.contains("since your last prompt"), "{out}");
 }
 
@@ -129,7 +129,7 @@ fn a_persons_recent_edit_is_not_an_overlap_between_agents() {
     // saved by a person a minute ago: older than the 20 s the coordination profile protects, newer than the 5 minute window
     let minute_ago = (chrono::Utc::now() - chrono::Duration::seconds(60)).to_rfc3339_opts(chrono::SecondsFormat::Millis, true);
     repo.write("a.txt", "one\n");
-    assert!(repo.with("human:me", &["scan"], None, &[("TRAIL_NOW", &minute_ago)]).ok());
+    assert!(repo.with("human:me", &["scan"], None, &[("TRACEWISE_NOW", &minute_ago)]).ok());
     let answer = hook(&repo, "claude", "s1", "pre-edit", &["a.txt"]);
     assert_eq!(answer["decision"], "allow", "{answer}");
     assert_eq!(review_lines(&repo, "overlap"), 0, "a person is not an agent session");

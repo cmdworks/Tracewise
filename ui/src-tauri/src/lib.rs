@@ -34,26 +34,26 @@ pub const ALLOWED_COMMANDS: &[&str] = &[
 
 const STRIPPED_ENV_VARS: &[&str] = &[
     "CLAUDECODE",
-    "TRAIL_ACTOR",
-    "TRAIL_WHY",
-    "TRAIL_INTENT",
-    "TRAIL_SESSION",
-    "TRAIL_SHELL_ACTIVE",
+    "TRACEWISE_ACTOR",
+    "TRACEWISE_WHY",
+    "TRACEWISE_INTENT",
+    "TRACEWISE_SESSION",
+    "TRACEWISE_SHELL_ACTIVE",
     "CODEX_THREAD_ID",
     "CURSOR_TRACE_ID",
     "GEMINI_CLI",
 ];
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone, PartialEq, Eq)]
-pub struct TrailResult {
+pub struct TracewiseResult {
     pub stdout: String,
     pub stderr: String,
     pub exit_code: i32,
 }
 
-pub fn validate_trail_args(args: &[String]) -> Result<&str, String> {
+pub fn validate_tracewise_args(args: &[String]) -> Result<&str, String> {
     if args.is_empty() {
-        return Err("no subcommand provided to trail".to_string());
+        return Err("no subcommand provided to tracewise".to_string());
     }
     let subcmd = args[0].as_str();
     if !ALLOWED_COMMANDS.contains(&subcmd) {
@@ -62,16 +62,16 @@ pub fn validate_trail_args(args: &[String]) -> Result<&str, String> {
     Ok(subcmd)
 }
 
-/// The work trees Tracewise knows (`<TRAIL_HOME>/repos`, one `work tree<TAB>data dir` line each), as real paths.
+/// The work trees Tracewise knows (`<TRACEWISE_HOME>/repos`, one `work tree<TAB>data dir` line each), as real paths.
 fn registered_repos(registry: &Path) -> Vec<PathBuf> {
     let text = std::fs::read_to_string(registry).unwrap_or_default();
     text.lines().filter_map(|l| std::fs::canonicalize(l.split('\t').next()?).ok()).collect()
 }
 
 fn registry_file() -> PathBuf {
-    match std::env::var_os("TRAIL_HOME") {
+    match std::env::var_os("TRACEWISE_HOME") {
         Some(h) => PathBuf::from(h),
-        None => PathBuf::from(std::env::var_os("HOME").unwrap_or_default()).join(".trail"),
+        None => PathBuf::from(std::env::var_os("HOME").unwrap_or_default()).join(".tracewise"),
     }
     .join("repos")
 }
@@ -87,7 +87,7 @@ pub fn validate_repo_path_in(repo: &Option<String>, registry: &Path) -> Result<O
         return Err(format!("repository path does not exist: '{r}'"));
     }
     if !registered_repos(registry).contains(&real) {
-        return Err(format!("not a repository Trail knows: '{r}'"));
+        return Err(format!("not a repository Tracewise knows: '{r}'"));
     }
     Ok(Some(real))
 }
@@ -96,8 +96,8 @@ pub fn validate_repo_path(repo: &Option<String>) -> Result<Option<PathBuf>, Stri
     validate_repo_path_in(repo, &registry_file())
 }
 
-pub fn locate_trail_binary() -> Result<PathBuf, String> {
-    if let Ok(override_bin) = std::env::var("TRAIL_BIN") {
+pub fn locate_tracewise_binary() -> Result<PathBuf, String> {
+    if let Ok(override_bin) = std::env::var("TRACEWISE_BIN") {
         let p = PathBuf::from(override_bin);
         if p.is_file() {
             return Ok(p);
@@ -105,18 +105,18 @@ pub fn locate_trail_binary() -> Result<PathBuf, String> {
     }
 
     if let Ok(home) = std::env::var("HOME") {
-        let installed = PathBuf::from(home).join(".trail").join("bin").join("trail");
+        let installed = PathBuf::from(home).join(".tracewise").join("bin").join("tracewise");
         if installed.is_file() {
             return Ok(installed);
         }
     }
 
-    // Dev environment fallbacks: look up from current dir for target/debug/trail or target/release/trail
+    // Dev environment fallbacks: look up from current dir for target/debug/tracewise or target/release/tracewise
     let dev_candidates = [
-        PathBuf::from("../../target/debug/trail"),
-        PathBuf::from("../../target/release/trail"),
-        PathBuf::from("../target/debug/trail"),
-        PathBuf::from("target/debug/trail"),
+        PathBuf::from("../../target/debug/tracewise"),
+        PathBuf::from("../../target/release/tracewise"),
+        PathBuf::from("../target/debug/tracewise"),
+        PathBuf::from("target/debug/tracewise"),
     ];
     for cand in &dev_candidates {
         if cand.is_file() {
@@ -125,7 +125,7 @@ pub fn locate_trail_binary() -> Result<PathBuf, String> {
     }
 
     // PATH lookup
-    if let Ok(output) = Command::new("which").arg("trail").output() {
+    if let Ok(output) = Command::new("which").arg("tracewise").output() {
         if output.status.success() {
             let path_str = String::from_utf8_lossy(&output.stdout).trim().to_string();
             let p = PathBuf::from(path_str);
@@ -135,11 +135,11 @@ pub fn locate_trail_binary() -> Result<PathBuf, String> {
         }
     }
 
-    Err("trail binary not found in ~/.trail/bin/trail, workspace target, or PATH".to_string())
+    Err("tracewise binary not found in ~/.tracewise/bin/tracewise, workspace target, or PATH".to_string())
 }
 
-pub fn build_trail_command(trail_bin: &Path, args: &[String], repo_path: Option<&Path>) -> Command {
-    let mut cmd = Command::new(trail_bin);
+pub fn build_tracewise_command(tracewise_bin: &Path, args: &[String], repo_path: Option<&Path>) -> Command {
+    let mut cmd = Command::new(tracewise_bin);
     cmd.args(args);
 
     if let Some(repo) = repo_path {
@@ -188,13 +188,13 @@ fn read_capped(mut pipe: impl Read, max: usize, over: &AtomicBool, cap: &Capture
 const PIPE_GRACE: Duration = Duration::from_millis(300);
 
 /// Runs the command with a time limit and an output limit; a command over either is killed and reported as an error.
-pub fn run_bounded(cmd: &mut Command, timeout: Duration, max_bytes: usize) -> Result<TrailResult, String> {
+pub fn run_bounded(cmd: &mut Command, timeout: Duration, max_bytes: usize) -> Result<TracewiseResult, String> {
     let mut child = cmd
         .stdin(Stdio::null())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .spawn()
-        .map_err(|e| format!("failed to spawn trail process: {e}"))?;
+        .map_err(|e| format!("failed to spawn tracewise process: {e}"))?;
     let over = Arc::new(AtomicBool::new(false));
     let (out_cap, err_cap) = (Arc::new(Captured::default()), Arc::new(Captured::default()));
     let (out_pipe, err_pipe) = (child.stdout.take().expect("piped"), child.stderr.take().expect("piped"));
@@ -206,14 +206,14 @@ pub fn run_bounded(cmd: &mut Command, timeout: Duration, max_bytes: usize) -> Re
     }
     let start = Instant::now();
     let status = loop {
-        if let Some(status) = child.try_wait().map_err(|e| format!("failed to wait for trail: {e}"))? {
+        if let Some(status) = child.try_wait().map_err(|e| format!("failed to wait for tracewise: {e}"))? {
             break Ok(status);
         }
         if over.load(Ordering::SeqCst) {
-            break Err(format!("trail printed more than {} MB; stopped", max_bytes / 1024 / 1024));
+            break Err(format!("tracewise printed more than {} MB; stopped", max_bytes / 1024 / 1024));
         }
         if start.elapsed() > timeout {
-            break Err(format!("trail did not finish within {} seconds; stopped", timeout.as_secs()));
+            break Err(format!("tracewise did not finish within {} seconds; stopped", timeout.as_secs()));
         }
         std::thread::sleep(Duration::from_millis(20));
     };
@@ -228,52 +228,52 @@ pub fn run_bounded(cmd: &mut Command, timeout: Duration, max_bytes: usize) -> Re
     let status = status?;
     // the reader closes the pipe when full, so the process may have ended by itself before the loop saw the flag
     if over.load(Ordering::SeqCst) {
-        return Err(format!("trail printed more than {} MB; stopped", max_bytes / 1024 / 1024));
+        return Err(format!("tracewise printed more than {} MB; stopped", max_bytes / 1024 / 1024));
     }
     let take = |c: &Captured| String::from_utf8_lossy(&c.bytes.lock().unwrap()).into_owned();
     let mut stderr = take(&err_cap);
     if !(out_cap.done.load(Ordering::SeqCst) && err_cap.done.load(Ordering::SeqCst)) {
         stderr.push_str("\n(output may be incomplete: a background process kept the output open)");
     }
-    Ok(TrailResult { stdout: take(&out_cap), stderr, exit_code: status.code().unwrap_or(-1) })
+    Ok(TracewiseResult { stdout: take(&out_cap), stderr, exit_code: status.code().unwrap_or(-1) })
 }
 
 #[tauri::command]
-async fn trail(args: Vec<String>, repo: Option<String>) -> Result<TrailResult, String> {
-    validate_trail_args(&args)?;
+async fn tracewise(args: Vec<String>, repo: Option<String>) -> Result<TracewiseResult, String> {
+    validate_tracewise_args(&args)?;
     let validated_repo = validate_repo_path(&repo)?;
-    let trail_bin = locate_trail_binary()?;
+    let tracewise_bin = locate_tracewise_binary()?;
 
-    let mut cmd = build_trail_command(&trail_bin, &args, validated_repo.as_deref());
+    let mut cmd = build_tracewise_command(&tracewise_bin, &args, validated_repo.as_deref());
 
     // runs on a blocking thread so a slow command cannot stall the app's async runtime
     tauri::async_runtime::spawn_blocking(move || run_bounded(&mut cmd, COMMAND_TIMEOUT, MAX_OUTPUT_BYTES))
         .await
-        .map_err(|e| format!("trail task failed: {e}"))?
+        .map_err(|e| format!("tracewise task failed: {e}"))?
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![trail])
+        .invoke_handler(tauri::generate_handler![tracewise])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{build_trail_command, validate_repo_path, validate_repo_path_in, validate_trail_args, ALLOWED_COMMANDS};
+    use super::{build_tracewise_command, validate_repo_path, validate_repo_path_in, validate_tracewise_args, ALLOWED_COMMANDS};
     use std::path::PathBuf;
 
     #[test]
     fn test_allow_list_permits_allowed_commands() {
         for cmd in ALLOWED_COMMANDS {
             let single = vec![cmd.to_string()];
-            assert!(validate_trail_args(&single).is_ok());
+            assert!(validate_tracewise_args(&single).is_ok());
 
             let with_json = vec![cmd.to_string(), "--json".to_string()];
-            assert!(validate_trail_args(&with_json).is_ok());
+            assert!(validate_tracewise_args(&with_json).is_ok());
         }
     }
 
@@ -282,12 +282,12 @@ mod tests {
         let disallowed = ["setup", "uninstall", "init", "push", "fetch", "rm", "cat", "bash"];
         for cmd in disallowed {
             let bad_args = vec![cmd.to_string()];
-            let res = validate_trail_args(&bad_args);
+            let res = validate_tracewise_args(&bad_args);
             assert!(res.is_err(), "expected '{cmd}' to be rejected");
             assert!(res.unwrap_err().contains("not permitted"));
         }
         let empty: Vec<String> = Vec::new();
-        assert!(validate_trail_args(&empty).is_err());
+        assert!(validate_tracewise_args(&empty).is_err());
     }
 
     #[test]
@@ -295,7 +295,7 @@ mod tests {
         let bad = Some("../foo/bar".to_string());
         assert!(validate_repo_path(&bad).is_err());
 
-        let nonexistent = Some("/tmp/trail_nonexistent_path_test_12345".to_string());
+        let nonexistent = Some("/tmp/tracewise_nonexistent_path_test_12345".to_string());
         assert!(validate_repo_path(&nonexistent).is_err());
 
         assert!(validate_repo_path(&None).is_ok());
@@ -303,16 +303,16 @@ mod tests {
 
     #[test]
     fn only_registered_repositories_are_accepted_even_through_a_symlink() {
-        let tmp = std::env::temp_dir().join(format!("trail-ui-reg-{}", std::process::id()));
+        let tmp = std::env::temp_dir().join(format!("tracewise-ui-reg-{}", std::process::id()));
         let (known, other) = (tmp.join("known"), tmp.join("other"));
         std::fs::create_dir_all(&known).unwrap();
         std::fs::create_dir_all(&other).unwrap();
         let registry = tmp.join("repos");
-        std::fs::write(&registry, format!("{}\t{}/.git/trail\n", known.display(), known.display())).unwrap();
+        std::fs::write(&registry, format!("{}\t{}/.git/tracewise\n", known.display(), known.display())).unwrap();
         let some = |p: &std::path::Path| Some(p.to_string_lossy().to_string());
         let real = std::fs::canonicalize(&known).unwrap();
         assert_eq!(validate_repo_path_in(&some(&known), &registry).unwrap(), Some(real));
-        assert!(validate_repo_path_in(&some(&other), &registry).unwrap_err().contains("not a repository Trail knows"));
+        assert!(validate_repo_path_in(&some(&other), &registry).unwrap_err().contains("not a repository Tracewise knows"));
         // a link that points at an unregistered folder is judged by where it leads
         let link = tmp.join("link");
         #[cfg(unix)]
@@ -348,27 +348,27 @@ mod tests {
 
     #[test]
     fn test_build_command_strips_agent_vars() {
-        let dummy_bin = PathBuf::from("trail");
+        let dummy_bin = PathBuf::from("tracewise");
         let args = vec!["status".to_string(), "--json".to_string()];
-        let cmd = build_trail_command(&dummy_bin, &args, None);
+        let cmd = build_tracewise_command(&dummy_bin, &args, None);
 
-        assert_eq!(cmd.get_program(), "trail");
+        assert_eq!(cmd.get_program(), "tracewise");
     }
 
-    /// The calls the UI's action buttons make, against the real `trail` in a scratch repository.
+    /// The calls the UI's action buttons make, against the real `tracewise` in a scratch repository.
     /// Skipped when no binary is found. Run it outside an agent session (agents are refused undo).
     #[test]
-    fn action_commands_work_against_the_real_trail() {
-        let Ok(bin) = super::locate_trail_binary() else { return };
-        let dir = std::env::temp_dir().join(format!("trail-ui-test-{}", std::process::id()));
+    fn action_commands_work_against_the_real_tracewise() {
+        let Ok(bin) = super::locate_tracewise_binary() else { return };
+        let dir = std::env::temp_dir().join(format!("tracewise-ui-test-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let sh = |args: &[&str]| {
             let args: Vec<String> = args.iter().map(|s| s.to_string()).collect();
             // `init` and `scan` only prepare the scratch repository; the UI itself may not call them.
             if !matches!(args[0].as_str(), "init" | "scan") {
-                super::validate_trail_args(&args).expect("allow-listed");
+                super::validate_tracewise_args(&args).expect("allow-listed");
             }
-            let out = build_trail_command(&bin, &args, Some(&dir)).env("TRAIL_HOME", dir.join("home")).output().unwrap();
+            let out = build_tracewise_command(&bin, &args, Some(&dir)).env("TRACEWISE_HOME", dir.join("home")).output().unwrap();
             (out.status.code().unwrap_or(-1), String::from_utf8_lossy(&out.stdout).to_string())
         };
         let git = |args: &[&str]| assert!(std::process::Command::new("git").args(args).current_dir(&dir).status().unwrap().success());

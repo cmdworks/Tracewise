@@ -6,9 +6,9 @@ fn registering_lists_once_and_forgets_what_is_gone() {
     let home = tmp.path().join("home");
     let make = |n: &str| {
         let wt = tmp.path().join(n);
-        let dd = wt.join(".git/trail");
+        let dd = wt.join(".git/tracewise");
         fs::create_dir_all(&dd).unwrap();
-        fs::write(dd.join("trail.db"), "").unwrap();
+        fs::write(dd.join("tracewise.db"), "").unwrap();
         (wt, dd)
     };
     let (a, ad) = make("a");

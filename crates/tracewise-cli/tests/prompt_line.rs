@@ -1,11 +1,11 @@
-//! B11: with the prompt line on, `trail shell precmd` says on stderr when someone else changed files since the last prompt.
+//! B11: with the prompt line on, `tracewise shell precmd` says on stderr when someone else changed files since the last prompt.
 mod common;
 use common::Repo;
 
 const SAID: &str = "since your last prompt";
 
 fn precmd(repo: &Repo, line_on: bool) -> String {
-    let env: &[(&str, &str)] = if line_on { &[("TRAIL_PROMPT_LINE", "1")] } else { &[] };
+    let env: &[(&str, &str)] = if line_on { &[("TRACEWISE_PROMPT_LINE", "1")] } else { &[] };
     repo.with("human:me", &["shell", "precmd", "--id", "t1", "--exit", "0"], None, env).err
 }
 

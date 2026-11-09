@@ -7,8 +7,8 @@ Tracewise works without any configuration. This page covers what you can change.
 Settings are read from, strongest first:
 
 1. environment variables (yours only — agents cannot use them to loosen anything);
-2. the project file `.trailconfig` in the repository root (commit it to share settings with your team);
-3. the global file `~/.trail/config.toml`;
+2. the project file `.tracewiseconfig` in the repository root (commit it to share settings with your team);
+3. the global file `~/.tracewise/config.toml`;
 4. built-in defaults.
 
 Both files use the same keys. The easiest way to read and change them:
@@ -16,7 +16,7 @@ Both files use the same keys. The easiest way to read and change them:
 ```bash
 tracewise config get                         # every setting and where its value comes from
 tracewise config get reasons.mode
-tracewise config set reasons.mode enforce    # in .trailconfig
+tracewise config set reasons.mode enforce    # in .tracewiseconfig
 tracewise config set --global profile.name full
 ```
 
@@ -74,7 +74,7 @@ commands = "30d"       # how long recorded command lines are kept ("off" keeps t
 
 ## Ignoring files
 
-Tracewise never records a path that git ignores (every `.gitignore`, `.git/info/exclude`, your global git ignore) or that is OS clutter such as `.DS_Store`. To ignore more without touching `.gitignore`, add patterns to `.trailignore` (same syntax):
+Tracewise never records a path that git ignores (every `.gitignore`, `.git/info/exclude`, your global git ignore) or that is OS clutter such as `.DS_Store`. To ignore more without touching `.gitignore`, add patterns to `.tracewiseignore` (same syntax):
 
 ```bash
 tracewise ignore 'dist/' '*.log'
@@ -91,7 +91,7 @@ tracewise prune
 
 ## Adding an agent
 
-Claude Code, Codex, Cursor, Gemini and Antigravity are built in. Any other agent with a hook system can be added without rebuilding Tracewise: put a small adapter file `<name>.toml` in `.trail/adapters/` of the project or in `~/.trail/adapters/`. It says where the event name, session, tool and file path sit in the agent's hook payload, and how to answer. Adapter files are data and are never executed.
+Claude Code, Codex, Cursor, Gemini and Antigravity are built in. Any other agent with a hook system can be added without rebuilding Tracewise: put a small adapter file `<name>.toml` in `.tracewise/adapters/` of the project or in `~/.tracewise/adapters/`. It says where the event name, session, tool and file path sit in the agent's hook payload, and how to answer. Adapter files are data and are never executed.
 
 ```bash
 tracewise agent list                                 # built-in agents and adapter files found
@@ -103,12 +103,12 @@ tracewise agent install myagent
 
 | Variable | Meaning |
 |---|---|
-| `TRAIL_HOME` | the global folder (default `~/.trail`) |
-| `TRAIL_PROFILE` | `core` or `full`, over the files |
-| `TRAIL_REASONS` | reasons mode for this shell |
-| `TRAIL_WHY` | the reason for the next command |
-| `TRAIL_ACTOR` | who is acting, e.g. `script:nightly-build` |
-| `TRAIL_LOCK_TTL_SECS` | lock lifetime (default 120) |
-| `TRAIL_EDIT_GRACE_SECS` | how long agents wait after your save (default 20) |
+| `TRACEWISE_HOME` | the global folder (default `~/.tracewise`) |
+| `TRACEWISE_PROFILE` | `core` or `full`, over the files |
+| `TRACEWISE_REASONS` | reasons mode for this shell |
+| `TRACEWISE_WHY` | the reason for the next command |
+| `TRACEWISE_ACTOR` | who is acting, e.g. `script:nightly-build` |
+| `TRACEWISE_LOCK_TTL_SECS` | lock lifetime (default 120) |
+| `TRACEWISE_EDIT_GRACE_SECS` | how long agents wait after your save (default 20) |
 
-The variables keep the `TRAIL_` prefix of Tracewise's earlier name.
+The variables keep the `TRACEWISE_` prefix of Tracewise's earlier name.

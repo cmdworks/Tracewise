@@ -39,9 +39,9 @@ fn test_unsafe_paths_in_hook_fail_open() {
     let wt = dir.path();
     std::process::Command::new("git").arg("init").arg(wt).output().unwrap();
 
-    let data_dir = wt.join(".trail").join("data");
+    let data_dir = wt.join(".tracewise").join("data");
     std::fs::create_dir_all(&data_dir).unwrap();
-    let db_path = data_dir.join("trail.db");
+    let db_path = data_dir.join("tracewise.db");
     let db = tracewise_core::db::Database::open(&db_path).unwrap();
 
     let orig_dir = std::env::current_dir().unwrap();
@@ -97,7 +97,7 @@ fn only_a_copy_out_of_the_repository_is_an_export() {
     assert_eq!(export_destination(&repo, &repo, "rm", &v(&["src", "x"])), None);
     // into another tracked repository: that one records it
     let other = tmp.path().canonicalize().unwrap().join("other");
-    std::fs::create_dir_all(other.join(".git/trail")).unwrap();
-    std::fs::write(other.join(".git/trail/trail.db"), b"").unwrap();
+    std::fs::create_dir_all(other.join(".git/tracewise")).unwrap();
+    std::fs::write(other.join(".git/tracewise/tracewise.db"), b"").unwrap();
     assert_eq!(export_destination(&repo, &repo, "mv", &v(&["src", other.join("a").to_str().unwrap()])), None);
 }

@@ -9,7 +9,7 @@ export interface Profile {
   strict: boolean;
 }
 
-export interface TrailStatus {
+export interface TracewiseStatus {
   repo: string;
   data_dir: string;
   changes: number;
@@ -74,7 +74,7 @@ export interface PendingItem {
 import type { AttributionSummary } from "./attribution";
 
 export interface DoctorReport {
-  /** How the last days of changes are credited (`trail doctor --json`). */
+  /** How the last days of changes are credited (`tracewise doctor --json`). */
   attribution?: AttributionSummary | null;
   ok: boolean;
   profile: string;
@@ -96,7 +96,7 @@ export interface DoctorReport {
   };
 }
 
-export interface TrailResult {
+export interface TracewiseResult {
   stdout: string;
   stderr: string;
   exit_code: number;

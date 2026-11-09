@@ -2,7 +2,7 @@ use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 
 #[derive(Parser, Debug, Clone)]
-#[command(name = "trail", version, about = "Tracewise: audit trail and coordination for developer agents and humans")]
+#[command(name = "tracewise", version, about = "Tracewise: a flight recorder for code changes by people and coding agents")]
 pub struct Cli {
     #[arg(short = 'C', help = "Run as if tracewise was started in <dir> instead of the current working directory")]
     pub directory: Option<PathBuf>,
@@ -15,18 +15,18 @@ pub struct Cli {
 
 #[derive(Subcommand, Debug, Clone)]
 pub enum Commands {
-    /// Initialize trail in the current repository
+    /// Initialize tracewise in the current repository
     Init,
-    /// Show trail status
+    /// Show tracewise status
     Status,
     /// Check repository health and report stuck immutable files; `--all` checks the whole installation
-    #[command(after_help = "Examples:\n  trail doctor\n  trail doctor --all")]
+    #[command(after_help = "Examples:\n  tracewise doctor\n  tracewise doctor --all")]
     Doctor {
-        #[arg(long, help = "Check the whole Trail installation, not only this repository")]
+        #[arg(long, help = "Check the whole Tracewise installation, not only this repository")]
         all: bool,
     },
     /// Install Tracewise for this user: programs, shims, git wrapper, one block in ~/.zshrc (no sudo)
-    #[command(after_help = "Examples:\n  trail setup\n  trail setup --login yes --profile core")]
+    #[command(after_help = "Examples:\n  tracewise setup\n  tracewise setup --login yes --profile core")]
     Setup {
         #[arg(long, value_parser = ["yes", "no", "ask"], default_value = "ask", help = "Start the daemon at login")]
         login: String,
@@ -41,13 +41,13 @@ pub enum Commands {
         #[arg(long, default_value = "core", help = "Default profile (core or full)")]
         profile: String,
     },
-    /// Remove what `trail setup` installed (repository histories stay)
+    /// Remove what `tracewise setup` installed (repository histories stay)
     Uninstall {
-        #[arg(long, help = "Also delete the whole ~/.trail folder")]
+        #[arg(long, help = "Also delete the whole ~/.tracewise folder")]
         purge: bool,
     },
     /// Show audit log
-    #[command(after_help = "Examples:\n  trail log\n  trail log src/main.rs\n  trail log --json")]
+    #[command(after_help = "Examples:\n  tracewise log\n  tracewise log src/main.rs\n  tracewise log --json")]
     Log {
         #[arg(help = "Filter changes by path")]
         path: Option<String>,
@@ -70,7 +70,7 @@ pub enum Commands {
         id: String,
     },
     /// One task as Markdown, for a review or a hand-off
-    #[command(after_help = "Examples:\n  trail report --session <session id>\n  trail report --intent <intent id> --json")]
+    #[command(after_help = "Examples:\n  tracewise report --session <session id>\n  tracewise report --intent <intent id> --json")]
     Report {
         #[arg(long, help = "Changes by this actor")]
         actor: Option<String>,
@@ -82,7 +82,7 @@ pub enum Commands {
         since: Option<String>,
     },
     /// Who holds a file and who changed it lately
-    #[command(after_help = "Examples:\n  trail file src/main.rs\n  trail file src/main.rs --limit 3 --json")]
+    #[command(after_help = "Examples:\n  tracewise file src/main.rs\n  tracewise file src/main.rs --limit 3 --json")]
     File {
         #[arg(help = "Path to the file, relative to the repository")]
         path: String,
@@ -92,7 +92,7 @@ pub enum Commands {
     /// Scan repository for changes
     Scan,
     /// Show line history blame for a file
-    #[command(after_help = "Examples:\n  trail blame src/main.rs")]
+    #[command(after_help = "Examples:\n  tracewise blame src/main.rs")]
     Blame {
         #[arg(help = "Path to the file to blame")]
         path: String,
@@ -100,7 +100,7 @@ pub enum Commands {
         at: Option<String>,
     },
     /// Show why a specific line was changed and its history
-    #[command(after_help = "Examples:\n  trail why src/main.rs:42")]
+    #[command(after_help = "Examples:\n  tracewise why src/main.rs:42")]
     Why {
         #[arg(help = "<path>:<line> to inspect")]
         target: String,
@@ -114,7 +114,7 @@ pub enum Commands {
     },
     /// Undo a specific change or all changes by an actor in a time window
     #[command(
-        after_help = "Examples:\n  trail undo <change id>\n  trail undo --actor claude --since 1h --dry-run\n  trail undo --intent <intent id> --dry-run"
+        after_help = "Examples:\n  tracewise undo <change id>\n  tracewise undo --actor claude --since 1h --dry-run\n  tracewise undo --intent <intent id> --dry-run"
     )]
     Undo {
         #[arg(help = "The change ID to undo")]
@@ -142,7 +142,7 @@ pub enum Commands {
         dry_run: bool,
     },
     /// Restore a file to its state at a change ID or time
-    #[command(after_help = "Examples:\n  trail restore a.txt --at <change id>")]
+    #[command(after_help = "Examples:\n  tracewise restore a.txt --at <change id>")]
     Restore {
         #[arg(help = "The file path to restore")]
         path: String,
@@ -153,15 +153,15 @@ pub enum Commands {
     Gc,
     /// Verify database hash chain integrity
     Verify,
-    /// Add paths to .trailignore so Tracewise stops recording them
-    #[command(after_help = "Examples:\n  trail ignore 'dist/' '*.log'")]
+    /// Add paths to .tracewiseignore so Tracewise stops recording them
+    #[command(after_help = "Examples:\n  tracewise ignore 'dist/' '*.log'")]
     Ignore {
         #[arg(required = true, help = "Ignore patterns (same syntax as .gitignore)")]
         patterns: Vec<String>,
     },
     /// Remove the history of ignored (or chosen) paths and keep the chain verifiable
     #[command(
-        after_help = "Examples:\n  trail prune --dry-run\n  trail prune --yes\n  trail prune --path 'build/**' --older-than 90d --yes"
+        after_help = "Examples:\n  tracewise prune --dry-run\n  tracewise prune --yes\n  tracewise prune --path 'build/**' --older-than 90d --yes"
     )]
     Prune {
         #[arg(long = "path", help = "Prune this path glob instead of the ignored paths (repeatable)")]
@@ -224,13 +224,13 @@ pub enum Commands {
         args: Vec<String>,
     },
     /// Manage intents (reasons)
-    #[command(after_help = "Examples:\n  trail intent add --why \"fix the title\" a.txt")]
+    #[command(after_help = "Examples:\n  tracewise intent add --why \"fix the title\" a.txt")]
     Intent {
         #[command(subcommand)]
         action: IntentAction,
     },
     /// Add a reason to an existing change
-    #[command(after_help = "Examples:\n  trail note --last \"why these changed\"\n  trail note <change id> \"why\"")]
+    #[command(after_help = "Examples:\n  tracewise note --last \"why these changed\"\n  tracewise note <change id> \"why\"")]
     Note {
         #[arg(long, help = "Add note to every pending change of the current actor")]
         last: Option<String>,
@@ -254,7 +254,7 @@ pub enum Commands {
         action: BackgroundAction,
     },
     /// Manage locks
-    #[command(after_help = "Examples:\n  trail lock list\n  trail lock release a.txt")]
+    #[command(after_help = "Examples:\n  tracewise lock list\n  tracewise lock release a.txt")]
     Lock {
         #[command(subcommand)]
         action: LockAction,
@@ -272,7 +272,7 @@ pub enum Commands {
     Rebuild,
     /// Read or change Tracewise's settings (retention, profile, reasons mode, storage, durability)
     #[command(
-        after_help = "Examples:\n  trail config get\n  trail config get reasons.mode\n  trail config set reasons.mode enforce\n  trail config set --global retention.commands 14d"
+        after_help = "Examples:\n  tracewise config get\n  tracewise config get reasons.mode\n  tracewise config set reasons.mode enforce\n  tracewise config set --global retention.commands 14d"
     )]
     Config {
         #[command(subcommand)]
@@ -286,7 +286,7 @@ pub enum Commands {
         action: ProcAction,
     },
     /// Run a command under a declared reason intent
-    #[command(after_help = "Examples:\n  trail run --why \"run the tests\" -- cargo test")]
+    #[command(after_help = "Examples:\n  tracewise run --why \"run the tests\" -- cargo test")]
     Run {
         #[arg(long, help = "Why this command is being run")]
         why: String,
@@ -344,11 +344,11 @@ pub enum ProcAction {
 pub enum ConfigAction {
     /// Show one setting, or all of them, with where each value comes from
     Get { key: Option<String> },
-    /// Change a setting in .trailconfig (or the global file with --global)
+    /// Change a setting in .tracewiseconfig (or the global file with --global)
     Set {
         key: String,
         value: String,
-        #[arg(long, help = "Write the global file ($TRAIL_HOME/config.toml) instead of this repository's .trailconfig")]
+        #[arg(long, help = "Write the global file ($TRACEWISE_HOME/config.toml) instead of this repository's .tracewiseconfig")]
         global: bool,
     },
 }
@@ -387,12 +387,15 @@ pub enum ShareAction {
         remote: Option<String>,
         #[arg(long, help = "Sharing level (full, summary, off); default summary")]
         level: Option<String>,
-        #[arg(long, help = "Keep the batches under refs/trail/device/ (no branches on the remote); the default when --remote is left out")]
+        #[arg(
+            long,
+            help = "Keep the batches under refs/tracewise/device/ (no branches on the remote); the default when --remote is left out"
+        )]
         hidden: bool,
         #[arg(long, help = "Encrypt every batch with a project key kept on this machine only (made now if there is none)")]
         encrypt: bool,
     },
-    /// Approve the remote named in .trailconfig so `trail push` may upload to it
+    /// Approve the remote named in .tracewiseconfig so `tracewise push` may upload to it
     Trust,
     /// Show how sharing is set up here: remote, level, refs, encryption, key, warnings
     Status,
@@ -523,7 +526,7 @@ pub enum StrictAction {
 
 #[derive(Subcommand, Debug, Clone)]
 pub enum BackgroundAction {
-    /// Stop attributing later writes to a background window (see `trail ps`)
+    /// Stop attributing later writes to a background window (see `tracewise ps`)
     Stop { id: String },
 }
 
@@ -531,13 +534,13 @@ pub enum BackgroundAction {
 pub enum DaemonAction {
     /// Run daemon in foreground
     Run,
-    /// Record the changed paths named on stdin (one JSON line each); started by trail-watchd
+    /// Record the changed paths named on stdin (one JSON line each); started by tracewise-watchd
     #[command(hide = true)]
     ScanPaths,
     /// Print 1 when an agent is working or a background job is alive (the strict sensor runs only then)
     #[command(hide = true)]
     Active,
-    /// Release expired locks and repair lock flags; started by trail-watchd
+    /// Release expired locks and repair lock flags; started by tracewise-watchd
     #[command(hide = true)]
     Sweep,
     Start,

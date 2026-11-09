@@ -1,4 +1,4 @@
-//! `trail prune` removes the history of ignored paths, keeps `verify` green, refuses agents and asks before it acts.
+//! `tracewise prune` removes the history of ignored paths, keeps `verify` green, refuses agents and asks before it acts.
 mod common;
 use common::Repo;
 

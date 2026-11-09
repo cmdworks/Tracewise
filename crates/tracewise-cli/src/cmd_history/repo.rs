@@ -4,14 +4,14 @@ use super::*;
 pub(crate) fn run_init(json: bool, repo_paths: &RepoPaths) {
     let data_dir = repo_paths.data_dir();
     if let Err(e) = fs::create_dir_all(&data_dir) {
-        eprintln!("trail: failed to create data directory: {e}");
+        eprintln!("tracewise: failed to create data directory: {e}");
         process::exit(1);
     }
 
     let files = walk_baseline_files(&repo_paths.work_tree);
     let (branch, head) = get_git_info(repo_paths);
     if let Err(e) = record_baseline(&repo_paths.work_tree, &data_dir, &branch, &head, &files) {
-        eprintln!("trail: baseline recording failed: {e}");
+        eprintln!("tracewise: baseline recording failed: {e}");
         process::exit(1);
     }
     // the daemon watches every registered repository: tell it about this one
@@ -27,19 +27,19 @@ pub(crate) fn run_init(json: bool, repo_paths: &RepoPaths) {
         });
         println!("{}", doc);
     } else {
-        println!("Initialized trail in {} ({} baseline files)", data_dir.display(), files.len());
+        println!("Initialized tracewise in {} ({} baseline files)", data_dir.display(), files.len());
     }
 }
 
 pub(crate) fn run_status(json: bool, repo_paths: &RepoPaths) {
-    let db_path = repo_paths.data_dir().join("trail.db");
+    let db_path = repo_paths.data_dir().join("tracewise.db");
     let (change_count, lock_count) = if db_path.is_file() {
         Database::open(&db_path).map(|db| (db.count_changes().unwrap_or(0), db.count_active_locks().unwrap_or(0))).unwrap_or((0, 0))
     } else {
         (0, 0)
     };
 
-    let share_cfg = tracewise_core::share::read_trailconfig(&repo_paths.work_tree);
+    let share_cfg = tracewise_core::share::read_tracewiseconfig(&repo_paths.work_tree);
     let share_json = if let Some(ref s) = share_cfg {
         serde_json::json!({
             "remote": s.remote,
@@ -109,7 +109,7 @@ pub(crate) fn run_scan(json: bool, repo_paths: &RepoPaths) {
             }
         }
         Err(e) => {
-            eprintln!("trail: scan failed: {e}");
+            eprintln!("tracewise: scan failed: {e}");
             process::exit(1);
         }
     }
@@ -117,7 +117,7 @@ pub(crate) fn run_scan(json: bool, repo_paths: &RepoPaths) {
 
 pub(crate) fn run_gc(json: bool, repo_paths: &RepoPaths) {
     let data_dir = repo_paths.data_dir();
-    let db_path = data_dir.join("trail.db");
+    let db_path = data_dir.join("tracewise.db");
     let mut db_gc_report = None;
     if db_path.exists() {
         if let Ok(db) = Database::open(&db_path) {
@@ -147,40 +147,40 @@ pub(crate) fn run_gc(json: bool, repo_paths: &RepoPaths) {
             }
         }
         Err(e) => {
-            eprintln!("trail: gc failed: {e}");
+            eprintln!("tracewise: gc failed: {e}");
             process::exit(1);
         }
     }
 }
 
 pub(crate) fn run_verify(json: bool, repo_paths: &RepoPaths) {
-    let db_path = repo_paths.data_dir().join("trail.db");
+    let db_path = repo_paths.data_dir().join("tracewise.db");
     if !db_path.exists() {
         if repo_paths.data_dir().join("chain-head").exists() {
-            eprintln!("trail: FAILED: trail.db is missing but its chain-head file exists; the history was deleted");
+            eprintln!("tracewise: FAILED: tracewise.db is missing but its chain-head file exists; the history was deleted");
         } else {
-            eprintln!("trail: not initialized; run trail init first");
+            eprintln!("tracewise: not initialized; run tracewise init first");
         }
         process::exit(1);
     }
     let db = match Database::open(&db_path) {
         Ok(d) => d,
         Err(e) => {
-            eprintln!("trail: failed to open db: {e}");
+            eprintln!("tracewise: failed to open db: {e}");
             process::exit(1);
         }
     };
     let report = match db.verify_hash_chain() {
         Ok(r) => r,
         Err(e) => {
-            eprintln!("trail: verify error: {e}");
+            eprintln!("tracewise: verify error: {e}");
             process::exit(1);
         }
     };
     let missing = match db.changes_with_missing_blobs(&tracewise_core::blob::BlobStore::new(&repo_paths.data_dir())) {
         Ok(m) => m,
         Err(e) => {
-            eprintln!("trail: verify error: {e}");
+            eprintln!("tracewise: verify error: {e}");
             process::exit(1);
         }
     };

@@ -33,18 +33,18 @@ pub fn is_process_running(pid: i32) -> bool {
     }
 }
 
-/// Check if a live process PID corresponds to a Tracewise daemon (`trail` or `trail-watchd`).
+/// Check if a live process PID corresponds to a Tracewise daemon (`tracewise` or `tracewise-watchd`).
 pub fn is_daemon_pid(pid: i32) -> bool {
     if !is_process_running(pid) {
         return false;
     }
     if let Some(name) = crate::process::get_proc_name(pid as u32) {
-        if name.contains("trail") || name.contains("watchd") {
+        if name.contains("tracewise") || name.contains("watchd") {
             return true;
         }
     }
     if let Some(path) = crate::process::get_proc_path(pid as u32) {
-        if path.contains("trail") || path.contains("watchd") {
+        if path.contains("tracewise") || path.contains("watchd") {
             return true;
         }
     }

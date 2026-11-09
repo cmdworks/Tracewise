@@ -64,7 +64,7 @@ pub fn handle_hook(event: &str, from: Option<&str>, record: Option<&std::path::P
             }
             Ok(None) => {}
             Err(e) => {
-                eprintln!("trail hook fail-open: {e}");
+                eprintln!("tracewise hook fail-open: {e}");
                 println!("{{}}");
                 return;
             }
@@ -74,7 +74,7 @@ pub fn handle_hook(event: &str, from: Option<&str>, record: Option<&std::path::P
     let input: HookInput = serde_json::from_str(&stdin_str).unwrap_or_default();
 
     let output = execute_hook(event, input).unwrap_or_else(|e| {
-        eprintln!("trail hook fail-open: {e}");
+        eprintln!("tracewise hook fail-open: {e}");
         HookOutput { decision: "allow", reason: None, notice: None }
     });
 
@@ -90,7 +90,7 @@ pub fn execute_hook(event: &str, input: HookInput) -> Result<HookOutput, String>
         }
     };
     let data_dir = repo_paths.data_dir();
-    let db_path = data_dir.join("trail.db");
+    let db_path = data_dir.join("tracewise.db");
     if !db_path.exists() {
         return Ok(HookOutput { decision: "allow", reason: None, notice: None });
     }

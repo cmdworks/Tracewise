@@ -14,10 +14,10 @@ export function matchesQuery(c: ChangeItem, query: string): boolean {
  * Tracewise's answer (paths and reasons over the whole history) together with the loaded events that match (which also covers commands and
  * ids, things Tracewise's search does not look at). One row per change, newest first.
  */
-export function mergeSearch(fromTrail: ChangeItem[], loaded: ChangeItem[], query: string): ChangeItem[] {
+export function mergeSearch(fromTracewise: ChangeItem[], loaded: ChangeItem[], query: string): ChangeItem[] {
   const seen = new Set<string>();
   const out: ChangeItem[] = [];
-  for (const c of [...fromTrail, ...loaded.filter((l) => matchesQuery(l, query))]) {
+  for (const c of [...fromTracewise, ...loaded.filter((l) => matchesQuery(l, query))]) {
     if (seen.has(c.id)) continue;
     seen.add(c.id);
     out.push(c);
@@ -26,10 +26,10 @@ export function mergeSearch(fromTrail: ChangeItem[], loaded: ChangeItem[], query
 }
 
 /** What the timeline says about its search, so the person knows how far it reached. */
-export function searchNote(o: { query: string; loading: boolean; answeredFor: string; fromTrail: number; shown: number; failed: boolean }): string {
+export function searchNote(o: { query: string; loading: boolean; answeredFor: string; fromTracewise: number; shown: number; failed: boolean }): string {
   if (!o.query.trim()) return "";
   if (o.failed) return "SEARCH FAILED · SHOWING MATCHES IN THE LOADED EVENTS ONLY";
   if (o.loading || o.answeredFor !== o.query.trim()) return "SEARCHING THE WHOLE HISTORY…";
-  const capped = o.fromTrail >= SEARCH_LIMIT ? ` (NEWEST ${SEARCH_LIMIT} OF THE PATH/REASON MATCHES)` : "";
+  const capped = o.fromTracewise >= SEARCH_LIMIT ? ` (NEWEST ${SEARCH_LIMIT} OF THE PATH/REASON MATCHES)` : "";
   return `${o.shown} ${o.shown === 1 ? "MATCH" : "MATCHES"} IN THE WHOLE HISTORY${capped}`;
 }

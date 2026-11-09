@@ -2,7 +2,7 @@ use super::*;
 
 #[test]
 fn only_reads_knows_readers() {
-    for c in ["ls", "sleep 40", "git status && git log -3", "cat a.txt | wc -l", "trail log --limit 3", "cd x && pwd"] {
+    for c in ["ls", "sleep 40", "git status && git log -3", "cat a.txt | wc -l", "tracewise log --limit 3", "cd x && pwd"] {
         assert!(only_reads(c), "{c}");
     }
     for c in ["echo hi > f", "git checkout x", "npm install", "sed -i s/a/b/ f", "python3 gen.py", "ls; rm x", ""] {

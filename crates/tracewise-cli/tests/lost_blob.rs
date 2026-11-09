@@ -1,4 +1,4 @@
-//! after a power cut a blob can be missing or cut short; `trail verify` must say so, and `show` must not present a
+//! after a power cut a blob can be missing or cut short; `tracewise verify` must say so, and `show` must not present a
 //! lost text version as a clean diff.
 mod common;
 use common::Repo;
@@ -21,7 +21,7 @@ fn verify_reports_a_blob_that_did_not_reach_the_disk() {
     let repo = Repo::new("");
     repo.edit_as("human:me", "a.txt", "content that is stored\n");
     assert!(repo.me(&["verify"]).ok(), "a healthy history verifies");
-    let lost = blobs(&repo.dir().join(".git/trail/objects"));
+    let lost = blobs(&repo.dir().join(".git/tracewise/objects"));
     assert!(!lost.is_empty(), "the scan stored a blob");
     for b in lost {
         std::fs::remove_file(b).unwrap();
@@ -41,7 +41,7 @@ fn show_fails_on_a_missing_text_version_but_not_on_a_binary_file() {
     assert!(repo.me(&["show", &bin_id]).ok(), "a hash-only file has no stored text and is fine");
 
     let after = repo.rows(&[]).iter().find(|c| c["id"] == text_id.as_str()).unwrap()["after"].as_str().unwrap().to_string();
-    std::fs::remove_file(repo.dir().join(".git/trail/objects").join(&after[..2]).join(&after[2..])).unwrap();
+    std::fs::remove_file(repo.dir().join(".git/tracewise/objects").join(&after[..2]).join(&after[2..])).unwrap();
     let out = repo.me(&["show", &text_id]);
     assert_eq!(out.code, 1, "{}", out.out);
     assert!(out.err.contains("missing or unreadable"), "{}", out.err);

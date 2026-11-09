@@ -51,7 +51,7 @@ pub fn check_copy(data_dir: &Path, main_work_tree: &Path) -> CopyState {
     if home == here {
         return CopyState::Original;
     }
-    let same_id_there = fs::read_to_string(home.join(".git").join("trail").join("id")).map(|s| s.trim() == id).unwrap_or(false);
+    let same_id_there = fs::read_to_string(home.join(".git").join("tracewise").join("id")).map(|s| s.trim() == id).unwrap_or(false);
     if same_id_there {
         CopyState::Copy { original: home }
     } else {

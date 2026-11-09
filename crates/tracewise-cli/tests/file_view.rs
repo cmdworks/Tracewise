@@ -1,4 +1,4 @@
-//! B3: `trail file <path>` shows the lock and the latest changes of one file.
+//! B3: `tracewise file <path>` shows the lock and the latest changes of one file.
 mod common;
 use common::Repo;
 
@@ -19,7 +19,7 @@ fn file_shows_lock_and_latest_changes_of_one_file_only() {
     assert_eq!(one["changes"].as_array().unwrap().len(), 1, "--limit applies");
     assert_eq!(one["changes"][0]["op"], "modify", "newest first");
 
-    let db = tracewise_core::Database::open(&repo.dir().join(".git/trail/trail.db")).unwrap();
+    let db = tracewise_core::Database::open(&repo.dir().join(".git/tracewise/tracewise.db")).unwrap();
     let holder = tracewise_core::model::Actor { kind: "agent".into(), name: Some("claude".into()), session: Some("s1".into()) };
     assert!(db.acquire_lock("a.txt", &holder, None, 600).unwrap().is_none(), "None means taken");
     let text = repo.me(&["file", "a.txt"]).out;

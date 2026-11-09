@@ -34,22 +34,22 @@ use model::{Actor, Change, FileRecord, GitInfo, TimeRange};
 use std::io;
 use std::path::{Path, PathBuf};
 
-/// Returns the global TRAIL_HOME path (defaults to ~/.trail).
-pub fn get_trail_home() -> PathBuf {
-    tracewise_platform::paths::trail_home_dir()
+/// Returns the global TRACEWISE_HOME path (defaults to ~/.tracewise).
+pub fn get_tracewise_home() -> PathBuf {
+    tracewise_platform::paths::tracewise_home_dir()
 }
 
-/// Gets the device ID from `TRAIL_DEVICE` env or `TRAIL_HOME/device`.
+/// Gets the device ID from `TRACEWISE_DEVICE` env or `TRACEWISE_HOME/device`.
 pub fn get_device_id() -> String {
-    if let Ok(dev) = std::env::var("TRAIL_DEVICE") {
+    if let Ok(dev) = std::env::var("TRACEWISE_DEVICE") {
         if !dev.trim().is_empty() {
             return dev.trim().to_string();
         }
     }
 
-    let trail_home = get_trail_home();
+    let tracewise_home = get_tracewise_home();
 
-    let dev_file = trail_home.join("device");
+    let dev_file = tracewise_home.join("device");
     if let Ok(content) = std::fs::read_to_string(&dev_file) {
         if !content.trim().is_empty() {
             return content.trim().to_string();
@@ -57,14 +57,14 @@ pub fn get_device_id() -> String {
     }
 
     let dev_id = format!("dev-{}", &ulid::Ulid::new().to_string().to_lowercase()[..8]);
-    let _ = tracewise_platform::private::create_dir_all(&trail_home);
+    let _ = tracewise_platform::private::create_dir_all(&tracewise_home);
     let _ = tracewise_platform::private::write(&dev_file, dev_id.as_bytes());
     dev_id
 }
 
 /// Records baseline changes for all unrecorded non-ignored files in `work_tree`.
 pub fn record_baseline(work_tree: &Path, data_dir: &Path, branch: &str, head: &str, files: &[PathBuf]) -> io::Result<usize> {
-    let db = Database::open(&data_dir.join("trail.db")).map_err(|e| io::Error::other(e.to_string()))?;
+    let db = Database::open(&data_dir.join("tracewise.db")).map_err(|e| io::Error::other(e.to_string()))?;
     let blobs = BlobStore::new(data_dir);
     let device = get_device_id();
     let known = db.get_known_files().map_err(|e| io::Error::other(e.to_string()))?;

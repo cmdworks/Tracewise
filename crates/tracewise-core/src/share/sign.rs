@@ -26,7 +26,7 @@ fn bad(msg: String) -> io::Error {
 }
 
 fn key_path() -> PathBuf {
-    crate::get_trail_home().join("device.key")
+    crate::get_tracewise_home().join("device.key")
 }
 
 /// This device's key, created on first use.
@@ -37,7 +37,7 @@ fn signing_key() -> io::Result<SigningKey> {
     }
     let mut seed = [0u8; 32];
     getrandom::getrandom(&mut seed).map_err(|e| io::Error::other(format!("no random numbers: {e}")))?;
-    tracewise_platform::private::create_dir_all(crate::get_trail_home())?;
+    tracewise_platform::private::create_dir_all(crate::get_tracewise_home())?;
     tracewise_platform::private::write(&path, hex(&seed))?;
     Ok(SigningKey::from_bytes(&seed))
 }
@@ -109,7 +109,7 @@ pub fn sign_batch(data_dir: &Path, dir: &Path, device: &str) -> io::Result<()> {
     match pins.get(device) {
         Some(p) if *p != public => {
             return Err(bad(format!(
-                "this device's signing key differs from the one pinned for '{device}'; run `trail share keys --forget {device}` if you replaced it on purpose"
+                "this device's signing key differs from the one pinned for '{device}'; run `tracewise share keys --forget {device}` if you replaced it on purpose"
             )))
         }
         Some(_) => {}
@@ -145,7 +145,7 @@ pub fn verify_batch(data_dir: &Path, dir: &Path) -> io::Result<()> {
         .map_err(|_| bad(format!("batch {} from '{device}' does not match its signature; it was changed after signing", dir.display())))?;
     match pins.get(&device) {
         Some(p) if *p != s.key => Err(bad(format!(
-            "batch {} is signed with a different key than the one pinned for '{device}'; refused. If the device really got a new key, run `trail share keys --forget {device}`",
+            "batch {} is signed with a different key than the one pinned for '{device}'; refused. If the device really got a new key, run `tracewise share keys --forget {device}`",
             dir.display()
         ))),
         Some(_) => Ok(()),

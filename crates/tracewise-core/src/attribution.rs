@@ -4,7 +4,7 @@ use rusqlite::Result;
 
 /// Single shared window-attribution routine (R07, Criterion 4 in plan-v0.2).
 /// Attributes changes to a window, upgrades actor confidence, and links covering intents.
-/// Used by shell precmd, agent post-command, and trail run.
+/// Used by shell precmd, agent post-command, and tracewise run.
 pub fn attribute_window(db: &Database, window: &Window, actor: &Actor, predicted: bool, reads_only: bool) -> Result<Vec<String>> {
     if reads_only {
         return Ok(Vec::new());

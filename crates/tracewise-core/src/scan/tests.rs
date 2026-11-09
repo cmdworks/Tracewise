@@ -8,7 +8,7 @@ use std::path::PathBuf;
 #[test]
 fn a_shell_that_exited_does_not_make_later_changes_ambiguous() {
     let temp = tempfile::tempdir().unwrap();
-    let db = Database::open(&temp.path().join("trail.db")).unwrap();
+    let db = Database::open(&temp.path().join("tracewise.db")).unwrap();
     let mut child = std::process::Command::new("true").spawn().unwrap();
     child.wait().unwrap();
     let dead_pid = child.id();
@@ -45,7 +45,7 @@ fn a_background_window_is_the_weakest_evidence() {
     let _env_guard = crate::test_env::ENV_LOCK.lock().unwrap();
     crate::test_env::clear_agent_markers();
     let temp = tempfile::tempdir().unwrap();
-    let db = Database::open(&temp.path().join("trail.db")).unwrap();
+    let db = Database::open(&temp.path().join("tracewise.db")).unwrap();
     let ago = (chrono::Utc::now() - chrono::Duration::minutes(1)).to_rfc3339_opts(chrono::SecondsFormat::Millis, true);
     let later = |secs: i64| (chrono::Utc::now() + chrono::Duration::seconds(secs)).to_rfc3339_opts(chrono::SecondsFormat::Millis, true);
     let window = |id: &str, kind: &str, actor: Actor, end: Option<String>| crate::model::Window {
@@ -75,7 +75,7 @@ fn a_background_window_is_the_weakest_evidence() {
     assert_eq!(source, None);
 
     let temp2 = tempfile::tempdir().unwrap();
-    let db2 = Database::open(&temp2.path().join("trail.db")).unwrap();
+    let db2 = Database::open(&temp2.path().join("tracewise.db")).unwrap();
     db2.open_window(&window("bg3", "agent_background", Actor::agent("claude", "s1"), Some(later(-5)))).unwrap();
     let (actor, _, _, _) = resolve_actor_candidates_confidence(&db2, &options, "a.txt", false);
     assert_eq!(actor.kind, "unknown");
@@ -88,7 +88,7 @@ fn a_background_window_is_the_weakest_evidence() {
 #[test]
 fn one_person_seen_by_two_hooks_is_not_ambiguous() {
     let temp = tempfile::tempdir().unwrap();
-    let db = Database::open(&temp.path().join("trail.db")).unwrap();
+    let db = Database::open(&temp.path().join("tracewise.db")).unwrap();
     let a_minute_ago = (chrono::Utc::now() - chrono::Duration::minutes(1)).to_rfc3339_opts(chrono::SecondsFormat::Millis, true);
     let window = |id: &str, kind: &str, actor: Actor| crate::model::Window {
         id: id.to_string(),
@@ -119,7 +119,7 @@ fn one_person_seen_by_two_hooks_is_not_ambiguous() {
 fn test_scan_create_modify_delete_rename() {
     let temp = tempfile::tempdir().unwrap();
     let repo = temp.path().join("repo");
-    let data_dir = repo.join(".git/trail");
+    let data_dir = repo.join(".git/tracewise");
     fs::create_dir_all(&data_dir).unwrap();
 
     // 1. Initial file
@@ -140,7 +140,7 @@ fn test_scan_create_modify_delete_rename() {
     let changes = scan_repository(&repo, &data_dir, "main", "12345678", &ScanOptions::default(), &files2).unwrap();
     assert_eq!(changes.len(), 1);
 
-    let db = Database::open(&data_dir.join("trail.db")).unwrap();
+    let db = Database::open(&data_dir.join("tracewise.db")).unwrap();
     let rename_rec = db.get_change(&changes[0]).unwrap().unwrap();
     assert_eq!(rename_rec.op, "rename");
     assert_eq!(rename_rec.old_path, Some("file1.txt".to_string()));
@@ -158,7 +158,7 @@ fn test_scan_create_modify_delete_rename() {
 fn test_scan_specific_paths() {
     let temp = tempfile::tempdir().unwrap();
     let repo = temp.path().join("repo");
-    let data_dir = repo.join(".git/trail");
+    let data_dir = repo.join(".git/tracewise");
     fs::create_dir_all(&data_dir).unwrap();
 
     fs::write(repo.join("a.txt"), "hello\n").unwrap();
@@ -182,7 +182,7 @@ fn test_scan_specific_paths() {
     .unwrap();
     assert_eq!(changes.len(), 1);
 
-    let db = Database::open(&data_dir.join("trail.db")).unwrap();
+    let db = Database::open(&data_dir.join("tracewise.db")).unwrap();
     let rec = db.get_change(&changes[0]).unwrap().unwrap();
     assert_eq!(rec.actor, Actor::agent("claude", "s1"));
     assert_eq!(rec.confidence, "exact");
@@ -194,7 +194,7 @@ fn unattributed_modify_without_agent_window_is_human_likely() {
     let _env_guard = crate::test_env::ENV_LOCK.lock().unwrap();
     crate::test_env::clear_agent_markers();
     let temp = tempfile::tempdir().unwrap();
-    let db = Database::open(&temp.path().join("trail.db")).unwrap();
+    let db = Database::open(&temp.path().join("tracewise.db")).unwrap();
     let options = ScanOptions::default();
 
     // Modify with no active window attributes to human likely
@@ -215,7 +215,7 @@ fn full_scan_and_path_scan_record_the_same_with_an_ignored_file() {
     let record = |targeted: bool| -> Vec<(String, String)> {
         let temp = tempfile::tempdir().unwrap();
         let repo = temp.path().join("repo");
-        let data_dir = repo.join(".git/trail");
+        let data_dir = repo.join(".git/tracewise");
         fs::create_dir_all(&data_dir).unwrap();
         fs::write(repo.join(".gitignore"), "*.log\n").unwrap();
         fs::write(repo.join("a.txt"), "same content\n").unwrap();
@@ -233,7 +233,7 @@ fn full_scan_and_path_scan_record_the_same_with_an_ignored_file() {
         fs::remove_file(repo.join("a.txt")).unwrap();
         fs::write(repo.join("noise.log"), "same content\n").unwrap();
         scan(&["a.txt", "noise.log"], &[".gitignore"]);
-        let db = Database::open(&data_dir.join("trail.db")).unwrap();
+        let db = Database::open(&data_dir.join("tracewise.db")).unwrap();
         let mut out: Vec<(String, String)> = db.list_changes(None, None).unwrap().into_iter().map(|c| (c.op, c.path)).collect();
         out.sort();
         out
@@ -249,7 +249,7 @@ fn full_scan_and_path_scan_record_the_same_with_an_ignored_file() {
 fn a_failed_blob_write_records_nothing_and_the_next_scan_recovers() {
     let temp = tempfile::tempdir().unwrap();
     let repo = temp.path().join("repo");
-    let data_dir = repo.join(".git/trail");
+    let data_dir = repo.join(".git/tracewise");
     let objects = data_dir.join("objects");
     fs::create_dir_all(&data_dir).unwrap();
     fs::create_dir_all(&objects).unwrap();
@@ -265,7 +265,7 @@ fn a_failed_blob_write_records_nothing_and_the_next_scan_recovers() {
     let full = scan_repository(&repo, &data_dir, "main", "1", &ScanOptions::default(), &files);
     let targeted = scan_specific_paths(&repo, &data_dir, "main", "1", &ScanOptions::default(), &files);
     assert!(full.is_err() && targeted.is_err(), "{full:?} {targeted:?}");
-    let db = Database::open(&data_dir.join("trail.db")).unwrap();
+    let db = Database::open(&data_dir.join("tracewise.db")).unwrap();
     assert!(db.list_changes(None, None).unwrap().is_empty());
     assert!(db.get_file("a.txt").unwrap().is_none());
 
@@ -279,7 +279,7 @@ fn a_failed_blob_write_records_nothing_and_the_next_scan_recovers() {
 fn a_deleted_blob_is_reported_but_a_hash_only_file_is_not() {
     let temp = tempfile::tempdir().unwrap();
     let repo = temp.path().join("repo");
-    let data_dir = repo.join(".git/trail");
+    let data_dir = repo.join(".git/tracewise");
     fs::create_dir_all(&data_dir).unwrap();
     fs::write(repo.join("a.txt"), "hello\n").unwrap();
     fs::write(repo.join("b.bin"), [0u8, 1, 2, 3]).unwrap();
@@ -287,7 +287,7 @@ fn a_deleted_blob_is_reported_but_a_hash_only_file_is_not() {
     let ids = scan_repository(&repo, &data_dir, "main", "1", &ScanOptions::default(), &files).unwrap();
     assert_eq!(ids.len(), 2);
 
-    let db = Database::open(&data_dir.join("trail.db")).unwrap();
+    let db = Database::open(&data_dir.join("tracewise.db")).unwrap();
     let blobs = crate::blob::BlobStore::new(&data_dir);
     assert!(db.changes_with_missing_blobs(&blobs).unwrap().is_empty());
 
@@ -310,7 +310,7 @@ fn a_deleted_blob_is_reported_but_a_hash_only_file_is_not() {
 fn an_unreadable_folder_is_not_recorded_as_a_deletion() {
     let temp = tempfile::tempdir().unwrap();
     let repo = temp.path().join("repo");
-    let data_dir = repo.join(".git/trail");
+    let data_dir = repo.join(".git/tracewise");
     fs::create_dir_all(&data_dir).unwrap();
     fs::create_dir_all(repo.join("sub")).unwrap();
     fs::write(repo.join("sub/a.txt"), "hello\n").unwrap();
@@ -325,7 +325,7 @@ fn an_unreadable_folder_is_not_recorded_as_a_deletion() {
         return; // running as root: the folder cannot be made unreadable
     }
     assert!(result.is_err(), "{result:?}");
-    let db = Database::open(&data_dir.join("trail.db")).unwrap();
+    let db = Database::open(&data_dir.join("tracewise.db")).unwrap();
     assert_eq!(db.list_changes(Some("sub/a.txt"), None).unwrap().len(), 1, "only the creation, no delete");
 }
 
@@ -334,7 +334,7 @@ fn an_unreadable_folder_is_not_recorded_as_a_deletion() {
 fn a_full_scan_keeps_files_of_an_unreadable_folder() {
     let temp = tempfile::tempdir().unwrap();
     let repo = temp.path().join("repo");
-    let data_dir = repo.join(".git/trail");
+    let data_dir = repo.join(".git/tracewise");
     fs::create_dir_all(&data_dir).unwrap();
     fs::create_dir_all(repo.join("sub")).unwrap();
     fs::write(repo.join("sub/a.txt"), "hello\n").unwrap();
@@ -349,7 +349,7 @@ fn a_full_scan_keeps_files_of_an_unreadable_folder() {
         return; // running as root
     }
     result.unwrap();
-    let db = Database::open(&data_dir.join("trail.db")).unwrap();
+    let db = Database::open(&data_dir.join("tracewise.db")).unwrap();
     assert_eq!(db.list_changes(Some("sub/a.txt"), None).unwrap().len(), 1, "only the creation, no delete");
 
     fs::remove_dir_all(repo.join("sub")).unwrap();
@@ -363,7 +363,7 @@ fn a_file_with_a_secret_is_recorded_by_hash_only() {
     for targeted in [false, true] {
         let temp = tempfile::tempdir().unwrap();
         let repo = temp.path().join("repo");
-        let data_dir = repo.join(".git/trail");
+        let data_dir = repo.join(".git/tracewise");
         fs::create_dir_all(&data_dir).unwrap();
         let key = format!("ghp_{}", "A1b2C3d4E5".repeat(4));
         fs::write(repo.join("cfg.txt"), format!("token = {key}\n")).unwrap();
@@ -374,7 +374,7 @@ fn a_file_with_a_secret_is_recorded_by_hash_only() {
         } else {
             scan_repository(&repo, &data_dir, "main", "1", &ScanOptions::default(), &files).unwrap();
         }
-        let db = Database::open(&data_dir.join("trail.db")).unwrap();
+        let db = Database::open(&data_dir.join("tracewise.db")).unwrap();
         let cfg = db.list_changes(Some("cfg.txt"), None).unwrap();
         assert_eq!(cfg.len(), 1, "the change itself is recorded (targeted={targeted})");
         assert!(cfg[0].hunks.is_empty() && cfg[0].after.is_some());
@@ -404,7 +404,7 @@ fn full_and_path_scan_both_record_the_per_path_undo_target() {
     for targeted in [false, true] {
         let temp = tempfile::tempdir().unwrap();
         let repo = temp.path().join("repo");
-        let data_dir = repo.join(".git/trail");
+        let data_dir = repo.join(".git/tracewise");
         fs::create_dir_all(&data_dir).unwrap();
         fs::write(repo.join("a.txt"), "a\n").unwrap();
         let files = vec![PathBuf::from("a.txt")];
@@ -419,7 +419,7 @@ fn full_and_path_scan_both_record_the_per_path_undo_target() {
         fs::write(repo.join("a.txt"), "a\nb\n").unwrap();
         let opts = ScanOptions { path_undoes: Some([("a.txt".to_string(), vec!["U1".to_string()])].into()), ..ScanOptions::default() };
         scan(&opts);
-        let db = Database::open(&data_dir.join("trail.db")).unwrap();
+        let db = Database::open(&data_dir.join("tracewise.db")).unwrap();
         let last = db.list_changes(Some("a.txt"), None).unwrap().into_iter().find(|c| c.op == "modify").unwrap();
         assert_eq!(last.undoes, Some(vec!["U1".to_string()]), "targeted={targeted}");
     }
@@ -442,7 +442,7 @@ fn full_scan_and_path_scan_agree_on_create_modify_delete_chmod_and_links() {
         let record = |targeted: bool| -> Vec<(String, String)> {
             let temp = tempfile::tempdir().unwrap();
             let repo = temp.path().join("repo");
-            let data_dir = repo.join(".git/trail");
+            let data_dir = repo.join(".git/tracewise");
             fs::create_dir_all(&data_dir).unwrap();
             fs::write(repo.join("a.txt"), "a\n").unwrap();
             let all = |r: &std::path::Path| -> Vec<PathBuf> {
@@ -460,7 +460,7 @@ fn full_scan_and_path_scan_agree_on_create_modify_delete_chmod_and_links() {
             } else {
                 scan_repository(&repo, &data_dir, "main", "1", &opts, &all(&repo)).unwrap();
             }
-            let db = Database::open(&data_dir.join("trail.db")).unwrap();
+            let db = Database::open(&data_dir.join("tracewise.db")).unwrap();
             let mut out: Vec<(String, String)> = db.list_changes(None, None).unwrap().into_iter().map(|c| (c.op, c.path)).collect();
             out.sort();
             out
@@ -474,7 +474,7 @@ fn an_agent_window_beats_a_long_running_shell_command() {
     let _env_guard = crate::test_env::ENV_LOCK.lock().unwrap();
     crate::test_env::clear_agent_markers();
     let temp = tempfile::tempdir().unwrap();
-    let db = Database::open(&temp.path().join("trail.db")).unwrap();
+    let db = Database::open(&temp.path().join("tracewise.db")).unwrap();
     let ago = |mins: i64| (chrono::Utc::now() - chrono::Duration::minutes(mins)).to_rfc3339_opts(chrono::SecondsFormat::Millis, true);
     let me = Actor { kind: "human".to_string(), name: Some("asmat".to_string()), session: None };
     let window = |id: String, kind: &str, actor: Actor, start: String| crate::model::Window {

@@ -1,5 +1,5 @@
-//! B9/B10: `trail log --actor/--since/--grep` really filter (they were once accepted and ignored), `--group` clusters by task and
-//! `trail report` writes one task as Markdown.
+//! B9/B10: `tracewise log --actor/--since/--grep` really filter (they were once accepted and ignored), `--group` clusters by task and
+//! `tracewise report` writes one task as Markdown.
 mod common;
 use common::Repo;
 
@@ -67,7 +67,7 @@ fn report_lists_one_task_as_markdown() {
     let out = repo.me(&["report", "--session", "s1"]);
     assert!(out.ok(), "{}", out.err);
     let md = out.out;
-    assert!(md.starts_with("# Trail report") && md.contains("## Files") && md.contains("## Changes"), "{md}");
+    assert!(md.starts_with("# Tracewise report") && md.contains("## Files") && md.contains("## Changes"), "{md}");
     assert!(md.contains("`a.txt`") && md.contains("`c.txt`") && !md.contains("`b.txt`"), "only session s1: {md}");
     assert!(md.contains("tighten the retry budget") && md.contains("no reason recorded"), "{md}");
 

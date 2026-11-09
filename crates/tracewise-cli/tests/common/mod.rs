@@ -1,8 +1,8 @@
 //! Shared helper for the integration tests: a throw-away git repository with Tracewise initialised, Tracewise's own home folder outside
 //! the repository (so it is not recorded as changes), and an environment that does not depend on who runs the tests.
 //!
-//! Every call runs the real `trail` binary. The environment is cleaned of anything that would change who a change is attributed
-//! to (agent markers, `TRAIL_ACTOR`, `TRAIL_WHY`, ...), so the tests give the same answer inside an agent session and in CI.
+//! Every call runs the real `tracewise` binary. The environment is cleaned of anything that would change who a change is attributed
+//! to (agent markers, `TRACEWISE_ACTOR`, `TRACEWISE_WHY`, ...), so the tests give the same answer inside an agent session and in CI.
 #![allow(dead_code)]
 use std::path::Path;
 use std::process::{Command, Stdio};
@@ -13,13 +13,13 @@ const AMBIENT: &[&str] = &[
     "CLAUDE_CODE_SESSION_ID",
     "ANTIGRAVITY_AGENT",
     "ANTIGRAVITY_CONVERSATION_ID",
-    "TRAIL_ACTOR",
-    "TRAIL_WHY",
-    "TRAIL_NOW", // an agent cannot freeze the clock, so the tests use the real one
-    "TRAIL_WARN",
-    "TRAIL_PROMPT_LINE",
-    "TRAIL_SHELL_ACTIVE",
-    "TRAIL_SHIM_DEPTH",
+    "TRACEWISE_ACTOR",
+    "TRACEWISE_WHY",
+    "TRACEWISE_NOW", // an agent cannot freeze the clock, so the tests use the real one
+    "TRACEWISE_WARN",
+    "TRACEWISE_PROMPT_LINE",
+    "TRACEWISE_SHELL_ACTIVE",
+    "TRACEWISE_SHIM_DEPTH",
 ];
 
 pub struct Run {
@@ -44,20 +44,20 @@ pub struct Repo {
 }
 
 impl Repo {
-    /// A git repository with Tracewise initialised. `config` is the content of `.trailconfig` (empty for none).
+    /// A git repository with Tracewise initialised. `config` is the content of `.tracewiseconfig` (empty for none).
     pub fn new(config: &str) -> Self {
         let repo = Self::uninitialised(config);
-        assert!(repo.me(&["init"]).ok(), "trail init failed");
+        assert!(repo.me(&["init"]).ok(), "tracewise init failed");
         repo
     }
 
-    /// Like `new` but before `trail init`, so a test can create files that become the baseline.
+    /// Like `new` but before `tracewise init`, so a test can create files that become the baseline.
     pub fn uninitialised(config: &str) -> Self {
         let tmp = tempfile::tempdir().unwrap();
         let ok = Command::new("git").args(["init", "-q"]).current_dir(tmp.path()).status().unwrap().success();
         assert!(ok, "git init failed");
         if !config.is_empty() {
-            std::fs::write(tmp.path().join(".trailconfig"), config).unwrap();
+            std::fs::write(tmp.path().join(".tracewiseconfig"), config).unwrap();
         }
         Self { tmp, home: tempfile::tempdir().unwrap() }
     }
@@ -93,11 +93,11 @@ impl Repo {
         }
     }
 
-    /// Runs `trail` as `actor` (`human:me`, `agent:codex:s1`), with optional stdin and extra environment.
+    /// Runs `tracewise` as `actor` (`human:me`, `agent:codex:s1`), with optional stdin and extra environment.
     pub fn with(&self, actor: &str, args: &[&str], stdin: Option<&str>, env: &[(&str, &str)]) -> Run {
-        let mut cmd = Command::new(env!("CARGO_BIN_EXE_trail"));
-        cmd.args(args).current_dir(self.dir()).env("TRAIL_HOME", self.home.path()).env("TRAIL_ACTOR", actor);
-        for name in AMBIENT.iter().filter(|n| **n != "TRAIL_ACTOR") {
+        let mut cmd = Command::new(env!("CARGO_BIN_EXE_tracewise"));
+        cmd.args(args).current_dir(self.dir()).env("TRACEWISE_HOME", self.home.path()).env("TRACEWISE_ACTOR", actor);
+        for name in AMBIENT.iter().filter(|n| **n != "TRACEWISE_ACTOR") {
             cmd.env_remove(name);
         }
         for (k, v) in env {
@@ -113,11 +113,11 @@ impl Repo {
         }
     }
 
-    /// Starts `trail` under another program name (`sed`, `rm`): how a command shim calls it. `env` is added to the environment.
+    /// Starts `tracewise` under another program name (`sed`, `rm`): how a command shim calls it. `env` is added to the environment.
     pub fn as_program(&self, program: &str, args: &[&str], env: &[(&str, &str)]) -> Run {
         use std::os::unix::process::CommandExt;
-        let mut cmd = Command::new(env!("CARGO_BIN_EXE_trail"));
-        cmd.arg0(program).args(args).current_dir(self.dir()).env("TRAIL_HOME", self.home.path());
+        let mut cmd = Command::new(env!("CARGO_BIN_EXE_tracewise"));
+        cmd.arg0(program).args(args).current_dir(self.dir()).env("TRACEWISE_HOME", self.home.path());
         for name in AMBIENT {
             cmd.env_remove(name);
         }
@@ -141,7 +141,7 @@ impl Repo {
         self.run("human:me", args)
     }
 
-    /// The rows of `trail log --json` with extra arguments.
+    /// The rows of `tracewise log --json` with extra arguments.
     pub fn rows(&self, extra: &[&str]) -> Vec<serde_json::Value> {
         let mut args = vec!["log", "--json"];
         args.extend_from_slice(extra);

@@ -19,9 +19,9 @@ pub struct RepoPaths {
 }
 
 impl RepoPaths {
-    /// Returns the `<git common dir>/trail` data directory.
+    /// Returns the `<git common dir>/tracewise` data directory.
     pub fn data_dir(&self) -> PathBuf {
-        self.git_common_dir.join("trail")
+        self.git_common_dir.join("tracewise")
     }
 
     /// Discover the git repository starting from `start_dir` and walking upwards.
@@ -89,14 +89,14 @@ impl RepoPaths {
     }
 }
 
-/// Walk all files in `root` respecting .gitignore, .trailignore, and excluding .git/.
+/// Walk all files in `root` respecting .gitignore, .tracewiseignore, and excluding .git/.
 pub fn walk_baseline_files(root: &Path) -> Vec<PathBuf> {
     let mut builder = WalkBuilder::new(root);
     builder.hidden(false); // don't skip dotfiles by default (.gitignore, .env etc.)
     builder.git_ignore(true);
     builder.git_global(true);
     builder.git_exclude(true);
-    builder.add_custom_ignore_filename(".trailignore");
+    builder.add_custom_ignore_filename(".tracewiseignore");
     // another repository inside (a submodule, a nested clone) has its own history
     let top = root.to_path_buf();
     builder.filter_entry(move |e| e.path() == top || !e.file_type().is_some_and(|t| t.is_dir()) || !e.path().join(".git").exists());
@@ -117,7 +117,7 @@ pub fn walk_baseline_files(root: &Path) -> Vec<PathBuf> {
     files
 }
 
-/// Count baseline files in `root` respecting .gitignore, .trailignore, and excluding .git/.
+/// Count baseline files in `root` respecting .gitignore, .tracewiseignore, and excluding .git/.
 pub fn count_baseline_files(root: &Path) -> usize {
     walk_baseline_files(root).len()
 }

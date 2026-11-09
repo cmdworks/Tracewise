@@ -2,13 +2,13 @@ use super::*;
 
 #[test]
 fn test_cli_parse() {
-    let cli = Cli::parse_from(["trail", "status"]);
+    let cli = Cli::parse_from(["tracewise", "status"]);
     assert!(!cli.json);
 }
 
 #[test]
 fn test_cli_shims_parse() {
-    let cli = Cli::parse_from(["trail", "shims", "install", "--dir", "/tmp/shims", "--json"]);
+    let cli = Cli::parse_from(["tracewise", "shims", "install", "--dir", "/tmp/shims", "--json"]);
     assert!(cli.json);
     match cli.command {
         Some(Commands::Shims { action: ShimsAction::Install { dir } }) => {
@@ -17,7 +17,7 @@ fn test_cli_shims_parse() {
         _ => panic!("expected Commands::Shims::Install"),
     }
 
-    let cli2 = Cli::parse_from(["trail", "shims", "uninstall", "--dir", "/tmp/shims"]);
+    let cli2 = Cli::parse_from(["tracewise", "shims", "uninstall", "--dir", "/tmp/shims"]);
     assert!(!cli2.json);
     match cli2.command {
         Some(Commands::Shims { action: ShimsAction::Uninstall { dir } }) => {
@@ -29,7 +29,7 @@ fn test_cli_shims_parse() {
 
 #[test]
 fn test_cli_pending_parse() {
-    let cli = Cli::parse_from(["trail", "pending", "--json"]);
+    let cli = Cli::parse_from(["tracewise", "pending", "--json"]);
     assert!(cli.json);
     match cli.command {
         Some(Commands::Pending) => {}
@@ -39,7 +39,7 @@ fn test_cli_pending_parse() {
 
 #[test]
 fn test_cli_note_last_parse() {
-    let cli = Cli::parse_from(["trail", "note", "--last", "document release procedure", "--json"]);
+    let cli = Cli::parse_from(["tracewise", "note", "--last", "document release procedure", "--json"]);
     assert!(cli.json);
     match cli.command {
         Some(Commands::Note { last, change_id, why }) => {
@@ -53,7 +53,7 @@ fn test_cli_note_last_parse() {
 
 #[test]
 fn test_cli_run_parse() {
-    let cli = Cli::parse_from(["trail", "run", "--why", "implement user login flow", "--", "echo", "hello", "world"]);
+    let cli = Cli::parse_from(["tracewise", "run", "--why", "implement user login flow", "--", "echo", "hello", "world"]);
     match cli.command {
         Some(Commands::Run { why, command }) => {
             assert_eq!(why, "implement user login flow");
@@ -65,7 +65,7 @@ fn test_cli_run_parse() {
 
 #[test]
 fn test_cli_proc_chain_parse() {
-    let cli = Cli::parse_from(["trail", "proc", "chain", "--json"]);
+    let cli = Cli::parse_from(["tracewise", "proc", "chain", "--json"]);
     assert!(cli.json);
     match cli.command {
         Some(Commands::Proc { action: ProcAction::Chain { pid } }) => {
@@ -77,7 +77,7 @@ fn test_cli_proc_chain_parse() {
 
 #[test]
 fn test_cli_proc_who_parse() {
-    let cli = Cli::parse_from(["trail", "proc", "who", "--json"]);
+    let cli = Cli::parse_from(["tracewise", "proc", "who", "--json"]);
     assert!(cli.json);
     match cli.command {
         Some(Commands::Proc { action: ProcAction::Who { pid } }) => {
@@ -89,7 +89,7 @@ fn test_cli_proc_who_parse() {
 
 #[test]
 fn test_cli_agent_parse() {
-    let cli = Cli::parse_from(["trail", "agent", "install", "claude", "--json"]);
+    let cli = Cli::parse_from(["tracewise", "agent", "install", "claude", "--json"]);
     assert!(cli.json);
     match cli.command {
         Some(Commands::Agent { action: AgentAction::Install { name, scope } }) => {
@@ -102,7 +102,7 @@ fn test_cli_agent_parse() {
 
 #[test]
 fn test_cli_hook_from_parse() {
-    let cli = Cli::parse_from(["trail", "hook", "pre-edit", "--from", "claude", "--record", "/tmp/rec"]);
+    let cli = Cli::parse_from(["tracewise", "hook", "pre-edit", "--from", "claude", "--record", "/tmp/rec"]);
     match cli.command {
         Some(Commands::Hook { event, from, record }) => {
             assert_eq!(event, "pre-edit");
@@ -115,7 +115,7 @@ fn test_cli_hook_from_parse() {
 
 #[test]
 fn test_cli_shell_begin_end_parse() {
-    let cli_begin = Cli::parse_from(["trail", "shell", "begin", "--pid", "12345", "--", "cargo", "test"]);
+    let cli_begin = Cli::parse_from(["tracewise", "shell", "begin", "--pid", "12345", "--", "cargo", "test"]);
     match cli_begin.command {
         Some(Commands::Shell { action: ShellAction::Begin { pid, command } }) => {
             assert_eq!(pid, 12345);
@@ -124,7 +124,7 @@ fn test_cli_shell_begin_end_parse() {
         _ => panic!("expected ShellAction::Begin"),
     }
 
-    let cli_end = Cli::parse_from(["trail", "shell", "end", "--pid", "12345", "--exit", "0"]);
+    let cli_end = Cli::parse_from(["tracewise", "shell", "end", "--pid", "12345", "--exit", "0"]);
     match cli_end.command {
         Some(Commands::Shell { action: ShellAction::End { pid, exit } }) => {
             assert_eq!(pid, 12345);
@@ -136,7 +136,7 @@ fn test_cli_shell_begin_end_parse() {
 
 #[test]
 fn test_cli_undo_redo_parse() {
-    let cli_undo = Cli::parse_from(["trail", "undo", "--actor", "codex", "--since", "1h", "--dry-run"]);
+    let cli_undo = Cli::parse_from(["tracewise", "undo", "--actor", "codex", "--since", "1h", "--dry-run"]);
     match cli_undo.command {
         Some(Commands::Undo { id, actor, since, dry_run, strict, .. }) => {
             assert_eq!(id, None);
@@ -148,7 +148,7 @@ fn test_cli_undo_redo_parse() {
         _ => panic!("expected Commands::Undo"),
     }
 
-    let cli_undo_id = Cli::parse_from(["trail", "undo", "01M5T3BNN6CDA1X5BEX9QGDD4R", "--strict"]);
+    let cli_undo_id = Cli::parse_from(["tracewise", "undo", "01M5T3BNN6CDA1X5BEX9QGDD4R", "--strict"]);
     match cli_undo_id.command {
         Some(Commands::Undo { id, actor, since, dry_run, strict, .. }) => {
             assert_eq!(id.as_deref(), Some("01M5T3BNN6CDA1X5BEX9QGDD4R"));
@@ -160,7 +160,7 @@ fn test_cli_undo_redo_parse() {
         _ => panic!("expected Commands::Undo"),
     }
 
-    let cli_redo = Cli::parse_from(["trail", "redo", "01M5T3BNN6CDA1X5BEX9QGDD4R", "--dry-run"]);
+    let cli_redo = Cli::parse_from(["tracewise", "redo", "01M5T3BNN6CDA1X5BEX9QGDD4R", "--dry-run"]);
     match cli_redo.command {
         Some(Commands::Redo { id, dry_run }) => {
             assert_eq!(id, "01M5T3BNN6CDA1X5BEX9QGDD4R");

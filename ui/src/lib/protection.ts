@@ -4,7 +4,7 @@ export interface Level {
   /** 0 to 3, higher is stronger. */
   rank: number;
   name: string;
-  /** What Trail promises at this level. */
+  /** What Tracewise promises at this level. */
   guarantees: string;
   /** What it does not, and what would raise the level. */
   limits: string;
@@ -17,7 +17,7 @@ export interface Notice {
   start: string;
 }
 
-/** The command kinds Trail writes about itself or about writes it could not explain. */
+/** The command kinds Tracewise writes about itself or about writes it could not explain. */
 export const NOTICE_KINDS = ["gap", "repair", "unhooked"];
 
 const LEVELS: Level[] = [
@@ -43,7 +43,7 @@ const LEVELS: Level[] = [
     rank: 3,
     name: "Strict",
     guarantees: "The system sensor names the process behind each write, so a hook-less tool is credited exactly too.",
-    limits: "Anything running as you can still edit Trail's own history; only a separate root helper (the Verified level) would stop that."
+    limits: "Anything running as you can still edit Tracewise's own history; only a separate root helper (the Verified level) would stop that."
   }
 ];
 
@@ -74,7 +74,7 @@ export function alerts(d: DoctorReport | null | undefined, notices: Notice[] = [
   return out;
 }
 
-/** Notices from the command list: the ones Trail wrote about itself, newest first, at most `max`. */
+/** Notices from the command list: the ones Tracewise wrote about itself, newest first, at most `max`. */
 export function noticesFrom(commands: Array<{ id: string; kind: string; text: string; start: string }>, max = 5): Notice[] {
   return commands
     .filter((c) => NOTICE_KINDS.includes(c.kind))

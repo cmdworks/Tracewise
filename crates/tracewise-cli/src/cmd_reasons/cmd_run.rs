@@ -1,26 +1,26 @@
-//! Running commands with reasons and attribution: trail run.
+//! Running commands with reasons and attribution: tracewise run.
 use super::super::*;
 
 pub(crate) fn run_cmd_run(repo_paths: &RepoPaths, why: String, command: Vec<String>) {
     if let Err(e) = validate_why(&why) {
-        eprintln!("trail: {e}");
+        eprintln!("tracewise: {e}");
         process::exit(1);
     }
 
     if command.is_empty() {
-        eprintln!("trail: no command specified to run");
+        eprintln!("tracewise: no command specified to run");
         process::exit(1);
     }
 
-    let db_path = repo_paths.data_dir().join("trail.db");
+    let db_path = repo_paths.data_dir().join("tracewise.db");
     if !db_path.exists() {
-        eprintln!("trail: not initialized; run trail init first");
+        eprintln!("tracewise: not initialized; run tracewise init first");
         process::exit(1);
     }
     let db = match Database::open(&db_path) {
         Ok(d) => d,
         Err(e) => {
-            eprintln!("trail: failed to open db: {e}");
+            eprintln!("tracewise: failed to open db: {e}");
             process::exit(1);
         }
     };
@@ -62,11 +62,11 @@ fn check_run_locks(db: &Database, repo_paths: &RepoPaths, actor: &Actor, command
             if !lock.holder.is_same(actor) {
                 let holder = lock.holder.name.as_deref().unwrap_or("another session");
                 if actor.kind == "agent" {
-                    eprintln!("trail: refused: {rel} is held by {holder}");
+                    eprintln!("tracewise: refused: {rel} is held by {holder}");
                     let _ = db.end_intent_by_id(intent_id);
                     process::exit(1);
                 }
-                eprintln!("trail: warning: {rel} is held by {holder}");
+                eprintln!("tracewise: warning: {rel} is held by {holder}");
             }
         }
     }
@@ -84,7 +84,7 @@ fn execute_child_command(command: &[String]) -> i32 {
     {
         Ok(status) => status.code().unwrap_or(1),
         Err(e) => {
-            eprintln!("trail: failed to execute {program}: {e}");
+            eprintln!("tracewise: failed to execute {program}: {e}");
             1
         }
     }
@@ -167,7 +167,7 @@ pub(crate) fn resolve_run_actor(db: &Database, who: tracewise_proc::ProcWhoResul
         } else {
             let had_closed_windows = actor.name.as_deref().is_some_and(|name| db.has_closed_windows_for_agent(name).unwrap_or(false));
             if had_closed_windows {
-                let human_name = std::env::var("TRAIL_HUMAN")
+                let human_name = std::env::var("TRACEWISE_HUMAN")
                     .ok()
                     .filter(|s| !s.trim().is_empty())
                     .or_else(|| std::env::var("USER").ok().filter(|s| !s.trim().is_empty()))

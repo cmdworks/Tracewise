@@ -87,7 +87,7 @@ pub fn handle_claude_hook(agent: &str, cli_event: &str, stdin_str: &str) {
                         "additionalContext": if crate::hook::events::awareness::is_complete(&notice) {
                             notice
                         } else {
-                            format!("Trail: since your last prompt, other actors changed files you work on:\n{notice}")
+                            format!("Tracewise: since your last prompt, other actors changed files you work on:\n{notice}")
                         }
                     }
                 });

@@ -5,8 +5,8 @@ use std::process::Command;
 
 const CANARY: &str = "CANARY-9f3c1d-contents";
 
-fn trail(repo: &Repo, args: &[&str]) -> common::Run {
-    repo.with("human:me", args, None, &[("TRAIL_PROFILE", "full")])
+fn tracewise(repo: &Repo, args: &[&str]) -> common::Run {
+    repo.with("human:me", args, None, &[("TRACEWISE_PROFILE", "full")])
 }
 
 fn git_out(remote: &std::path::Path, args: &[&str]) -> String {
@@ -31,10 +31,10 @@ fn remote_text(remote: &std::path::Path) -> String {
 fn device(url: &str, init_args: &[&str]) -> Repo {
     let repo = Repo::uninitialised("[profile]\nshare = true\n");
     repo.write("a.txt", "base\n");
-    assert!(trail(&repo, &["init"]).ok());
+    assert!(tracewise(&repo, &["init"]).ok());
     let mut args = vec!["share", "init", "--remote", url, "--level", "full", "--hidden"];
     args.extend_from_slice(init_args);
-    let r = trail(&repo, &args);
+    let r = tracewise(&repo, &args);
     assert!(r.ok(), "{}", r.err);
     repo
 }
@@ -47,10 +47,10 @@ fn an_encrypted_push_hides_everything_and_another_device_needs_the_key() {
     let url = format!("file://{}", remote.display());
 
     let first = device(&url, &["--encrypt"]);
-    assert!(first.read(".trailconfig").contains("encrypt = true"));
+    assert!(first.read(".tracewiseconfig").contains("encrypt = true"));
     first.write("a.txt", &format!("base\n{CANARY}\n"));
-    assert!(trail(&first, &["scan"]).ok());
-    let pushed = trail(&first, &["push"]);
+    assert!(tracewise(&first, &["scan"]).ok());
+    let pushed = tracewise(&first, &["push"]);
     assert!(pushed.ok(), "{}", pushed.err);
 
     let text = remote_text(&remote);
@@ -59,17 +59,17 @@ fn an_encrypted_push_hides_everything_and_another_device_needs_the_key() {
 
     // a second device without the key is refused, and nothing is imported
     let second = device(&url, &[]);
-    let refused = trail(&second, &["fetch"]);
+    let refused = tracewise(&second, &["fetch"]);
     assert!(!refused.ok() && refused.err.contains("encrypted") && refused.err.contains("import the key"), "{}", refused.err);
-    let before = trail(&second, &["log", "--json"]).json().as_array().unwrap().len();
+    let before = tracewise(&second, &["log", "--json"]).json().as_array().unwrap().len();
 
     // with the key it reads the history
-    std::fs::copy(first.dir().join(".git/trail/share-keys.json"), second.dir().join(".git/trail/share-keys.json")).unwrap();
-    let fetched = trail(&second, &["fetch"]);
+    std::fs::copy(first.dir().join(".git/tracewise/share-keys.json"), second.dir().join(".git/tracewise/share-keys.json")).unwrap();
+    let fetched = tracewise(&second, &["fetch"]);
     assert!(fetched.ok(), "{}", fetched.err);
-    let after = trail(&second, &["log", "--json"]).json().as_array().unwrap().len();
+    let after = tracewise(&second, &["log", "--json"]).json().as_array().unwrap().len();
     assert!(after > before, "records arrived: {before} -> {after}");
-    assert!(trail(&second, &["verify"]).ok());
+    assert!(tracewise(&second, &["verify"]).ok());
 }
 
 #[test]
@@ -79,23 +79,23 @@ fn a_push_with_encryption_on_and_no_key_is_refused_not_sent_in_the_clear() {
     assert!(Command::new("git").args(["init", "-q", "--bare", remote.to_str().unwrap()]).status().unwrap().success());
     let url = format!("file://{}", remote.display());
     let repo = device(&url, &[]);
-    repo.write(".trailconfig", &format!("[profile]\nshare = true\n\n[share]\nremote = \"{url}\"\nlevel = \"full\"\nencrypt = true\n"));
+    repo.write(".tracewiseconfig", &format!("[profile]\nshare = true\n\n[share]\nremote = \"{url}\"\nlevel = \"full\"\nencrypt = true\n"));
     repo.write("a.txt", &format!("base\n{CANARY}\n"));
-    assert!(trail(&repo, &["scan"]).ok());
-    let out = trail(&repo, &["push"]);
+    assert!(tracewise(&repo, &["scan"]).ok());
+    let out = tracewise(&repo, &["push"]);
     assert!(!out.ok() && out.err.contains("has no key"), "{}", out.err);
     assert!(!remote_text(&remote).contains(CANARY));
 }
 
 fn push_edit(repo: &Repo, text: &str) {
     repo.write("a.txt", text);
-    assert!(trail(repo, &["scan"]).ok());
-    let pushed = trail(repo, &["push"]);
+    assert!(tracewise(repo, &["scan"]).ok());
+    let pushed = tracewise(repo, &["push"]);
     assert!(pushed.ok(), "{}", pushed.err);
 }
 
 fn exported(repo: &Repo) -> String {
-    let out = trail(repo, &["share", "key", "export"]);
+    let out = tracewise(repo, &["share", "key", "export"]);
     assert!(out.ok(), "{}", out.err);
     out.out.trim().to_string()
 }
@@ -109,28 +109,31 @@ fn keys_are_handed_over_rotated_and_an_agent_cannot_touch_them() {
     let first = device(&url, &["--encrypt"]);
     push_edit(&first, "one\n");
 
-    let listed = trail(&first, &["share", "key", "list", "--json"]).json();
+    let listed = tracewise(&first, &["share", "key", "list", "--json"]).json();
     assert_eq!(listed["keys"].as_array().unwrap().len(), 1);
     let key = exported(&first);
-    assert!(key.starts_with("trailkey1:") && !listed.to_string().contains(&key[key.rfind(':').unwrap() + 1..]), "list never shows the key");
+    assert!(
+        key.starts_with("tracewisekey1:") && !listed.to_string().contains(&key[key.rfind(':').unwrap() + 1..]),
+        "list never shows the key"
+    );
     for args in [&["share", "key", "export"][..], &["share", "key", "rotate"], &["share", "key", "import", &key]] {
-        let r = first.with("agent:claude:s1", args, None, &[("TRAIL_PROFILE", "full")]);
+        let r = first.with("agent:claude:s1", args, None, &[("TRACEWISE_PROFILE", "full")]);
         assert!(!r.ok() && r.err.contains("agents cannot"), "{args:?}: {}", r.err);
     }
 
     // the second device imports the key by hand-over and reads the history
     let second = device(&url, &[]);
-    assert!(trail(&second, &["share", "key", "import", &key]).ok());
-    assert!(trail(&second, &["fetch"]).ok());
+    assert!(tracewise(&second, &["share", "key", "import", &key]).ok());
+    assert!(tracewise(&second, &["fetch"]).ok());
 
     // a rotation: a new batch is under the new key; the second device cannot read it until it imports that key as current
-    assert!(trail(&first, &["share", "key", "rotate"]).ok());
+    assert!(tracewise(&first, &["share", "key", "rotate"]).ok());
     push_edit(&first, "one\ntwo\n");
-    let blocked = trail(&second, &["fetch"]);
+    let blocked = tracewise(&second, &["fetch"]);
     assert!(!blocked.ok() && blocked.err.contains("import the key"), "{}", blocked.err);
-    assert!(trail(&second, &["share", "key", "import", "--current", &exported(&first)]).ok());
-    assert!(trail(&second, &["fetch"]).ok());
-    assert_eq!(trail(&second, &["share", "key", "list", "--json"]).json()["keys"].as_array().unwrap().len(), 2);
+    assert!(tracewise(&second, &["share", "key", "import", "--current", &exported(&first)]).ok());
+    assert!(tracewise(&second, &["fetch"]).ok());
+    assert_eq!(tracewise(&second, &["share", "key", "list", "--json"]).json()["keys"].as_array().unwrap().len(), 2);
 }
 
 #[test]
@@ -142,26 +145,26 @@ fn rekey_recovers_a_lost_key_from_the_local_history_and_prune_needs_yes() {
     let first = device(&url, &["--encrypt"]);
     push_edit(&first, &format!("one\n{CANARY}\n"));
     let second = device(&url, &[]);
-    assert!(trail(&second, &["share", "key", "import", &exported(&first)]).ok());
-    assert!(trail(&second, &["fetch"]).ok());
+    assert!(tracewise(&second, &["share", "key", "import", &exported(&first)]).ok());
+    assert!(tracewise(&second, &["fetch"]).ok());
 
     // the key is lost on the first device; its own database is intact
-    std::fs::remove_file(first.dir().join(".git/trail/share-keys.json")).unwrap();
-    let no_yes = trail(&first, &["share", "key", "rekey", "--prune-old"]);
+    std::fs::remove_file(first.dir().join(".git/tracewise/share-keys.json")).unwrap();
+    let no_yes = tracewise(&first, &["share", "key", "rekey", "--prune-old"]);
     assert!(!no_yes.ok() && no_yes.err.contains("--yes"), "{}", no_yes.err);
-    let done = trail(&first, &["share", "key", "rekey", "--prune-old", "--yes", "--json"]);
+    let done = tracewise(&first, &["share", "key", "rekey", "--prune-old", "--yes", "--json"]);
     assert!(done.ok(), "{}", done.err);
     assert!(done.json()["records"].as_u64().unwrap() >= 1, "{}", done.out);
     assert!(!remote_text(&remote).contains(CANARY));
-    assert!(trail(&first, &["fetch"]).ok(), "the unreadable old batch does not block this device: it is noted as imported");
+    assert!(tracewise(&first, &["fetch"]).ok(), "the unreadable old batch does not block this device: it is noted as imported");
 
     // the other device takes the new key and still has everything
-    let before = trail(&second, &["log", "--json"]).json().as_array().unwrap().len();
-    assert!(trail(&second, &["share", "key", "import", "--current", &exported(&first)]).ok());
-    let fetched = trail(&second, &["fetch"]);
+    let before = tracewise(&second, &["log", "--json"]).json().as_array().unwrap().len();
+    assert!(tracewise(&second, &["share", "key", "import", "--current", &exported(&first)]).ok());
+    let fetched = tracewise(&second, &["fetch"]);
     assert!(fetched.ok(), "{}", fetched.err);
-    assert_eq!(trail(&second, &["log", "--json"]).json().as_array().unwrap().len(), before, "the same records, none doubled");
-    assert!(trail(&second, &["verify"]).ok());
+    assert_eq!(tracewise(&second, &["log", "--json"]).json().as_array().unwrap().len(), before, "the same records, none doubled");
+    assert!(tracewise(&second, &["verify"]).ok());
 }
 
 #[test]
@@ -170,25 +173,25 @@ fn doctor_warns_about_an_unexported_key_a_missing_key_and_full_on_the_projects_o
     let remote = d.path().join("project.git");
     assert!(Command::new("git").args(["init", "-q", "--bare", remote.to_str().unwrap()]).status().unwrap().success());
     let url = format!("file://{}", remote.display());
-    let warnings = |repo: &Repo| -> String { trail(repo, &["doctor", "--json"]).json()["sharing_warnings"].to_string() };
+    let warnings = |repo: &Repo| -> String { tracewise(repo, &["doctor", "--json"]).json()["sharing_warnings"].to_string() };
 
     // level full, no encryption, on the project's own origin
     let repo = Repo::uninitialised("[profile]\nshare = true\n");
     repo.write("a.txt", "x\n");
-    assert!(trail(&repo, &["init"]).ok());
+    assert!(tracewise(&repo, &["init"]).ok());
     assert!(Command::new("git").current_dir(repo.dir()).args(["remote", "add", "origin", &url]).status().unwrap().success());
     assert_eq!(warnings(&repo), "[]", "sharing not set up: nothing to say");
-    assert!(trail(&repo, &["share", "init", "--level", "full"]).ok());
+    assert!(tracewise(&repo, &["share", "init", "--level", "full"]).ok());
     assert!(warnings(&repo).contains("level full"), "{}", warnings(&repo));
 
     // encryption on: the key was made but never exported
-    assert!(trail(&repo, &["share", "init", "--level", "summary", "--encrypt"]).ok());
+    assert!(tracewise(&repo, &["share", "init", "--level", "summary", "--encrypt"]).ok());
     assert!(warnings(&repo).contains("never exported"), "{}", warnings(&repo));
-    assert!(trail(&repo, &["share", "key", "export"]).ok());
+    assert!(tracewise(&repo, &["share", "key", "export"]).ok());
     assert_eq!(warnings(&repo), "[]", "after the export nothing is left to warn about");
 
     // encryption on, key gone
-    std::fs::remove_file(repo.dir().join(".git/trail/share-keys.json")).unwrap();
+    std::fs::remove_file(repo.dir().join(".git/tracewise/share-keys.json")).unwrap();
     assert!(warnings(&repo).contains("has no key"), "{}", warnings(&repo));
 }
 
@@ -200,10 +203,10 @@ fn share_status_reports_the_setup_and_never_the_key() {
     let url = format!("file://{}", remote.display());
     let repo = Repo::uninitialised("[profile]\nshare = true\n");
     repo.write("a.txt", "x\n");
-    assert!(trail(&repo, &["init"]).ok());
-    assert_eq!(trail(&repo, &["share", "status", "--json"]).json()["configured"], false);
-    assert!(trail(&repo, &["share", "init", "--remote", &url, "--level", "summary", "--hidden", "--encrypt"]).ok());
-    let out = trail(&repo, &["share", "status", "--json"]);
+    assert!(tracewise(&repo, &["init"]).ok());
+    assert_eq!(tracewise(&repo, &["share", "status", "--json"]).json()["configured"], false);
+    assert!(tracewise(&repo, &["share", "init", "--remote", &url, "--level", "summary", "--hidden", "--encrypt"]).ok());
+    let out = tracewise(&repo, &["share", "status", "--json"]);
     let v = out.json();
     assert_eq!(
         (v["configured"].clone(), v["level"].as_str(), v["refs"].as_str(), v["encrypt"].clone(), v["store"].as_str()),
@@ -211,12 +214,12 @@ fn share_status_reports_the_setup_and_never_the_key() {
         "{v}"
     );
     assert!(v["key_id"].as_str().is_some() && v["trusted"] == true && v["key_exported"] == false);
-    let exported = trail(&repo, &["share", "key", "export"]).out;
+    let exported = tracewise(&repo, &["share", "key", "export"]).out;
     let secret = exported.trim().rsplit(':').next().unwrap().to_string();
     assert!(!out.out.contains(&secret), "status never prints the key");
-    assert_eq!(trail(&repo, &["share", "status", "--json"]).json()["key_exported"], true);
+    assert_eq!(tracewise(&repo, &["share", "status", "--json"]).json()["key_exported"], true);
     // an agent may read it
-    assert!(repo.with("agent:claude:s1", &["share", "status", "--json"], None, &[("TRAIL_PROFILE", "full")]).ok());
+    assert!(repo.with("agent:claude:s1", &["share", "status", "--json"], None, &[("TRACEWISE_PROFILE", "full")]).ok());
 }
 
 /// S8: all four combinations of store and encryption, two devices each: what one pushes the other reads, and an encrypted remote holds no text.
@@ -236,7 +239,7 @@ fn every_combination_of_store_and_encryption_works_between_two_devices() {
         let mk = |first: bool| {
             let repo = Repo::uninitialised("[profile]\nshare = true\n");
             repo.write("a.txt", "base\n");
-            assert!(trail(&repo, &["init"]).ok());
+            assert!(tracewise(&repo, &["init"]).ok());
             if own_remote {
                 assert!(Command::new("git").current_dir(repo.dir()).args(["remote", "add", "origin", &url]).status().unwrap().success());
             }
@@ -247,7 +250,7 @@ fn every_combination_of_store_and_encryption_works_between_two_devices() {
             if first && encrypt {
                 args.push("--encrypt");
             }
-            let r = trail(&repo, &args);
+            let r = tracewise(&repo, &args);
             assert!(r.ok(), "{own_remote} {encrypt}: {}", r.err);
             repo
         };
@@ -262,16 +265,21 @@ fn every_combination_of_store_and_encryption_works_between_two_devices() {
         );
         if encrypt {
             // the second device needs the key and the setting
-            b.write(".trailconfig", &format!("{}encrypt = true\n", b.read(".trailconfig")));
-            assert!(!trail(&b, &["fetch"]).ok(), "no key yet");
-            assert!(trail(&b, &["share", "key", "import", &exported(&a)]).ok());
+            b.write(".tracewiseconfig", &format!("{}encrypt = true\n", b.read(".tracewiseconfig")));
+            assert!(!tracewise(&b, &["fetch"]).ok(), "no key yet");
+            assert!(tracewise(&b, &["share", "key", "import", &exported(&a)]).ok());
         }
-        let got = trail(&b, &["fetch"]);
+        let got = tracewise(&b, &["fetch"]);
         assert!(got.ok(), "own={own_remote} encrypt={encrypt}: {}", got.err);
-        let paths: Vec<String> =
-            trail(&b, &["log", "--json"]).json().as_array().unwrap().iter().map(|c| c["path"].as_str().unwrap_or("").to_string()).collect();
+        let paths: Vec<String> = tracewise(&b, &["log", "--json"])
+            .json()
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|c| c["path"].as_str().unwrap_or("").to_string())
+            .collect();
         assert!(paths.iter().any(|p| p == "a.txt"), "{own_remote} {encrypt}: b has a's change of a.txt: {paths:?}");
-        assert!(trail(&b, &["verify"]).ok());
+        assert!(tracewise(&b, &["verify"]).ok());
     }
 }
 
@@ -284,15 +292,15 @@ fn a_changed_encrypted_batch_fails_its_signature_before_any_decryption() {
     let first = device(&url, &["--encrypt"]);
     push_edit(&first, "one\n");
     let second = device(&url, &[]);
-    assert!(trail(&second, &["share", "key", "import", &exported(&first)]).ok());
-    assert!(trail(&second, &["fetch"]).ok());
+    assert!(tracewise(&second, &["share", "key", "import", &exported(&first)]).ok());
+    assert!(tracewise(&second, &["fetch"]).ok());
     // the first device's own copy of the batch is altered, then rebuilt (rebuild reads every batch)
-    let batches = first.dir().join(".git/trail/batches");
+    let batches = first.dir().join(".git/tracewise/batches");
     let batch = std::fs::read_dir(&batches).unwrap().flatten().find(|e| e.path().is_dir()).unwrap().path();
     let f = batch.join("changes.jsonl.zst");
     let mut bytes = std::fs::read(&f).unwrap();
     *bytes.last_mut().unwrap() ^= 1;
     std::fs::write(&f, bytes).unwrap();
-    let out = trail(&first, &["rebuild"]);
+    let out = tracewise(&first, &["rebuild"]);
     assert!(!out.ok() && out.err.contains("signature"), "{}", out.err);
 }

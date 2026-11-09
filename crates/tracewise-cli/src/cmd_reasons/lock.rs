@@ -3,7 +3,7 @@ use super::super::*;
 use tracewise_core::model::LockRecord;
 
 pub(crate) fn run_lock(json: bool, repo_paths: &RepoPaths, action: LockAction) {
-    let db_path = repo_paths.data_dir().join("trail.db");
+    let db_path = repo_paths.data_dir().join("tracewise.db");
     let db = match Database::open(&db_path) {
         Ok(d) => d,
         Err(e) => {
@@ -79,7 +79,7 @@ fn lock_release(db: &Database, repo_paths: &RepoPaths, json: bool, path: Option<
         if let Ok(Some(l)) = db.get_lock_for_path(&rel_p) {
             if !is_mine(&l) {
                 eprintln!(
-                    "trail: {} is held by {}; an agent cannot release another actor's lock (use `trail lock wait`)",
+                    "tracewise: {} is held by {}; an agent cannot release another actor's lock (use `tracewise lock wait`)",
                     rel_p,
                     l.holder.name.as_deref().unwrap_or(&l.holder.kind)
                 );
@@ -95,7 +95,7 @@ fn lock_release(db: &Database, repo_paths: &RepoPaths, json: bool, path: Option<
             println!("no lock on {}", rel_p);
         }
     } else {
-        eprintln!("trail: specify a path to release or --all");
+        eprintln!("tracewise: specify a path to release or --all");
         process::exit(1);
     }
 }
@@ -145,7 +145,7 @@ fn lock_wait(
             }
             Ok(Some(conflict)) => conflict.holder,
             Err(e) => {
-                eprintln!("trail: failed to acquire lock: {e}");
+                eprintln!("tracewise: failed to acquire lock: {e}");
                 process::exit(1);
             }
         };
@@ -154,7 +154,7 @@ fn lock_wait(
             if json {
                 println!("{}", serde_json::json!({ "acquired": false, "holder": holder }));
             } else {
-                eprintln!("trail: timeout waiting for lock on {}", rel_p);
+                eprintln!("tracewise: timeout waiting for lock on {}", rel_p);
             }
             process::exit(1);
         }

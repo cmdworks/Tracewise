@@ -1,9 +1,9 @@
-/** The settings `trail config` can change, with the words the screen shows. */
+/** The settings `tracewise config` can change, with the words the screen shows. */
 export interface SettingDef {
   key: string;
   label: string;
   help: string;
-  /** Allowed values, or null for free text that Trail checks itself. */
+  /** Allowed values, or null for free text that Tracewise checks itself. */
   options: string[] | null;
   placeholder?: string;
 }
@@ -24,7 +24,7 @@ export const SETTINGS: SettingDef[] = [
   { key: "durability.level", label: "Durability", help: "full survives a power cut; normal is a little faster but can lose the newest records.", options: ["full", "normal"] }
 ];
 
-/** Rows from `trail config get --json`, in the order of SETTINGS; a key Trail did not return is left out. */
+/** Rows from `tracewise config get --json`, in the order of SETTINGS; a key Tracewise did not return is left out. */
 export function rowsFrom(raw: unknown): SettingRow[] {
   const list = Array.isArray(raw) ? raw : [];
   const byKey = new Map<string, SettingRow>();
@@ -44,7 +44,7 @@ export function setArgs(key: string, value: string, global: boolean): string[] {
   return ["config", "set", ...(global ? ["--global"] : []), key, value.trim()];
 }
 
-/** What `trail share status --json` says; never holds the key itself. */
+/** What `tracewise share status --json` says; never holds the key itself. */
 export interface ShareStatus {
   configured: boolean;
   remote?: string;
@@ -75,7 +75,7 @@ export function shareFrom(raw: unknown): ShareStatus {
   };
 }
 
-/** Arguments for `trail share init`: the project's own origin when `remote` is empty. */
+/** Arguments for `tracewise share init`: the project's own origin when `remote` is empty. */
 export function shareInitArgs(opts: { remote: string; level: string; encrypt: boolean }): string[] {
   const args = ["share", "init", "--level", opts.level];
   if (opts.remote.trim()) args.push("--remote", opts.remote.trim());
@@ -83,7 +83,7 @@ export function shareInitArgs(opts: { remote: string; level: string; encrypt: bo
   return args;
 }
 
-/** The refusal Trail gives when the share profile is off, in words for the screen. */
+/** The refusal Tracewise gives when the share profile is off, in words for the screen. */
 export function shareProfileOff(stderr: string): boolean {
   return /share profile is not enabled/i.test(stderr);
 }

@@ -2,7 +2,7 @@
 use super::*;
 
 #[test]
-fn test_find_real_git_skips_trail_binaries() {
+fn test_find_real_git_skips_tracewise_binaries() {
     let tmp = tempfile::tempdir().expect("tempdir");
     let dir1 = tmp.path().join("dir1");
     let dir2 = tmp.path().join("dir2");
@@ -11,10 +11,10 @@ fn test_find_real_git_skips_trail_binaries() {
 
     let link1 = dir1.join("git");
     let link2 = dir2.join("git");
-    let fake_trail = tmp.path().join("trail");
-    std::fs::write(&fake_trail, b"binary").unwrap();
-    tracewise_platform::shims::create_shim_link(&fake_trail, &link1).unwrap();
-    tracewise_platform::shims::create_shim_link(&fake_trail, &link2).unwrap();
+    let fake_tracewise = tmp.path().join("tracewise");
+    std::fs::write(&fake_tracewise, b"binary").unwrap();
+    tracewise_platform::shims::create_shim_link(&fake_tracewise, &link1).unwrap();
+    tracewise_platform::shims::create_shim_link(&fake_tracewise, &link2).unwrap();
 
     let old_path = std::env::var("PATH").unwrap_or_default();
     let test_path = format!("{}:{}:{}", dir1.display(), dir2.display(), old_path);
@@ -26,13 +26,13 @@ fn test_find_real_git_skips_trail_binaries() {
 #[test]
 fn test_git_wrapper_multiple_wrappers_no_loop() {
     let _lock = crate::TEST_MUTEX.lock().unwrap();
-    let status = std::process::Command::new("cargo").args(["build", "--bin", "trail"]).status().expect("cargo build failed");
+    let status = std::process::Command::new("cargo").args(["build", "--bin", "tracewise"]).status().expect("cargo build failed");
     assert!(status.success(), "cargo build must succeed");
 
     let test_exe = std::env::current_exe().expect("current exe");
     let debug_dir = test_exe.parent().and_then(|p| p.parent()).expect("target dir");
-    let trail_bin = debug_dir.join("trail");
-    assert!(trail_bin.exists(), "trail binary exists at {:?}", trail_bin);
+    let tracewise_bin = debug_dir.join("tracewise");
+    assert!(tracewise_bin.exists(), "tracewise binary exists at {:?}", tracewise_bin);
 
     let tmp = tempfile::tempdir().expect("tempdir");
     let dir1 = tmp.path().join("dir1");
@@ -44,10 +44,10 @@ fn test_git_wrapper_multiple_wrappers_no_loop() {
     std::fs::create_dir_all(&bin_dir1).unwrap();
     std::fs::create_dir_all(&bin_dir2).unwrap();
 
-    let copy1 = bin_dir1.join("trail");
-    let copy2 = bin_dir2.join("trail");
-    std::fs::copy(&trail_bin, &copy1).expect("copy 1");
-    std::fs::copy(&trail_bin, &copy2).expect("copy 2");
+    let copy1 = bin_dir1.join("tracewise");
+    let copy2 = bin_dir2.join("tracewise");
+    std::fs::copy(&tracewise_bin, &copy1).expect("copy 1");
+    std::fs::copy(&tracewise_bin, &copy2).expect("copy 2");
 
     let _ = tracewise_platform::shims::set_executable(&copy1);
     let _ = tracewise_platform::shims::set_executable(&copy2);
@@ -63,8 +63,8 @@ fn test_git_wrapper_multiple_wrappers_no_loop() {
     let mut child = std::process::Command::new(&link1)
         .arg("version")
         .env("PATH", &custom_path)
-        .env_remove("TRAIL_GIT_DEPTH")
-        .env_remove("TRAIL_REAL_GIT")
+        .env_remove("TRACEWISE_GIT_DEPTH")
+        .env_remove("TRACEWISE_REAL_GIT")
         .stdout(std::process::Stdio::piped())
         .stderr(std::process::Stdio::piped())
         .spawn()
@@ -161,9 +161,9 @@ fn test_read_only_git_fast_path_does_not_open_db_s05() {
     let status = std::process::Command::new("git").arg("init").current_dir(&repo_dir).status().unwrap();
     assert!(status.success());
 
-    let data_dir = repo_dir.join(".git/trail");
+    let data_dir = repo_dir.join(".git/tracewise");
     std::fs::create_dir_all(&data_dir).unwrap();
-    let db_path = data_dir.join("trail.db");
+    let db_path = data_dir.join("tracewise.db");
     {
         let db = Database::open(&db_path).unwrap();
         let cmds = db.list_commands().unwrap();

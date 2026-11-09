@@ -9,11 +9,11 @@ pub(crate) struct RedoContext<'a> {
 }
 
 pub(crate) fn run_redo(json: bool, repo_paths: &RepoPaths, id: String, dry_run: bool) {
-    let db_path = repo_paths.data_dir().join("trail.db");
+    let db_path = repo_paths.data_dir().join("tracewise.db");
     let db = match Database::open(&db_path) {
         Ok(d) => d,
         Err(e) => {
-            eprintln!("trail: redo failed: {e}");
+            eprintln!("tracewise: redo failed: {e}");
             process::exit(1);
         }
     };
@@ -25,7 +25,7 @@ fn redo_by_id(db: &Database, blobs: &BlobStore, repo_paths: &RepoPaths, json: bo
     let undo_change = match db.get_change(undo_id) {
         Ok(Some(c)) => c,
         _ => {
-            eprintln!("trail: change not found: {undo_id}");
+            eprintln!("tracewise: change not found: {undo_id}");
             process::exit(1);
         }
     };
@@ -33,7 +33,7 @@ fn redo_by_id(db: &Database, blobs: &BlobStore, repo_paths: &RepoPaths, json: bo
     let env_actor = tracewise_core::model::Actor::from_env();
     let target_name = undo_change.actor.name.as_deref().unwrap_or("unknown");
     if !can_actor_undo(env_actor.as_ref(), target_name) {
-        eprintln!("trail: refused: agents cannot undo another actor's changes");
+        eprintln!("tracewise: refused: agents cannot undo another actor's changes");
         process::exit(1);
     }
 
@@ -51,7 +51,7 @@ pub(crate) fn redo_single_change(change: &Change, ctx: &RedoContext, redone_path
     let path = &change.path;
     let change_slice = [change];
     if let Some(reason) = check_path_binary_or_hash_only(path, ctx.repo_paths, &change_slice, None, ctx.blobs) {
-        eprintln!("trail: skipped {path}: cannot redo: {reason}");
+        eprintln!("tracewise: skipped {path}: cannot redo: {reason}");
         skipped.push(path.to_string());
         return;
     }

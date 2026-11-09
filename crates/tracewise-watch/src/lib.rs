@@ -103,12 +103,12 @@ where
     // after a failed call: no new attempt before this time
     let (mut retry_at, mut failures) = (None::<Instant>, 0u32);
 
-    let sweep_secs = std::env::var("TRAIL_SWEEP_INTERVAL_SECS").ok().and_then(|s| s.parse::<u64>().ok()).unwrap_or(30);
+    let sweep_secs = std::env::var("TRACEWISE_SWEEP_INTERVAL_SECS").ok().and_then(|s| s.parse::<u64>().ok()).unwrap_or(30);
     let sweep_interval = Duration::from_secs(sweep_secs.max(1));
     let mut last_sweep = Instant::now();
     // A path written without a pause is recorded at most once per `min_gap`; what arrives in between waits and goes out
     // with the latest content (the path stays pending until it is sent).
-    let min_gap = Duration::from_millis(std::env::var("TRAIL_MIN_GAP_MS").ok().and_then(|s| s.parse().ok()).unwrap_or(1000));
+    let min_gap = Duration::from_millis(std::env::var("TRACEWISE_MIN_GAP_MS").ok().and_then(|s| s.parse().ok()).unwrap_or(1000));
     let mut gate = SendGate { min_gap, last_flush: HashMap::new() };
 
     while running.load(Ordering::SeqCst) {

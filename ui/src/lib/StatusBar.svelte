@@ -1,9 +1,9 @@
 <script lang="ts">
   import Icon from "./Icon.svelte";
-  import type { TrailStatus } from "./types";
+  import type { TracewiseStatus } from "./types";
 
   interface Props {
-    status: TrailStatus | null;
+    status: TracewiseStatus | null;
     daemonPid: number | null;
     daemonUptime: number | null;
     currentRepo: string;

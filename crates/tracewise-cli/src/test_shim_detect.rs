@@ -4,14 +4,14 @@ use std::path::PathBuf;
 use tracewise_shim::detect_sed_targets;
 
 #[test]
-fn test_strip_trail_why() {
-    let args = vec!["-i".to_string(), "s/a/b/".to_string(), "--trail-why=fix typo".to_string(), "file.txt".to_string()];
-    let (clean, why) = strip_trail_why(&args);
+fn test_strip_tracewise_why() {
+    let args = vec!["-i".to_string(), "s/a/b/".to_string(), "--tracewise-why=fix typo".to_string(), "file.txt".to_string()];
+    let (clean, why) = strip_tracewise_why(&args);
     assert_eq!(clean, vec!["-i", "s/a/b/", "file.txt"]);
     assert_eq!(why, Some("fix typo".to_string()));
 
     let args2 = vec!["-i".to_string(), "file.txt".to_string()];
-    let (clean2, why2) = strip_trail_why(&args2);
+    let (clean2, why2) = strip_tracewise_why(&args2);
     assert_eq!(clean2, vec!["-i", "file.txt"]);
     assert_eq!(why2, None);
 }
@@ -47,17 +47,17 @@ fn test_is_read_only_perl_awk_tee() {
 
 #[test]
 fn test_fast_read_only_shim_guard() {
-    std::env::set_var("TRAIL_SHIM_DEPTH", "1");
+    std::env::set_var("TRACEWISE_SHIM_DEPTH", "1");
     assert!(!try_fast_read_only_shim());
-    std::env::remove_var("TRAIL_SHIM_DEPTH");
+    std::env::remove_var("TRACEWISE_SHIM_DEPTH");
 }
 
 #[test]
 fn test_find_real_tool_override() {
-    std::env::set_var("TRAIL_REAL_SED", "/bin/echo");
+    std::env::set_var("TRACEWISE_REAL_SED", "/bin/echo");
     let tool = find_real_tool("sed", None);
     assert_eq!(tool, PathBuf::from("/bin/echo"));
-    std::env::remove_var("TRAIL_REAL_SED");
+    std::env::remove_var("TRACEWISE_REAL_SED");
 }
 
 #[test]
@@ -66,8 +66,8 @@ fn test_find_real_tool_skips_shims_dir() {
     let shims_dir = tmp.path().join("shims");
     fs::create_dir_all(&shims_dir).unwrap();
     let mock_shim = shims_dir.join("sed");
-    let fake_bin = tmp.path().join("trail");
-    fs::write(&fake_bin, b"fake trail").unwrap();
+    let fake_bin = tmp.path().join("tracewise");
+    fs::write(&fake_bin, b"fake tracewise").unwrap();
     tracewise_platform::shims::create_shim_link(&fake_bin, &mock_shim).unwrap();
 
     let tool = find_real_tool("sed", Some(&shims_dir));
@@ -189,7 +189,7 @@ fn test_log_shim_error() {
     let tmp = tempfile::tempdir().unwrap();
     let home = tmp.path().join("home");
     fs::create_dir_all(&home).unwrap();
-    std::env::set_var("TRAIL_HOME", &home);
+    std::env::set_var("TRACEWISE_HOME", &home);
 
     log_shim_error("database corrupt test error");
     let log_file = home.join("shim.log");
@@ -197,5 +197,5 @@ fn test_log_shim_error() {
     let content = fs::read_to_string(&log_file).unwrap();
     assert!(content.contains("database corrupt test error"));
 
-    std::env::remove_var("TRAIL_HOME");
+    std::env::remove_var("TRACEWISE_HOME");
 }

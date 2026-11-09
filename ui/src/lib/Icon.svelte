@@ -17,7 +17,7 @@
   stroke-width="1.75"
   stroke-linecap="round"
   stroke-linejoin="round"
-  class="trail-icon {className}"
+  class="tracewise-icon {className}"
   aria-hidden="true"
 >
   {#if name === "brand"}
@@ -159,7 +159,7 @@
 </svg>
 
 <style>
-  .trail-icon {
+  .tracewise-icon {
     display: inline-block;
     vertical-align: middle;
     flex-shrink: 0;

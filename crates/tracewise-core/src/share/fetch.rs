@@ -1,6 +1,6 @@
 //! Fetching batches from remote companion repositories, importing, and rebuilding.
 use super::batch::{copy_remote_batches, ensure_companion_repo, import_all_batches, run_git};
-use super::config::{is_safe_rel_path, may_sync_from, read_trailconfig};
+use super::config::{is_safe_rel_path, may_sync_from, read_tracewiseconfig};
 use crate::blob::BlobStore;
 use crate::db::Database;
 use crate::model::{Change, CommandRecord, FileRecord, Intent};
@@ -147,7 +147,7 @@ fn apply_imported_change_to_files(c: &Change, db: &mut Database, blob_store: &Bl
 }
 
 pub fn fetch(repo_root: &Path, data_dir: &Path) -> io::Result<usize> {
-    let cfg = match read_trailconfig(repo_root) {
+    let cfg = match read_tracewiseconfig(repo_root) {
         Some(c) => c,
         None => return Ok(0),
     };
@@ -155,7 +155,7 @@ pub fn fetch(repo_root: &Path, data_dir: &Path) -> io::Result<usize> {
         return Err(io::Error::new(
             io::ErrorKind::PermissionDenied,
             format!(
-                "remote '{}' comes from .trailconfig and is not approved on this machine; check it, then run `trail share trust` and `trail fetch`",
+                "remote '{}' comes from .tracewiseconfig and is not approved on this machine; check it, then run `tracewise share trust` and `tracewise fetch`",
                 cfg.remote
             ),
         ));
@@ -165,7 +165,12 @@ pub fn fetch(repo_root: &Path, data_dir: &Path) -> io::Result<usize> {
     ensure_companion_repo(&cfg.remote, &remote_dir)?;
     run_git(
         &remote_dir,
-        &["fetch", "origin", "+refs/heads/trail/device/*:refs/heads/trail/device/*", "+refs/trail/device/*:refs/trail/device/*"],
+        &[
+            "fetch",
+            "origin",
+            "+refs/heads/tracewise/device/*:refs/heads/tracewise/device/*",
+            "+refs/tracewise/device/*:refs/tracewise/device/*",
+        ],
     )
     .map_err(|e| io::Error::other(format!("could not fetch from '{}': {e}", cfg.remote)))?;
     copy_remote_batches(&remote_dir, data_dir)?;

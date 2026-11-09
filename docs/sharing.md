@@ -4,20 +4,20 @@ By default Tracewise history stays on your machine. Sharing lets every clone of 
 
 ## How it works
 
-- Each machine writes its new records as an append-only **batch** and pushes it to a git remote under its own ref (`refs/trail/device/<id>`). Machines never write to each other's refs, so pushes never conflict.
+- Each machine writes its new records as an append-only **batch** and pushes it to a git remote under its own ref (`refs/tracewise/device/<id>`). Machines never write to each other's refs, so pushes never conflict.
 - Fetching imports other machines' batches into the local database. The database itself is never pushed; it can always be rebuilt from the batches with `tracewise rebuild`.
 - Every batch is **signed** with a key of the machine that made it. The first batch from a machine pins its key; a batch that doesn't match is refused.
 - Locks are never shared.
 
 ## Set it up
 
-Sharing is turned on per project, in `.trailconfig`, so everyone who clones the project gets the same setting.
+Sharing is turned on per project, in `.tracewiseconfig`, so everyone who clones the project gets the same setting.
 
 **The simplest setup uses the project's own remote:**
 
 ```bash
 tracewise share init                 # uses origin, hidden refs, level "summary"
-git add .trailconfig && git commit -m "Share Tracewise history"
+git add .tracewiseconfig && git commit -m "Share Tracewise history"
 git push
 ```
 
@@ -38,7 +38,7 @@ tracewise fetch       # import everyone else's
 
 With the git wrapper installed, `git fetch`, `git pull` and `git clone` also fetch Tracewise history.
 
-**On every other clone**, approve the remote once — Tracewise never pushes to or fetches from a remote named in a `.trailconfig` you have not approved:
+**On every other clone**, approve the remote once — Tracewise never pushes to or fetches from a remote named in a `.tracewiseconfig` you have not approved:
 
 ```bash
 tracewise share trust
@@ -76,8 +76,8 @@ This creates a random project key on this machine (XChaCha20-Poly1305). It is st
 **Hand the key to every other clone yourself:**
 
 ```bash
-tracewise share key export        # on a machine that has the key: prints trailkey1:…
-tracewise share key import 'trailkey1:…'   # on each other clone
+tracewise share key export        # on a machine that has the key: prints tracewisekey1:…
+tracewise share key import 'tracewisekey1:…'   # on each other clone
 ```
 
 The exported string *is* the key. Keep a copy in a password manager: a clone that loses its key cannot read the shared history, and `tracewise doctor` warns until the key has been exported once.

@@ -1,4 +1,4 @@
-import type { TrailResult } from "./types";
+import type { TracewiseResult } from "./types";
 
 /**
  * The repository to send with a call: a path, or null for "the one the app is in". The page starts with no project chosen (an empty
@@ -8,11 +8,11 @@ export function repoOrNull(repo?: string | null): string | null {
   return repo && repo.trim() ? repo : null;
 }
 
-export async function invokeTrail(args: string[], repoOverride?: string | null): Promise<TrailResult> {
+export async function invokeTracewise(args: string[], repoOverride?: string | null): Promise<TracewiseResult> {
   const targetRepo = repoOrNull(repoOverride);
   try {
     const { invoke } = await import("@tauri-apps/api/core");
-    return await invoke<TrailResult>("trail", { args, repo: targetRepo });
+    return await invoke<TracewiseResult>("tracewise", { args, repo: targetRepo });
   } catch (e: any) {
     // Never invent data: outside the desktop app there is no Tracewise to ask.
     if (e?.toString().includes("__TAURI_INTERNALS__") || e?.toString().includes("window.__TAURI__")) {

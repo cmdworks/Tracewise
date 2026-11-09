@@ -1,7 +1,7 @@
 use super::*;
 
 #[test]
-pub fn trail_files_and_hook_configs_are_protected() {
+pub fn tracewise_files_and_hook_configs_are_protected() {
     let wt = Path::new("/w/repo");
     for p in [
         ".claude/settings.json",
@@ -10,15 +10,15 @@ pub fn trail_files_and_hook_configs_are_protected() {
         ".codex/hooks.json",
         ".gemini/settings.json",
         ".cursor/hooks.json",
-        ".git/trail/trail.db",
-        ".git/trail",
-        ".trailconfig",
-        "/w/repo/.git/trail/objects",
+        ".git/tracewise/tracewise.db",
+        ".git/tracewise",
+        ".tracewiseconfig",
+        "/w/repo/.git/tracewise/objects",
         "src/../.claude/settings.json",
     ] {
-        assert!(is_trail_protected(p, wt), "{p}");
+        assert!(is_tracewise_protected(p, wt), "{p}");
     }
     for p in ["src/main.rs", ".claude/skills/x.md", ".gitignore", "/etc/hosts", "../other/.claude/settings.json"] {
-        assert!(!is_trail_protected(p, wt), "{p}");
+        assert!(!is_tracewise_protected(p, wt), "{p}");
     }
 }

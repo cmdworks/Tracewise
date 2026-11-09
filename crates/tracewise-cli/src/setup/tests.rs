@@ -12,7 +12,7 @@ fn fake_env() -> (tempfile::TempDir, Env) {
     for n in PROGRAMS {
         fs::write(src.join(n), format!("program {n}")).unwrap();
     }
-    let env = Env { root: home.join(".trail"), home, src_dir: src };
+    let env = Env { root: home.join(".tracewise"), home, src_dir: src };
     (tmp, env)
 }
 
@@ -20,17 +20,17 @@ fn opts(login: Login) -> SetupOptions {
     SetupOptions { login, start: false, shell_rc: true, live: false, profile: "core".to_string() }
 }
 
-const OLD_RC: &str = "export FOO=1\n\n# Trail git wrapper and shell integration\nexport PATH=\"$HOME/.trail/bin:$PATH\"\neval \"$(trail shell init zsh)\"\nexport PATH=\"$HOME/.trail/bin:$HOME/.trail/shims:$PATH\"\nalias ll='ls -l'\n";
+const OLD_RC: &str = "export FOO=1\n\n# Tracewise git wrapper and shell integration\nexport PATH=\"$HOME/.tracewise/bin:$PATH\"\neval \"$(tracewise shell init zsh)\"\nexport PATH=\"$HOME/.tracewise/bin:$HOME/.tracewise/shims:$PATH\"\nalias ll='ls -l'\n";
 
 #[test]
 fn old_lines_become_one_block_and_nothing_else_changes() {
-    let rc = rewrite_zshrc(OLD_RC, "# >>> trail >>>\nB\n# <<< trail <<<\n");
-    assert_eq!(rc.matches(".trail").count(), 0);
+    let rc = rewrite_zshrc(OLD_RC, "# >>> tracewise >>>\nB\n# <<< tracewise <<<\n");
+    assert_eq!(rc.matches(".tracewise").count(), 0);
     assert!(rc.starts_with("export FOO=1\n"));
     assert!(rc.contains("alias ll='ls -l'\n"));
     assert_eq!(rc.matches(BLOCK_START).count(), 1);
-    assert_eq!(rewrite_zshrc(&rc, "# >>> trail >>>\nB\n# <<< trail <<<\n"), rc, "twice is the same");
-    assert_eq!(strip_trail(&rc), "export FOO=1\n\nalias ll='ls -l'\n");
+    assert_eq!(rewrite_zshrc(&rc, "# >>> tracewise >>>\nB\n# <<< tracewise <<<\n"), rc, "twice is the same");
+    assert_eq!(strip_tracewise(&rc), "export FOO=1\n\nalias ll='ls -l'\n");
 }
 
 #[test]
@@ -38,9 +38,9 @@ fn setup_installs_everything_and_uninstall_removes_exactly_that() {
     let (_tmp, env) = fake_env();
     fs::write(env.zshrc(), OLD_RC).unwrap();
     fs::create_dir_all(env.home.join(".cargo/bin")).unwrap();
-    fs::write(env.home.join(".cargo/bin/trail"), "old copy").unwrap();
+    fs::write(env.home.join(".cargo/bin/tracewise"), "old copy").unwrap();
     let m = setup_in(&env, &opts(Login::Yes)).unwrap();
-    assert!(env.home.join(".cargo/bin/trail").is_symlink(), "the old copy now links to the installed one");
+    assert!(env.home.join(".cargo/bin/tracewise").is_symlink(), "the old copy now links to the installed one");
     assert_eq!(m.programs.len(), PROGRAMS.len());
     for n in PROGRAMS {
         assert!(env.bin().join(n).is_file(), "{n}");
@@ -51,7 +51,7 @@ fn setup_installs_everything_and_uninstall_removes_exactly_that() {
     assert_eq!(rc.matches(BLOCK_START).count(), 1);
     assert!(m.zshrc_backup.is_some() && Path::new(m.zshrc_backup.as_ref().unwrap()).is_file());
     let zshenv = fs::read_to_string(env.zshenv()).unwrap();
-    assert!(zshenv.contains(".trail/bin") && !zshenv.contains("shell init"), "PATH is in .zshenv: {zshenv}");
+    assert!(zshenv.contains(".tracewise/bin") && !zshenv.contains("shell init"), "PATH is in .zshenv: {zshenv}");
     assert!(rc.contains("shell init zsh") && !rc.contains("export PATH"), "only the hook is in .zshrc: {rc}");
     assert!(env.agent_plist().is_file());
     assert!(env.manifest().is_file());
@@ -63,7 +63,7 @@ fn setup_installs_everything_and_uninstall_removes_exactly_that() {
     assert_eq!(fs::read_to_string(env.zshenv()).unwrap(), zshenv);
 
     uninstall_in(&env, false, false);
-    assert!(!env.home.join(".cargo/bin/trail").exists());
+    assert!(!env.home.join(".cargo/bin/tracewise").exists());
     assert!(!env.bin().exists() && !env.shims().exists() && !env.manifest().exists());
     assert!(!env.agent_plist().exists());
     assert_eq!(fs::read_to_string(env.zshrc()).unwrap(), "export FOO=1\n\nalias ll='ls -l'\n");
@@ -84,7 +84,7 @@ fn doctor_names_what_is_missing_and_stray_lines() {
     fs::write(env.zshrc(), OLD_RC).unwrap();
     let before = checks(&env, "/usr/bin");
     assert!(before.iter().any(|c| !c.ok && c.what.contains("install.json")));
-    assert!(before.iter().any(|c| !c.ok && c.what.contains("old Trail line")));
+    assert!(before.iter().any(|c| !c.ok && c.what.contains("old Tracewise line")));
     setup_in(&env, &opts(Login::No)).unwrap();
     let path = format!("{}:{}:/usr/bin", env.bin().display(), env.shims().display());
     let after = checks(&env, &path);
@@ -93,9 +93,9 @@ fn doctor_names_what_is_missing_and_stray_lines() {
 }
 
 #[test]
-fn a_missing_trail_program_is_an_error() {
+fn a_missing_tracewise_program_is_an_error() {
     let (_tmp, env) = fake_env();
-    fs::remove_file(env.src_dir.join("trail")).unwrap();
+    fs::remove_file(env.src_dir.join("tracewise")).unwrap();
     assert!(setup_in(&env, &opts(Login::No)).is_err());
 }
 
@@ -120,9 +120,9 @@ fn doctor_compares_programs_with_the_candidate_checksums() {
     setup_in(&env, &opts(Login::Yes)).unwrap();
     let find = |env: &Env| doctor::checks(env, "").into_iter().find(|c| c.what.contains("checksums"));
     assert!(find(&env).is_some_and(|c| c.ok), "matching programs pass");
-    fs::write(env.bin().join("trail-shim"), "tampered").unwrap();
+    fs::write(env.bin().join("tracewise-shim"), "tampered").unwrap();
     let c = find(&env).unwrap();
-    assert!(!c.ok && c.what.contains("trail-shim"), "{}", c.what);
+    assert!(!c.ok && c.what.contains("tracewise-shim"), "{}", c.what);
 }
 
 #[test]
@@ -132,14 +132,14 @@ fn fish_gets_one_file_that_setup_writes_and_uninstall_removes_and_a_foreign_file
     setup_in(&env, &opts(Login::No)).unwrap();
     let file = install::fish_file(&env);
     let text = fs::read_to_string(&file).unwrap();
-    assert!(text.contains(BLOCK_START) && text.contains("trail shell init fish | source"), "{text}");
-    assert!(text.contains("$HOME/.trail/shims") && text.contains("$HOME/.trail/bin"), "{text}");
+    assert!(text.contains(BLOCK_START) && text.contains("tracewise shell init fish | source"), "{text}");
+    assert!(text.contains("$HOME/.tracewise/shims") && text.contains("$HOME/.tracewise/bin"), "{text}");
     setup_in(&env, &opts(Login::No)).unwrap();
     assert_eq!(fs::read_to_string(&file).unwrap(), text, "twice is the same");
     uninstall_in(&env, false, false);
-    assert!(!file.exists(), "the file was only Trail's");
+    assert!(!file.exists(), "the file was only Tracewise's");
 
-    // a trail.fish the person wrote is never overwritten or removed
+    // a tracewise.fish the person wrote is never overwritten or removed
     fs::write(&file, "# mine\nset -gx FOO 1\n").unwrap();
     setup_in(&env, &opts(Login::No)).unwrap();
     assert_eq!(fs::read_to_string(&file).unwrap(), "# mine\nset -gx FOO 1\n");

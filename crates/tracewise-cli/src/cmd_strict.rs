@@ -4,16 +4,16 @@
 //! root-owned folder, because a root program must not be run from a place the user can rewrite.
 use super::*;
 
-const LABEL: &str = "dev.trail.sensor";
-const SENSOR_DIR: &str = "/usr/local/libexec/trail";
+const LABEL: &str = "dev.tracewise.sensor";
+const SENSOR_DIR: &str = "/usr/local/libexec/tracewise";
 
-/// `TRAIL_STRICT_PREFIX` moves every system path under a folder (tests); empty on a real machine.
+/// `TRACEWISE_STRICT_PREFIX` moves every system path under a folder (tests); empty on a real machine.
 fn root(path: &str) -> String {
-    format!("{}{}", std::env::var("TRAIL_STRICT_PREFIX").unwrap_or_default(), path)
+    format!("{}{}", std::env::var("TRACEWISE_STRICT_PREFIX").unwrap_or_default(), path)
 }
 
 fn sensor_path() -> String {
-    root(&format!("{SENSOR_DIR}/trail-sensor"))
+    root(&format!("{SENSOR_DIR}/tracewise-sensor"))
 }
 
 fn plist_path() -> String {
@@ -26,11 +26,11 @@ fn plist_text(socket: &Path) -> String {
 <!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n\
 <plist version=\"1.0\">\n<dict>\n\
   <key>Label</key><string>{LABEL}</string>\n\
-  <key>ProgramArguments</key>\n  <array>\n    <string>{SENSOR_DIR}/trail-sensor</string>\n    <string>--socket</string>\n    <string>{}</string>\n  </array>\n\
+  <key>ProgramArguments</key>\n  <array>\n    <string>{SENSOR_DIR}/tracewise-sensor</string>\n    <string>--socket</string>\n    <string>{}</string>\n  </array>\n\
   <key>RunAtLoad</key><true/>\n\
   <key>KeepAlive</key><true/>\n\
   <key>ProcessType</key><string>Background</string>\n\
-  <key>StandardErrorPath</key><string>/var/log/trail-sensor.log</string>\n\
+  <key>StandardErrorPath</key><string>/var/log/tracewise-sensor.log</string>\n\
 </dict>\n</plist>\n",
         socket.display()
     )
@@ -40,9 +40,9 @@ fn now_secs() -> u64 {
     std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_secs()).unwrap_or(0)
 }
 
-/// What `trail strict status` reports; also the strict part of `trail doctor`.
+/// What `tracewise strict status` reports; also the strict part of `tracewise doctor`.
 pub fn status_json() -> serde_json::Value {
-    let home = tracewise_core::get_trail_home();
+    let home = tracewise_core::get_tracewise_home();
     let file: serde_json::Value = fs::read_to_string(home.join("sensor.status.json"))
         .ok()
         .and_then(|t| serde_json::from_str(&t).ok())
@@ -114,10 +114,10 @@ fn handle_status(json: bool) {
 }
 
 fn handle_install(dry_run: bool, events: &str) {
-    let socket = tracewise_core::get_trail_home().join("sensor.sock");
+    let socket = tracewise_core::get_tracewise_home().join("sensor.sock");
     let steps: Vec<Vec<String>> = vec![
         vec!["sudo", "install", "-d", "-o", "root", "-g", "wheel", "-m", "755", &root(SENSOR_DIR)].into_iter().map(String::from).collect(),
-        vec!["sudo", "install", "-o", "root", "-g", "wheel", "-m", "755", "<trail-sensor>", &sensor_path()]
+        vec!["sudo", "install", "-o", "root", "-g", "wheel", "-m", "755", "<tracewise-sensor>", &sensor_path()]
             .into_iter()
             .map(String::from)
             .collect(),
@@ -125,7 +125,7 @@ fn handle_install(dry_run: bool, events: &str) {
         tracewise_platform::service::system_bootout_command(LABEL),
         tracewise_platform::service::system_bootstrap_command(&plist_path()),
     ];
-    let fda = format!("{SENSOR_DIR}/trail-sensor");
+    let fda = format!("{SENSOR_DIR}/tracewise-sensor");
     if dry_run {
         println!(
             "{}",
@@ -140,18 +140,18 @@ fn handle_install(dry_run: bool, events: &str) {
     }
     refuse_for_agents("install");
     if events != "light" && events != "full" {
-        eprintln!("trail: --events must be light or full");
+        eprintln!("tracewise: --events must be light or full");
         process::exit(1);
     }
-    let _ = fs::write(tracewise_core::get_trail_home().join("sensor-events"), format!("{events}\n"));
+    let _ = fs::write(tracewise_core::get_tracewise_home().join("sensor-events"), format!("{events}\n"));
     let me = std::env::current_exe().ok().and_then(|p| p.canonicalize().ok());
-    let Some(sensor) = me.as_ref().and_then(|p| p.parent()).map(|d| d.join("trail-sensor")).filter(|p| p.is_file()) else {
-        eprintln!("trail: trail-sensor must be installed next to trail");
+    let Some(sensor) = me.as_ref().and_then(|p| p.parent()).map(|d| d.join("tracewise-sensor")).filter(|p| p.is_file()) else {
+        eprintln!("tracewise: tracewise-sensor must be installed next to tracewise");
         process::exit(1);
     };
     let plist_tmp = std::env::temp_dir().join(format!("{LABEL}.{}.plist", std::process::id()));
     if fs::write(&plist_tmp, plist_text(&socket)).is_err() {
-        eprintln!("trail: cannot write a temporary file");
+        eprintln!("tracewise: cannot write a temporary file");
         process::exit(1);
     }
     println!("Installing the strict sensor. sudo will ask for your password in this terminal.");
@@ -159,14 +159,14 @@ fn handle_install(dry_run: bool, events: &str) {
         let args: Vec<String> = step
             .iter()
             .map(|a| match a.as_str() {
-                "<trail-sensor>" => sensor.to_string_lossy().to_string(),
+                "<tracewise-sensor>" => sensor.to_string_lossy().to_string(),
                 "<plist>" => plist_tmp.to_string_lossy().to_string(),
                 _ => a.clone(),
             })
             .collect();
         let ok = std::process::Command::new(&args[0]).args(&args[1..]).status().map(|s| s.success()).unwrap_or(false);
         if !ok && !args.contains(&"bootout".to_string()) {
-            eprintln!("trail: step failed: {}", args.join(" "));
+            eprintln!("tracewise: step failed: {}", args.join(" "));
             let _ = fs::remove_file(&plist_tmp);
             process::exit(1);
         }
@@ -176,7 +176,7 @@ fn handle_install(dry_run: bool, events: &str) {
     println!("Installed. One more thing only you can do:");
     println!("  System Settings > Privacy & Security > Full Disk Access > + > add  {fda}");
     println!("  (press Cmd-Shift-G in the file picker to type the path), then switch it on.");
-    println!("Then run `trail daemon start` and `trail strict status`: the sensor starts by itself");
+    println!("Then run `tracewise daemon start` and `tracewise strict status`: the sensor starts by itself");
     println!("while an agent works and stops when it is done.");
 }
 
@@ -194,7 +194,7 @@ fn handle_uninstall(dry_run: bool) {
     for step in &steps {
         let _ = std::process::Command::new(&step[0]).args(&step[1..]).status();
     }
-    let _ = fs::remove_file(tracewise_core::get_trail_home().join("sensor.status.json"));
+    let _ = fs::remove_file(tracewise_core::get_tracewise_home().join("sensor.status.json"));
     println!("Removed the sensor. You can also remove it from Full Disk Access.");
 }
 
@@ -203,7 +203,7 @@ fn refuse_for_agents(what: &str) {
     let who = tracewise_proc::who(None, None);
     if who.kind == "agent" {
         eprintln!(
-            "trail: strict {what} is refused for an agent ({}): it needs your password and your decision. Run it yourself in a terminal.",
+            "tracewise: strict {what} is refused for an agent ({}): it needs your password and your decision. Run it yourself in a terminal.",
             who.name
         );
         process::exit(1);

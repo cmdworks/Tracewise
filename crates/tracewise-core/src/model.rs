@@ -81,10 +81,10 @@ impl Actor {
 
     pub fn from_env() -> Option<Self> {
         let marker = Self::claude_from_env().or_else(Self::antigravity_from_env);
-        std::env::var("TRAIL_ACTOR")
+        std::env::var("TRACEWISE_ACTOR")
             .ok()
             .and_then(|val| Self::parse(&val))
-            // An agent cannot pose as a person through TRAIL_ACTOR.
+            // An agent cannot pose as a person through TRACEWISE_ACTOR.
             .filter(|a| marker.is_none() || a.kind != "human")
             .or(marker)
     }

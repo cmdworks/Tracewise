@@ -62,7 +62,7 @@ jobs:
         run: cargo build --locked --release --workspace
       - name: Bridge tests
         env:
-          TRAIL_BIN: ${{ github.workspace }}/target/release/trail
+          TRACEWISE_BIN: ${{ github.workspace }}/target/release/tracewise
         run: cargo test --locked --manifest-path ui/src-tauri/Cargo.toml
 
   portability:

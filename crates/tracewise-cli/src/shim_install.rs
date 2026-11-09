@@ -1,10 +1,10 @@
 use crate::cli::{Commands, ShimsAction};
-use crate::shim_detect::{is_trail_bin_name, SHIM_TOOLS};
+use crate::shim_detect::{is_tracewise_bin_name, SHIM_TOOLS};
 use std::fs;
 use std::path::Path;
 use std::process;
 
-fn is_trail_shim_symlink(p: &Path, self_exe: Option<&Path>) -> bool {
+fn is_tracewise_shim_symlink(p: &Path, self_exe: Option<&Path>) -> bool {
     if !p.is_symlink() {
         return false;
     }
@@ -16,7 +16,7 @@ fn is_trail_shim_symlink(p: &Path, self_exe: Option<&Path>) -> bool {
             return true;
         }
     }
-    target.file_name().and_then(|n| n.to_str()).map(is_trail_bin_name).unwrap_or(false)
+    target.file_name().and_then(|n| n.to_str()).map(is_tracewise_bin_name).unwrap_or(false)
 }
 
 pub fn install_shims(dir: &Path, self_exe: &Path) -> Result<Vec<String>, String> {
@@ -27,7 +27,7 @@ pub fn install_shims(dir: &Path, self_exe: &Path) -> Result<Vec<String>, String>
             let p = entry.path();
             let name = entry.file_name();
             let name_str = name.to_string_lossy();
-            if !SHIM_TOOLS.contains(&name_str.as_ref()) && is_trail_shim_symlink(&p, Some(self_exe)) {
+            if !SHIM_TOOLS.contains(&name_str.as_ref()) && is_tracewise_shim_symlink(&p, Some(self_exe)) {
                 let _ = fs::remove_file(&p);
             }
         }
@@ -50,7 +50,7 @@ pub fn uninstall_shims(dir: &Path, self_exe: Option<&Path>) -> usize {
         if let Ok(entries) = fs::read_dir(dir) {
             for entry in entries.flatten() {
                 let p = entry.path();
-                if is_trail_shim_symlink(&p, self_exe) && fs::remove_file(&p).is_ok() {
+                if is_tracewise_shim_symlink(&p, self_exe) && fs::remove_file(&p).is_ok() {
                     removed += 1;
                 }
             }
@@ -69,13 +69,13 @@ pub(crate) fn run(json: bool, command: Commands) {
                         Err(_) => p,
                     },
                     Err(e) => {
-                        eprintln!("trail: cannot determine current executable path: {e}");
+                        eprintln!("tracewise: cannot determine current executable path: {e}");
                         process::exit(1);
                     }
                 };
 
                 let target_bin =
-                    self_exe.parent().map(|p| p.join("trail-shim")).filter(|p| p.is_file()).unwrap_or_else(|| self_exe.clone());
+                    self_exe.parent().map(|p| p.join("tracewise-shim")).filter(|p| p.is_file()).unwrap_or_else(|| self_exe.clone());
 
                 match install_shims(&dir, &target_bin) {
                     Ok(tools) => {
@@ -93,7 +93,7 @@ pub(crate) fn run(json: bool, command: Commands) {
                         }
                     }
                     Err(e) => {
-                        eprintln!("trail: {e}");
+                        eprintln!("tracewise: {e}");
                         process::exit(1);
                     }
                 }

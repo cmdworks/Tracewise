@@ -1,5 +1,5 @@
 // Dev-only: records what the page shows (normalised HTML and the computed style of every element) for each tab and dialog, so a
-// refactor can be compared before and after. Used from the browser console of `TRAIL_UI_BRIDGE=1 pnpm dev`:
+// refactor can be compared before and after. Used from the browser console of `TRACEWISE_UI_BRIDGE=1 pnpm dev`:
 //   const { run } = await import("/__snapshot.js"); await run("before");   // writes /tmp/ui-snap-before.json
 const PROPS = ["display", "position", "color", "background-color", "font-family", "font-size", "font-weight", "line-height", "letter-spacing",
   "margin-top", "margin-right", "margin-bottom", "margin-left", "padding-top", "padding-right", "padding-bottom", "padding-left",

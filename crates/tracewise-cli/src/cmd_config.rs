@@ -1,11 +1,11 @@
-//! `trail config get|set`: settings by command instead of editing `.trailconfig` by hand. See docs/configuration.md.
+//! `tracewise config get|set`: settings by command instead of editing `.tracewiseconfig` by hand. See docs/configuration.md.
 use std::fs;
 use std::path::{Path, PathBuf};
 
 /// (key, default, allowed values or a description, env variable that overrides it)
 const KEYS: [(&str, &str, &str, Option<&str>); 6] = [
-    ("profile.name", "core", "core | full", Some("TRAIL_PROFILE")),
-    ("reasons.mode", "warn", "off | warn | enforce", Some("TRAIL_REASONS")),
+    ("profile.name", "core", "core | full", Some("TRACEWISE_PROFILE")),
+    ("reasons.mode", "warn", "off | warn | enforce", Some("TRACEWISE_REASONS")),
     ("retention.commands", "30d", "off | <n>d | <n>w", None),
     ("storage.max_file", "5mb", "<n>kb | <n>mb", None),
     ("storage.secrets", "hash", "hash | store", None),
@@ -78,7 +78,7 @@ pub(crate) fn set_value(text: &str, key: &str, value: &str) -> String {
 }
 
 fn files(project: Option<&Path>) -> (Option<PathBuf>, PathBuf) {
-    (project.map(|p| p.join(".trailconfig")), tracewise_core::get_trail_home().join("config.toml"))
+    (project.map(|p| p.join(".tracewiseconfig")), tracewise_core::get_tracewise_home().join("config.toml"))
 }
 
 /// (value, where it came from) for one key.
@@ -99,7 +99,7 @@ fn lookup(key: &str, project: Option<&Path>) -> Option<(String, &'static str)> {
 }
 
 fn fail(msg: &str) -> ! {
-    eprintln!("trail: {msg}");
+    eprintln!("tracewise: {msg}");
     std::process::exit(1);
 }
 
@@ -128,7 +128,7 @@ pub(crate) fn get(json: bool, key: Option<String>, project: Option<&Path>) {
 pub(crate) fn set(json: bool, key: &str, value: &str, global: bool, project: Option<&Path>) {
     // a setting an agent could change would let it switch off the checks that watch it
     if tracewise_core::model::Actor::from_env().is_some_and(|a| a.kind == "agent") {
-        fail("refused: agents cannot change Trail's settings");
+        fail("refused: agents cannot change Tracewise's settings");
     }
     let Some((_, _, allowed, _)) = KEYS.iter().find(|k| k.0 == key) else {
         fail(&format!("unknown setting '{key}'; known: {}", KEYS.map(|x| x.0).join(", ")))

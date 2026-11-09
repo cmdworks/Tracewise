@@ -1,4 +1,4 @@
-import { invokeTrail } from "$lib/api";
+import { invokeTracewise } from "$lib/api";
 import type { AgentStatus, ChangeItem } from "$lib/types";
 import { app } from "./state.svelte";
 import { addToast, arm, splitArgs } from "./fx-core";
@@ -18,7 +18,7 @@ export async function executeSingleDryRun(id: string, strict: boolean) {
     app.undoDryRunResult = null;
     try {
       const args = ["undo", id, "--dry-run", ...(strict ? ["--strict"] : []), "--json"];
-      const res = await invokeTrail(args, app.currentRepo);
+      const res = await invokeTracewise(args, app.currentRepo);
       if (res.exit_code === 0) {
         app.undoDryRunResult = {
           success: true,
@@ -47,7 +47,7 @@ export async function applySingleUndo() {
     app.undoApplying = true;
     try {
       const args = ["undo", target.id, ...(app.undoStrictMode ? ["--strict"] : []), "--json"];
-      const res = await invokeTrail(args, repo);
+      const res = await invokeTracewise(args, repo);
       if (res.exit_code === 0) {
         let undoId = "";
         try {
@@ -87,7 +87,7 @@ export async function redoUndo(undoId: string) {
 export async function applyRedo(undoId: string, repo?: string) {
     const target = repo ?? app.currentRepo;
     try {
-      const res = await invokeTrail(["redo", undoId, "--json"], target);
+      const res = await invokeTracewise(["redo", undoId, "--json"], target);
       if (res.exit_code === 0) {
         if (target === app.currentRepo) {
           fetchTimeline();
@@ -109,7 +109,7 @@ export async function executeBatchDryRun() {
     const preview = { repo: app.currentRepo, actor: app.batchActor, since: app.batchSince };
     try {
       const args = ["undo", "--actor", preview.actor, "--since", preview.since, "--dry-run", "--json"];
-      const res = await invokeTrail(args, preview.repo);
+      const res = await invokeTracewise(args, preview.repo);
       if (preview.repo !== app.currentRepo) return;
       if (res.exit_code === 0) {
         app.batchPreview = preview;
@@ -146,7 +146,7 @@ export async function applyBatchUndo() {
     app.batchApplying = true;
     try {
       const args = ["undo", "--actor", preview.actor, "--since", preview.since, "--json"];
-      const res = await invokeTrail(args, preview.repo);
+      const res = await invokeTracewise(args, preview.repo);
       if (res.exit_code === 0) {
         let count = 0;
         try {
@@ -179,7 +179,7 @@ export async function runCustomCommand(cmdStr?: string) {
 
     try {
       const args = splitArgs(toRun);
-      const res = await invokeTrail(args, app.currentRepo);
+      const res = await invokeTracewise(args, app.currentRepo);
       app.cmdExitCode = res.exit_code;
       if (res.exit_code === 0) {
         app.cmdOutput = res.stdout;
@@ -194,11 +194,11 @@ export async function runCustomCommand(cmdStr?: string) {
     }
   }
 
-/** Runs one allow-listed trail command as the person, reports the result, then refreshes. */
+/** Runs one allow-listed tracewise command as the person, reports the result, then refreshes. */
 export async function act(label: string, args: string[], after?: () => void): Promise<boolean> {
     app.busy = label;
     try {
-      const res = await invokeTrail(args, app.currentRepo);
+      const res = await invokeTracewise(args, app.currentRepo);
       if (res.exit_code === 0) {
         const first = res.stdout.trim().split("\n")[0] || "";
         addToast("success", first.length > 0 && first.length < 160 ? first : `${label} done`, label);
@@ -261,7 +261,7 @@ export function toggleAgent(a: AgentStatus) {
 
 export async function openJsonViewer(id: string) {
     try {
-      const res = await invokeTrail(["show", id, "--json"], app.currentRepo);
+      const res = await invokeTracewise(["show", id, "--json"], app.currentRepo);
       app.rawJsonContent = res.stdout || JSON.stringify({ error: res.stderr }, null, 2);
       app.showJsonModal = true;
     } catch (e: any) {
@@ -272,7 +272,7 @@ export async function openJsonViewer(id: string) {
 /** Saves one setting for this project or for all projects, then reads them all again. */
 export async function saveSetting(key: string, value: string, global: boolean) {
   try {
-    const res = await invokeTrail(setArgs(key, value, global), app.currentRepo);
+    const res = await invokeTracewise(setArgs(key, value, global), app.currentRepo);
     if (res.exit_code !== 0) {
       addToast("error", res.stderr.trim() || `Could not save ${key}`);
       return false;
@@ -288,9 +288,9 @@ export async function saveSetting(key: string, value: string, global: boolean) {
 
 async function shareCall(args: string[], ok: string): Promise<string | null> {
   try {
-    const res = await invokeTrail(args, app.currentRepo);
+    const res = await invokeTracewise(args, app.currentRepo);
     if (res.exit_code !== 0) {
-      addToast("error", res.stderr.trim() || "Trail refused");
+      addToast("error", res.stderr.trim() || "Tracewise refused");
       return null;
     }
     if (ok) addToast("success", ok);

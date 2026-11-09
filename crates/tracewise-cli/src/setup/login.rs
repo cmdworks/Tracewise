@@ -1,10 +1,10 @@
-//! Launchd login item management delegated to `trail-platform::service`.
+//! Launchd login item management delegated to `tracewise-platform::service`.
 use super::*;
 
 pub(crate) const AGENT_LABEL: &str = tracewise_platform::service::AGENT_LABEL;
 
 pub(crate) fn agent_plist_text(env: &Env) -> String {
-    tracewise_platform::service::daemon_plist(&env.bin().join("trail"), &env.root.join("daemon.log"))
+    tracewise_platform::service::daemon_plist(&env.bin().join("tracewise"), &env.root.join("daemon.log"))
 }
 
 pub(crate) fn login_item_installed(env: &Env) -> bool {

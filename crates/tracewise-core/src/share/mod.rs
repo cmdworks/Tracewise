@@ -12,8 +12,9 @@ mod warnings;
 
 pub use batch::{ensure_companion_repo, BatchMeta};
 pub use config::{
-    contains_secret, is_remote_trusted, is_safe_id, is_safe_rel_path, is_secret_path, may_sync_from, origin_url, read_trailconfig,
-    strip_credentials, trust_remote, validate_remote_url, write_trailconfig, write_trailconfig_full, write_trailconfig_with, ShareConfig,
+    contains_secret, is_remote_trusted, is_safe_id, is_safe_rel_path, is_secret_path, may_sync_from, origin_url, read_tracewiseconfig,
+    strip_credentials, trust_remote, validate_remote_url, write_tracewiseconfig, write_tracewiseconfig_full, write_tracewiseconfig_with,
+    ShareConfig,
 };
 pub use fetch::{fetch, import_batch_dir, rebuild};
 pub use push::{delete_own_ref, push};

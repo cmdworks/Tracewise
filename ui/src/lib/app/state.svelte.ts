@@ -4,7 +4,7 @@ import { recentUndos } from "$lib/undos";
 import { buildTimelineActorOptions, matchesActorFilter, extractDistinctFiles } from "$lib/actors";
 import type { Notice } from "$lib/protection";
 import type { SettingRow, ShareStatus } from "$lib/settings";
-import type { Tab, TrailStatus, AgentStatus, ChangeItem, BlameLine, PendingItem, DoctorReport, RepoDetail, ParsedDiffLine, ToastMessage } from "$lib/types";
+import type { Tab, TracewiseStatus, AgentStatus, ChangeItem, BlameLine, PendingItem, DoctorReport, RepoDetail, ParsedDiffLine, ToastMessage } from "$lib/types";
 import { getActorInfo } from "./fx-core";
 
 export type Who = { kind?: string; name?: string; session?: string } | string | null | undefined;
@@ -36,9 +36,9 @@ export const PROBLEM_LABEL: Record<string, string> = {
   /** Tracewise refuses an undo it may not do (an agent undoing a person's change): that is a permission, not a conflict. */
 export const isRefusal = (message?: string) => /refused/i.test(message ?? "");
 
-// How many events are loaded; `trail log` has no cursor, so "more" asks for a longer list (UI8).
+// How many events are loaded; `tracewise log` has no cursor, so "more" asks for a longer list (UI8).
 export const TIMELINE_PAGE = 120;
-/** Most events the timeline holds: `trail log` has no cursor, so each page refetches the whole list, and one reply may not pass 8 MB. */
+/** Most events the timeline holds: `tracewise log` has no cursor, so each page refetches the whole list, and one reply may not pass 8 MB. */
 export const TIMELINE_MAX = 5000;
 
 export class AppState {
@@ -71,7 +71,7 @@ export class AppState {
   newProjectInput = $state<string>("");
   newProjectError = $state<string | null>(null);
   repoDetails = $state<Record<string, RepoDetail>>({});
-  status = $state<TrailStatus | null>(null);
+  status = $state<TracewiseStatus | null>(null);
   statusLoading = $state<boolean>(true);
   errorMsg = $state<string | null>(null);
   lastRefreshed = $state<string>("");
@@ -108,7 +108,7 @@ export class AppState {
   lineWhyData = $state<any | null>(null);
   lineWhyLoading = $state<boolean>(false);
   fileVersionIndex = $state<number>(0);
-  /** The selected file's own history, from `trail log <path>` (the loaded events only stand in until it arrives). */
+  /** The selected file's own history, from `tracewise log <path>` (the loaded events only stand in until it arrives). */
   fileHistory = $state<ChangeItem[]>([]);
   fileHistoryFor = $state<string>("");
   /** Soft-wrap long lines in the blame view (a person's preference, kept in localStorage). */
@@ -128,11 +128,11 @@ export class AppState {
   settings = $state<SettingRow[]>([]);
   settingsLoading = $state<boolean>(false);
   share = $state<ShareStatus | null>(null);
-  /** Set when Trail says the share profile is off: the Share block then asks for the full profile. */
+  /** Set when Tracewise says the share profile is off: the Share block then asks for the full profile. */
   shareProfileOff = $state<boolean>(false);
   /** The exported key, shown once on request (it is the key itself); cleared when closed. */
   exportedKey = $state<string>("");
-  /** What Trail wrote about itself (restarts, repaired hooks, unexplained writes), newest first. */
+  /** What Tracewise wrote about itself (restarts, repaired hooks, unexplained writes), newest first. */
   notices = $state<Notice[]>([]);
   // Safe Undo Modal State
   showUndoModal = $state<boolean>(false);
@@ -261,7 +261,7 @@ export class AppState {
       query: app.searchQuery,
       loading: app.searchLoading,
       answeredFor: app.searchFor,
-      fromTrail: app.searchRows.length,
+      fromTracewise: app.searchRows.length,
       shown: app.searchSource.length,
       failed: !!app.loadProblem.search
     })

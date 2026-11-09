@@ -59,7 +59,7 @@
       <div>
         <span class="badge badge-accent font-mono">DIAGNOSTICS</span>
         <h2 class="card-title mt-1 font-mono">System Doctor Matrix</h2>
-        <p class="section-sub">Live component health via <code>trail doctor --json</code>:</p>
+        <p class="section-sub">Live component health via <code>tracewise doctor --json</code>:</p>
       </div>
       <button type="button" class="btn btn-secondary btn-sm font-mono" onclick={() => fx.fetchDoctor()}>
         <Icon name="refresh" size={12} />
@@ -135,7 +135,7 @@
 
   <section class="card mb-4" id="health-maintenance">
     <h2 class="card-title font-mono">Maintenance</h2>
-    <p class="section-sub">Each button runs the matching <code>trail</code> command as you and reports the result.</p>
+    <p class="section-sub">Each button runs the matching <code>tracewise</code> command as you and reports the result.</p>
     <div class="quick-chips mt-3">
       <button type="button" class="btn btn-secondary btn-sm font-mono" disabled={app.busy !== null} onclick={() => fx.maintain("Verify history", ["verify", "--json"])}>Verify history</button>
       <button type="button" class="btn btn-secondary btn-sm font-mono" disabled={app.busy !== null} onclick={() => fx.maintain("Compact history", ["gc", "--json"])}>Compact (gc)</button>
@@ -161,7 +161,7 @@
     </div>
 
     <div class="cmd-run-bar mt-3">
-      <span class="cmd-trail-lbl font-mono font-bold">trail</span>
+      <span class="cmd-tracewise-lbl font-mono font-bold">tracewise</span>
       <input
         type="text"
         class="cmd-run-input font-mono"
@@ -358,7 +358,7 @@
     border-radius: 5px;
     padding: 4px 8px;
   }
-  .cmd-trail-lbl {
+  .cmd-tracewise-lbl {
     color: var(--accent);
   }
   .cmd-run-input {

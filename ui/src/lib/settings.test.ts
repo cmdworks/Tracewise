@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { rowsFrom, setArgs, sourceText, SETTINGS, shareFrom, shareInitArgs, shareProfileOff } from "./settings.ts";
 
-test("rows follow the order of the definitions and drop what Trail did not return", () => {
+test("rows follow the order of the definitions and drop what Tracewise did not return", () => {
   const rows = rowsFrom([
     { key: "storage.secrets", value: "hash", source: "default" },
     { key: "reasons.mode", value: "enforce", source: "project" },
@@ -32,6 +32,6 @@ test("share status is read defensively and never carries a key", () => {
 test("share init arguments and the profile refusal", () => {
   assert.deepEqual(shareInitArgs({ remote: "", level: "summary", encrypt: false }), ["share", "init", "--level", "summary"]);
   assert.deepEqual(shareInitArgs({ remote: " git@h:o/r.git ", level: "full", encrypt: true }), ["share", "init", "--level", "full", "--remote", "git@h:o/r.git", "--encrypt"]);
-  assert.ok(shareProfileOff("trail: share profile is not enabled; add '[profile] share = true'"));
-  assert.ok(!shareProfileOff("trail: something else"));
+  assert.ok(shareProfileOff("tracewise: share profile is not enabled; add '[profile] share = true'"));
+  assert.ok(!shareProfileOff("tracewise: something else"));
 });

@@ -22,18 +22,18 @@ pub(crate) fn run_undo(
     let env_actor = tracewise_core::model::Actor::from_env();
     if let Some(ref name) = target.actor {
         if !can_actor_undo(env_actor.as_ref(), name) {
-            eprintln!("trail: refused: agents cannot undo another actor's changes");
+            eprintln!("tracewise: refused: agents cannot undo another actor's changes");
             process::exit(1);
         }
     }
     // an agent can undo a whole intent or session only for the changes it made itself
     target.restrict_to = env_actor.as_ref().filter(|a| a.kind == "agent").and_then(|a| a.name.clone());
 
-    let db_path = repo_paths.data_dir().join("trail.db");
+    let db_path = repo_paths.data_dir().join("tracewise.db");
     let db = match Database::open(&db_path) {
         Ok(d) => d,
         Err(e) => {
-            eprintln!("trail: undo failed: {e}");
+            eprintln!("tracewise: undo failed: {e}");
             process::exit(1);
         }
     };
@@ -44,7 +44,7 @@ pub(crate) fn run_undo(
     } else if let Some(change_id) = id {
         undo_by_id(&db, &blobs, repo_paths, json, &change_id, dry_run, strict);
     } else {
-        eprintln!("trail undo: requires a change id, --actor, --intent, --session or --command");
+        eprintln!("tracewise undo: requires a change id, --actor, --intent, --session or --command");
         process::exit(1);
     }
 }
@@ -233,7 +233,7 @@ fn revert_actor_path(
     path_changes.sort_by(|a, b| a.time.start.cmp(&b.time.start));
 
     if let Some(reason) = check_path_binary_or_hash_only(path, ctx.repo_paths, &path_changes, Some(ctx.target), ctx.blobs) {
-        eprintln!("trail: skipped {path}: cannot undo: {reason}");
+        eprintln!("tracewise: skipped {path}: cannot undo: {reason}");
         skipped.push(path.to_string());
         return;
     }
@@ -376,11 +376,11 @@ fn write_atomic_or_exit(file_path: &Path, bytes: &[u8]) {
     }
     let tmp_path = file_path.with_extension(format!("{}.tmp", ulid::Ulid::new()));
     if let Err(e) = fs::write(&tmp_path, bytes) {
-        eprintln!("trail: failed to write file: {e}");
+        eprintln!("tracewise: failed to write file: {e}");
         process::exit(1);
     }
     if let Err(e) = fs::rename(&tmp_path, file_path) {
-        eprintln!("trail: failed to update file: {e}");
+        eprintln!("tracewise: failed to update file: {e}");
         process::exit(1);
     }
 }
@@ -391,36 +391,36 @@ fn report_undo_conflicts(path: &str, merge: &tracewise_core::diff::ThreeWayMerge
         return;
     }
     let lines: Vec<String> = merge.conflicts.iter().map(|c| format!("{path}:{}", c.line_in_ours)).collect();
-    eprintln!("trail: skipped, changed later: {}", lines.join(", "));
+    eprintln!("tracewise: skipped, changed later: {}", lines.join(", "));
     if merge.merged_text == ours {
-        eprintln!("trail: nothing was undone: the file changed since that change");
+        eprintln!("tracewise: nothing was undone: the file changed since that change");
         process::exit(1);
     }
 }
 
 fn undo_by_id(db: &Database, blobs: &BlobStore, repo_paths: &RepoPaths, json: bool, change_id: &str, dry_run: bool, strict: bool) {
     let Ok(Some(target_change)) = db.get_change(change_id) else {
-        eprintln!("trail: change not found");
+        eprintln!("tracewise: change not found");
         process::exit(1);
     };
     let env_actor = tracewise_core::model::Actor::from_env();
     if !can_actor_undo(env_actor.as_ref(), target_change.actor.name.as_deref().unwrap_or("unknown")) {
-        eprintln!("trail: refused: agents cannot undo another actor's changes");
+        eprintln!("tracewise: refused: agents cannot undo another actor's changes");
         process::exit(1);
     }
     let Some(file_path) = util::safe_join(&repo_paths.work_tree, &target_change.path) else {
-        eprintln!("trail: change {} has an unsafe path; refusing", target_change.id);
+        eprintln!("tracewise: change {} has an unsafe path; refusing", target_change.id);
         process::exit(1);
     };
     let change_slice = [&target_change];
     if let Some(reason) = check_path_binary_or_hash_only(&target_change.path, repo_paths, &change_slice, None, blobs) {
-        eprintln!("trail: cannot undo: {reason}");
+        eprintln!("tracewise: cannot undo: {reason}");
         process::exit(1);
     }
     let current_bytes = fs::read(&file_path).ok();
     let current_hash = current_bytes.as_deref().map(tracewise_core::blob::hash_bytes);
     if strict && current_hash != target_change.after {
-        eprintln!("trail: changed since");
+        eprintln!("tracewise: changed since");
         process::exit(1);
     }
 
@@ -429,11 +429,11 @@ fn undo_by_id(db: &Database, blobs: &BlobStore, repo_paths: &RepoPaths, json: bo
     if target_change.op == "rename" || target_change.old_path.is_some() {
         if let Some(ref old_rel) = target_change.old_path {
             let Some(old_file_path) = util::safe_join(&repo_paths.work_tree, old_rel) else {
-                eprintln!("trail: unsafe destination path: {old_rel}");
+                eprintln!("tracewise: unsafe destination path: {old_rel}");
                 process::exit(1);
             };
             if old_file_path.exists() {
-                eprintln!("trail: cannot undo rename: destination {old_rel} already exists");
+                eprintln!("tracewise: cannot undo rename: destination {old_rel} already exists");
                 process::exit(1);
             }
             if !dry_run {
@@ -441,7 +441,7 @@ fn undo_by_id(db: &Database, blobs: &BlobStore, repo_paths: &RepoPaths, json: bo
                     let _ = fs::create_dir_all(parent);
                 }
                 if let Err(e) = fs::rename(&file_path, &old_file_path) {
-                    eprintln!("trail: failed to move file to {old_rel}: {e}");
+                    eprintln!("tracewise: failed to move file to {old_rel}: {e}");
                     process::exit(1);
                 }
                 if let Some(ref before_hash) = target_change.before {
@@ -458,7 +458,7 @@ fn undo_by_id(db: &Database, blobs: &BlobStore, repo_paths: &RepoPaths, json: bo
         let (Some(base_text), Some(theirs_text)) =
             (read_blob_str(blobs, target_change.after.as_deref()), read_blob_str(blobs, target_change.before.as_deref()))
         else {
-            eprintln!("trail: cannot undo: file was recorded by hash only (too large/binary)");
+            eprintln!("tracewise: cannot undo: file was recorded by hash only (too large/binary)");
             process::exit(1);
         };
         let ours_text = current_bytes.and_then(|b| String::from_utf8(b).ok()).unwrap_or_default();
@@ -474,7 +474,7 @@ fn undo_by_id(db: &Database, blobs: &BlobStore, repo_paths: &RepoPaths, json: bo
     } else if let Some(before_hash) = target_change.before {
         if !dry_run {
             let Ok(bytes) = blobs.read(&before_hash) else {
-                eprintln!("trail: cannot undo: file was recorded by hash only (too large/binary)");
+                eprintln!("tracewise: cannot undo: file was recorded by hash only (too large/binary)");
                 process::exit(1);
             };
             write_atomic_or_exit(&file_path, &bytes);
@@ -517,15 +517,15 @@ pub(crate) fn run_restore(json: bool, repo_paths: &RepoPaths, path: String, at: 
     let (path, file_path) = match tracewise_core::safe_path::resolve_inside(&repo_paths.work_tree, &path) {
         Ok(v) => v,
         Err(e) => {
-            eprintln!("trail: restore refused: {e}");
+            eprintln!("tracewise: restore refused: {e}");
             process::exit(1);
         }
     };
-    let db_path = repo_paths.data_dir().join("trail.db");
+    let db_path = repo_paths.data_dir().join("tracewise.db");
     let db = match Database::open(&db_path) {
         Ok(d) => d,
         Err(e) => {
-            eprintln!("trail: restore failed: {e}");
+            eprintln!("tracewise: restore failed: {e}");
             process::exit(1);
         }
     };
@@ -535,7 +535,7 @@ pub(crate) fn run_restore(json: bool, repo_paths: &RepoPaths, path: String, at: 
     if let Some(agent) = tracewise_core::model::Actor::from_env().filter(|a| a.kind == "agent") {
         let newest = db.list_changes(Some(&path), Some(1)).unwrap_or_default();
         if newest.first().is_some_and(|c| c.actor.name != agent.name) {
-            eprintln!("trail: refused: agents cannot restore a file that another actor changed last");
+            eprintln!("tracewise: refused: agents cannot restore a file that another actor changed last");
             process::exit(1);
         }
     }
@@ -544,7 +544,7 @@ pub(crate) fn run_restore(json: bool, repo_paths: &RepoPaths, path: String, at: 
         c
     } else {
         if chrono::DateTime::parse_from_rfc3339(&at).is_err() {
-            eprintln!("trail: target state not found: '{at}' is neither a change id nor a time (RFC 3339)");
+            eprintln!("tracewise: target state not found: '{at}' is neither a change id nor a time (RFC 3339)");
             process::exit(1);
         }
         let changes = db.list_changes(Some(&path), None).unwrap_or_default();
@@ -552,21 +552,21 @@ pub(crate) fn run_restore(json: bool, repo_paths: &RepoPaths, path: String, at: 
         match found {
             Some(c) => c,
             None => {
-                eprintln!("trail: target state not found");
+                eprintln!("tracewise: target state not found");
                 process::exit(1);
             }
         }
     };
 
     if target_change.path != path {
-        eprintln!("trail: restore refused: change {} is for '{}', not '{}'", target_change.id, target_change.path, path);
+        eprintln!("tracewise: restore refused: change {} is for '{}', not '{}'", target_change.id, target_change.path, path);
         process::exit(1);
     }
 
     let blob_hash = match target_change.after {
         Some(h) => h,
         None => {
-            eprintln!("trail: cannot restore: file was deleted in that change");
+            eprintln!("tracewise: cannot restore: file was deleted in that change");
             process::exit(1);
         }
     };
@@ -574,7 +574,7 @@ pub(crate) fn run_restore(json: bool, repo_paths: &RepoPaths, path: String, at: 
     let bytes = match blobs.read(&blob_hash) {
         Ok(b) => b,
         Err(_) => {
-            eprintln!("trail: cannot restore: file was recorded by hash only (too large/binary)");
+            eprintln!("tracewise: cannot restore: file was recorded by hash only (too large/binary)");
             process::exit(1);
         }
     };
@@ -583,7 +583,7 @@ pub(crate) fn run_restore(json: bool, repo_paths: &RepoPaths, path: String, at: 
         let _ = fs::create_dir_all(parent);
     }
     if let Err(e) = fs::write(&file_path, bytes) {
-        eprintln!("trail: failed to write file: {e}");
+        eprintln!("tracewise: failed to write file: {e}");
         process::exit(1);
     }
 

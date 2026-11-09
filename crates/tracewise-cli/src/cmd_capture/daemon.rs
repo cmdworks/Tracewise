@@ -2,7 +2,7 @@
 use super::super::*;
 use super::commands::relative_to;
 
-/// The pid is alive and is `trail-watchd` (a pid file can be stale, and the number can belong to something else).
+/// The pid is alive and is `tracewise-watchd` (a pid file can be stale, and the number can belong to something else).
 pub(crate) fn daemon_pid_is_alive(pid: u32) -> bool {
     tracewise_platform::signal::is_daemon_pid(pid as i32)
 }
@@ -10,7 +10,7 @@ pub(crate) fn daemon_pid_is_alive(pid: u32) -> bool {
 /// Adds the repository we are in (if it has Tracewise data) to the list the daemon watches; true when it was new.
 pub(crate) fn register_repo(repo: Option<&RepoPaths>) -> bool {
     match repo {
-        Some(r) if r.data_dir().join("trail.db").is_file() => tracewise_core::repos::register(&r.work_tree, &r.data_dir()),
+        Some(r) if r.data_dir().join("tracewise.db").is_file() => tracewise_core::repos::register(&r.work_tree, &r.data_dir()),
         _ => false,
     }
 }
@@ -30,12 +30,12 @@ pub(crate) fn daemon_global(json: bool, action: DaemonAction, repo: Option<&Repo
 }
 
 /// Keeps `daemon.log` from growing without end: over 10 MB it becomes `daemon.log.1` (older copies shift up, three are kept) (J10).
-fn rotate_log(trail_home: &std::path::Path) {
-    let log = trail_home.join("daemon.log");
+fn rotate_log(tracewise_home: &std::path::Path) {
+    let log = tracewise_home.join("daemon.log");
     if fs::metadata(&log).map(|m| m.len()).unwrap_or(0) <= 10 * 1024 * 1024 {
         return;
     }
-    let numbered = |n: u32| trail_home.join(format!("daemon.log.{n}"));
+    let numbered = |n: u32| tracewise_home.join(format!("daemon.log.{n}"));
     let _ = fs::remove_file(numbered(3));
     for n in (1..3).rev() {
         let _ = fs::rename(numbered(n), numbered(n + 1));
@@ -44,17 +44,17 @@ fn rotate_log(trail_home: &std::path::Path) {
 }
 
 fn daemon_run_action(repo: Option<&RepoPaths>) {
-    let trail_home = tracewise_core::get_trail_home();
-    let _ = tracewise_platform::private::create_dir_all(&trail_home);
-    rotate_log(&trail_home);
-    let pid_file = trail_home.join("daemon.pid");
+    let tracewise_home = tracewise_core::get_tracewise_home();
+    let _ = tracewise_platform::private::create_dir_all(&tracewise_home);
+    rotate_log(&tracewise_home);
+    let pid_file = tracewise_home.join("daemon.pid");
     let my_pid = std::process::id();
     if let Some(other) =
         fs::read_to_string(&pid_file).ok().and_then(|t| t.trim().parse::<u32>().ok()).filter(|p| *p != my_pid && daemon_pid_is_alive(*p))
     {
         register_repo(repo);
         tracewise_core::repos::wake_daemon();
-        eprintln!("trail: a daemon is already running (pid {other})");
+        eprintln!("tracewise: a daemon is already running (pid {other})");
         return;
     }
     let _ = tracewise_platform::private::write(&pid_file, my_pid.to_string());
@@ -63,16 +63,16 @@ fn daemon_run_action(repo: Option<&RepoPaths>) {
     let watchd = std::env::current_exe()
         .ok()
         .and_then(|p| p.canonicalize().ok())
-        .and_then(|p| p.parent().map(|d| d.join("trail-watchd")))
+        .and_then(|p| p.parent().map(|d| d.join("tracewise-watchd")))
         .filter(|p| p.is_file());
     let Some(watchd) = watchd else {
-        eprintln!("trail: trail-watchd must be installed next to trail");
+        eprintln!("tracewise: tracewise-watchd must be installed next to tracewise");
         let _ = fs::remove_file(&pid_file);
         process::exit(1);
     };
     use std::os::unix::process::CommandExt;
     let err = std::process::Command::new(watchd).exec();
-    eprintln!("trail: cannot start trail-watchd: {err}");
+    eprintln!("tracewise: cannot start tracewise-watchd: {err}");
     let _ = fs::remove_file(&pid_file);
     process::exit(1);
 }
@@ -82,43 +82,44 @@ fn daemon_start_action(repo: Option<&RepoPaths>) {
         tracewise_core::repos::wake_daemon();
     }
     // ten `daemon start` at once must give one daemon: the check and the spawn happen under an exclusive file lock (K13)
-    let _ = tracewise_platform::private::create_dir_all(tracewise_core::get_trail_home());
-    let start_lock = fs::OpenOptions::new().create(true).append(true).open(tracewise_core::get_trail_home().join("daemon.start.lock")).ok();
+    let _ = tracewise_platform::private::create_dir_all(tracewise_core::get_tracewise_home());
+    let start_lock =
+        fs::OpenOptions::new().create(true).append(true).open(tracewise_core::get_tracewise_home().join("daemon.start.lock")).ok();
     if let Some(f) = &start_lock {
         let _ = f.lock();
     }
     if is_daemon_running() {
-        println!("trail daemon is already running");
+        println!("tracewise daemon is already running");
         return;
     }
     let env = crate::setup::Env::current();
     if crate::setup::login_item_installed(&env) {
         crate::setup::login_item_load(&env);
-        println!("trail daemon started (login item)");
+        println!("tracewise daemon started (login item)");
         return;
     }
     let self_exe = match std::env::current_exe() {
         Ok(e) => e,
         Err(e) => {
-            eprintln!("trail: failed to get current executable: {e}");
+            eprintln!("tracewise: failed to get current executable: {e}");
             process::exit(1);
         }
     };
-    let trail_home = tracewise_core::get_trail_home();
-    let _ = tracewise_platform::private::create_dir_all(&trail_home);
-    rotate_log(&trail_home);
-    let log_path = trail_home.join("daemon.log");
+    let tracewise_home = tracewise_core::get_tracewise_home();
+    let _ = tracewise_platform::private::create_dir_all(&tracewise_home);
+    rotate_log(&tracewise_home);
+    let log_path = tracewise_home.join("daemon.log");
     let log_file = match fs::OpenOptions::new().create(true).append(true).open(&log_path) {
         Ok(f) => f,
         Err(e) => {
-            eprintln!("trail: cannot open daemon log: {e}");
+            eprintln!("tracewise: cannot open daemon log: {e}");
             process::exit(1);
         }
     };
     let log_err = match log_file.try_clone() {
         Ok(f) => f,
         Err(e) => {
-            eprintln!("trail: cannot clone daemon log handle: {e}");
+            eprintln!("tracewise: cannot clone daemon log handle: {e}");
             process::exit(1);
         }
     };
@@ -132,21 +133,21 @@ fn daemon_start_action(repo: Option<&RepoPaths>) {
     {
         Ok(c) => c,
         Err(e) => {
-            eprintln!("trail: failed to spawn daemon: {e}");
+            eprintln!("tracewise: failed to spawn daemon: {e}");
             process::exit(1);
         }
     };
 
-    let _ = tracewise_platform::private::write(trail_home.join("daemon.pid"), child.id().to_string());
-    println!("trail daemon started");
+    let _ = tracewise_platform::private::write(tracewise_home.join("daemon.pid"), child.id().to_string());
+    println!("tracewise daemon started");
 }
 
 fn daemon_stop_action() {
     if crate::setup::login_item_installed(&crate::setup::Env::current()) {
         crate::setup::login_item_unload(&crate::setup::Env::current());
     }
-    let trail_home = tracewise_core::get_trail_home();
-    let pid_file = trail_home.join("daemon.pid");
+    let tracewise_home = tracewise_core::get_tracewise_home();
+    let pid_file = tracewise_home.join("daemon.pid");
     if let Ok(content) = fs::read_to_string(&pid_file) {
         if let Ok(pid) = content.trim().parse::<i32>() {
             let _ = tracewise_platform::signal::terminate_daemon(pid);
@@ -160,14 +161,14 @@ fn daemon_stop_action() {
         let _ = fs::remove_file(&pid_file);
     }
     for leftover in ["sensor.sock", "sensor.status.json"] {
-        let _ = fs::remove_file(trail_home.join(leftover));
+        let _ = fs::remove_file(tracewise_home.join(leftover));
     }
-    println!("trail daemon stopped");
+    println!("tracewise daemon stopped");
 }
 
 fn daemon_status_action(json: bool) {
     let running = is_daemon_running();
-    let home = tracewise_core::get_trail_home();
+    let home = tracewise_core::get_tracewise_home();
     let pid = fs::read_to_string(home.join("daemon.pid")).ok().and_then(|t| t.trim().parse::<u32>().ok()).filter(|_| running);
     let uptime = pid
         .and_then(|_| fs::metadata(home.join("daemon.pid")).ok())
@@ -202,7 +203,7 @@ fn human_duration(secs: u64) -> String {
 fn daemon_install_action(json: bool, no_load: bool) {
     let env = crate::setup::Env::current();
     if let Err(e) = crate::setup::login_item_write(&env) {
-        eprintln!("trail: {e}");
+        eprintln!("tracewise: {e}");
         process::exit(1);
     }
     if !no_load {
@@ -237,7 +238,7 @@ pub(crate) fn daemon_scan_paths(repo_paths: &RepoPaths) {
     let _ = std::io::stdin().read_to_string(&mut raw);
     let data_dir = repo_paths.data_dir();
     let (branch, head) = get_git_info(repo_paths);
-    let db = Database::open_hot(&data_dir.join("trail.db")).ok();
+    let db = Database::open_hot(&data_dir.join("tracewise.db")).ok();
     let windows = db.as_ref().and_then(|d| d.get_open_windows().ok()).unwrap_or_default();
     let actor_for = |agent: &Option<String>| match agent {
         Some(name) => {
@@ -316,7 +317,7 @@ pub(crate) fn daemon_scan_paths(repo_paths: &RepoPaths) {
 }
 
 pub(crate) fn daemon_active(repo_paths: &RepoPaths) {
-    let active = Database::open_hot(&repo_paths.data_dir().join("trail.db"))
+    let active = Database::open_hot(&repo_paths.data_dir().join("tracewise.db"))
         .map(|db| {
             let two_hours_ago =
                 (tracewise_core::clock::now() - chrono::Duration::hours(2)).to_rfc3339_opts(chrono::SecondsFormat::Millis, true);
@@ -329,7 +330,7 @@ pub(crate) fn daemon_active(repo_paths: &RepoPaths) {
 }
 
 pub(crate) fn daemon_sweep(repo_paths: &RepoPaths) {
-    let held = Database::open_hot(&repo_paths.data_dir().join("trail.db"))
+    let held = Database::open_hot(&repo_paths.data_dir().join("tracewise.db"))
         .map(|db| {
             let _ = db.clean_expired_locks(&repo_paths.work_tree);
             // restores wanted agent hooks and records a restart of the daemon; prints nothing (the output below is read)

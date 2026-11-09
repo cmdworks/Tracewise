@@ -4,8 +4,8 @@ use std::path::{Path, PathBuf};
 #[allow(unused_imports)]
 use std::process::Command;
 
-pub const AGENT_LABEL: &str = "dev.trail.daemon";
-pub const SENSOR_LABEL: &str = "dev.trail.sensor";
+pub const AGENT_LABEL: &str = "dev.tracewise.daemon";
+pub const SENSOR_LABEL: &str = "dev.tracewise.sensor";
 pub const LAUNCHCTL: &str = "launchctl";
 
 /// Return the command to bootstrap a system service.
@@ -90,7 +90,7 @@ pub fn sensor_plist(sensor_bin: &Path, socket_path: &Path) -> String {
     <key>RunAtLoad</key><true/>
     <key>KeepAlive</key><true/>
     <key>ProcessType</key><string>Background</string>
-    <key>StandardErrorPath</key><string>/var/log/trail-sensor.log</string>
+    <key>StandardErrorPath</key><string>/var/log/tracewise-sensor.log</string>
 </dict>
 </plist>
 "#,

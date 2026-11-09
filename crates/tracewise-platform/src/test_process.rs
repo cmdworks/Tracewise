@@ -22,7 +22,7 @@ fn the_sed_fast_path_only_takes_arguments_that_cannot_write() {
         &["-f", "x.sed", "f"],
         &["--file=x.sed", "f"],
         &["-n", "s/a/b/w out", "f"],
-        &["--trail-why=x", "s/a/b/", "f"],
+        &["--tracewise-why=x", "s/a/b/", "f"],
     ] {
         assert!(!ok(writes), "{writes:?}");
     }

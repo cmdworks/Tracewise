@@ -24,7 +24,7 @@ pub(crate) fn resolve_actor_and_confidence(options: &ScanOptions, path: &str) ->
 }
 
 pub(crate) fn human_actor() -> Actor {
-    let name = std::env::var("TRAIL_HUMAN")
+    let name = std::env::var("TRACEWISE_HUMAN")
         .ok()
         .filter(|s| !s.trim().is_empty())
         .or_else(|| std::env::var("USER").ok().filter(|s| !s.trim().is_empty()));

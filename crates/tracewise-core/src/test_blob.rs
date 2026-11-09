@@ -20,7 +20,7 @@ fn a_packed_project_blob_is_readable_from_any_directory() {
     git(&["add", "."]);
     git(&["-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "x"]);
     git(&["repack", "-adq"]);
-    let store = BlobStore::new(&repo.join(".git/trail"));
+    let store = BlobStore::new(&repo.join(".git/tracewise"));
     let hash = hash_bytes(b"in a pack\n");
     // stored as already present (no copy) ...
     assert_eq!(store.store(b"in a pack\n").unwrap(), hash);
@@ -74,7 +74,7 @@ fn test_hash_bytes() {
 fn test_blob_store_roundtrip() {
     let temp = tempfile::tempdir().unwrap();
     let store = BlobStore::new(temp.path());
-    let content = b"hello trail blob store\n";
+    let content = b"hello tracewise blob store\n";
     let hash = store.store(content).unwrap();
     assert_eq!(hash, hash_bytes(content));
     let read_back = store.read(&hash).unwrap();
@@ -91,9 +91,9 @@ fn test_binary_or_large() {
 fn test_blob_store_alternates_dedupe() {
     let temp = tempfile::tempdir().unwrap();
     let git_objects = temp.path().join("git_objects");
-    let trail_objects = temp.path().join("trail_objects");
+    let tracewise_objects = temp.path().join("tracewise_objects");
 
-    let store = BlobStore::with_git_objects(trail_objects.clone(), Some(git_objects.clone()));
+    let store = BlobStore::with_git_objects(tracewise_objects.clone(), Some(git_objects.clone()));
 
     // Pre-create object in git_objects
     let content = b"committed to project git\n";
@@ -113,16 +113,16 @@ fn test_blob_store_alternates_dedupe() {
     let stored_hash = store.store(content).unwrap();
     assert_eq!(stored_hash, hash);
 
-    // Verify it was NOT written into trail_objects loose
-    let trail_loose = trail_objects.join(prefix).join(rest);
-    assert!(!trail_loose.exists());
+    // Verify it was NOT written into tracewise_objects loose
+    let tracewise_loose = tracewise_objects.join(prefix).join(rest);
+    assert!(!tracewise_loose.exists());
 
     // But read works through alternate
     let read_back = store.read(&hash).unwrap();
     assert_eq!(read_back, content);
 
     // Verify alternates file exists
-    let alt_file = trail_objects.join("info").join("alternates");
+    let alt_file = tracewise_objects.join("info").join("alternates");
     assert!(alt_file.is_file());
     let alt_content = fs::read_to_string(alt_file).unwrap();
     assert!(alt_content.contains(git_objects.to_str().unwrap()));
@@ -161,12 +161,12 @@ fn test_blob_store_gc() {
 #[test]
 fn the_durability_level_is_read_from_the_repository_config() {
     let repo = tempfile::tempdir().unwrap();
-    let data = repo.path().join(".git").join("trail");
+    let data = repo.path().join(".git").join("tracewise");
     std::fs::create_dir_all(&data).unwrap();
     assert!(load_durability(&data), "default is full");
-    std::fs::write(repo.path().join(".trailconfig"), "[durability]\nlevel = \"normal\"\n").unwrap();
+    std::fs::write(repo.path().join(".tracewiseconfig"), "[durability]\nlevel = \"normal\"\n").unwrap();
     assert!(!load_durability(&data));
-    std::fs::write(repo.path().join(".trailconfig"), "[durability]\nlevel = \"full\"\n").unwrap();
+    std::fs::write(repo.path().join(".tracewiseconfig"), "[durability]\nlevel = \"full\"\n").unwrap();
     assert!(load_durability(&data));
     let store = BlobStore::new(&data);
     let hash = store.store(b"hello\n").unwrap();

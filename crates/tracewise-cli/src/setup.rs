@@ -1,6 +1,6 @@
-//! `trail setup`, `trail uninstall`, `trail doctor --all`: one root (`TRAIL_HOME`), one manifest (`install.json`),
+//! `tracewise setup`, `tracewise uninstall`, `tracewise doctor --all`: one root (`TRACEWISE_HOME`), one manifest (`install.json`),
 //! one marked block in `~/.zshrc`. Nothing here needs a repository, and nothing needs sudo (the strict sensor has
-//! its own `trail strict install`).
+//! its own `tracewise strict install`).
 
 use serde::{Deserialize, Serialize};
 use std::fs;
@@ -9,9 +9,9 @@ use std::process::{self, Command};
 
 /// Written next to the programs by `scripts/package.sh`; absent for a build from source.
 pub(crate) const CHECKSUM_FILE: &str = "SHA256SUMS";
-pub(crate) const PROGRAMS: &[&str] = &["trail", "trail-git", "trail-shim", "trail-watchd", "trail-sensor"];
-pub(crate) const BLOCK_START: &str = "# >>> trail >>>";
-pub(crate) const BLOCK_END: &str = "# <<< trail <<<";
+pub(crate) const PROGRAMS: &[&str] = &["tracewise", "tracewise-git", "tracewise-shim", "tracewise-watchd", "tracewise-sensor"];
+pub(crate) const BLOCK_START: &str = "# >>> tracewise >>>";
+pub(crate) const BLOCK_END: &str = "# <<< tracewise <<<";
 
 pub(crate) mod doctor;
 pub(crate) mod install;
@@ -27,7 +27,7 @@ pub(crate) use login::*;
 pub struct Env {
     pub home: PathBuf,
     pub root: PathBuf,
-    /// The folder holding the programs to install (next to the running `trail`).
+    /// The folder holding the programs to install (next to the running `tracewise`).
     pub src_dir: PathBuf,
 }
 
@@ -36,7 +36,7 @@ impl Env {
         let exe = std::env::current_exe().ok().and_then(|p| p.canonicalize().ok()).unwrap_or_default();
         Env {
             home: std::env::var("HOME").map(PathBuf::from).unwrap_or_default(),
-            root: tracewise_core::get_trail_home(),
+            root: tracewise_core::get_tracewise_home(),
             src_dir: exe.parent().map(Path::to_path_buf).unwrap_or_default(),
         }
     }
@@ -52,7 +52,7 @@ impl Env {
     pub(crate) fn zshrc(&self) -> PathBuf {
         self.home.join(".zshrc")
     }
-    /// Read by every zsh, including the shells an agent starts: the PATH lives here so hooks find `trail`.
+    /// Read by every zsh, including the shells an agent starts: the PATH lives here so hooks find `tracewise`.
     pub(crate) fn zshenv(&self) -> PathBuf {
         self.home.join(".zshenv")
     }
@@ -114,9 +114,9 @@ pub struct SetupOptions {
     pub profile: String,
 }
 
-/// Tests set `TRAIL_SETUP_NO_LAUNCHCTL=1`: they must not load, unload or kill anything on the machine they run on.
+/// Tests set `TRACEWISE_SETUP_NO_LAUNCHCTL=1`: they must not load, unload or kill anything on the machine they run on.
 pub(crate) fn live() -> bool {
-    std::env::var("TRAIL_SETUP_NO_LAUNCHCTL").as_deref() != Ok("1")
+    std::env::var("TRACEWISE_SETUP_NO_LAUNCHCTL").as_deref() != Ok("1")
 }
 
 pub fn run_setup(json: bool, login: Login, no_start: bool, no_shell_rc: bool, strict: bool, events: &str, profile: &str) {
@@ -127,14 +127,14 @@ pub fn run_setup(json: bool, login: Login, no_start: bool, no_shell_rc: bool, st
             if json {
                 println!("{}", serde_json::to_string(&m).unwrap_or_default());
             } else {
-                println!("Trail {} is set up in {}", m.version, env.root.display());
+                println!("Tracewise {} is set up in {}", m.version, env.root.display());
                 println!("  programs: {}", m.programs.join(", "));
                 println!("  shims:    {} in {}", m.shims, env.shims().display());
                 if m.zshrc_block {
-                    println!("  shell:    one Trail block in ~/.zshenv (PATH) and one in ~/.zshrc (terminal hook)");
+                    println!("  shell:    one Tracewise block in ~/.zshenv (PATH) and one in ~/.zshrc (terminal hook)");
                 }
                 if m.zshrc_block && install::fish_installed(&env) && install::fish_file(&env).is_file() {
-                    println!("  shell:    fish: one Trail file, {}", install::fish_file(&env).display());
+                    println!("  shell:    fish: one Tracewise file, {}", install::fish_file(&env).display());
                 }
                 if let Some(shell) = install::unsupported_shell().filter(|_| m.zshrc_block) {
                     println!(
@@ -148,18 +148,22 @@ pub fn run_setup(json: bool, login: Login, no_start: bool, no_shell_rc: bool, st
                 }
                 println!(
                     "  login:    {}",
-                    if m.launch_agent.is_some() { "daemon starts at login" } else { "daemon is started by hand (`trail daemon start`)" }
+                    if m.launch_agent.is_some() {
+                        "daemon starts at login"
+                    } else {
+                        "daemon is started by hand (`tracewise daemon start`)"
+                    }
                 );
-                println!("Open a new terminal, then run `trail doctor --all`.");
+                println!("Open a new terminal, then run `tracewise doctor --all`.");
             }
         }
         Err(e) => {
-            eprintln!("trail: setup failed: {e}");
+            eprintln!("tracewise: setup failed: {e}");
             process::exit(1);
         }
     }
     if strict {
-        let status = Command::new(env.bin().join("trail")).args(["strict", "install", "--events", events]).status();
+        let status = Command::new(env.bin().join("tracewise")).args(["strict", "install", "--events", events]).status();
         if !status.map(|s| s.success()).unwrap_or(false) {
             process::exit(1);
         }
@@ -173,13 +177,13 @@ pub fn run_uninstall(json: bool, purge: bool) {
         println!("{}", serde_json::json!({ "removed": removed }));
     } else {
         if removed.is_empty() {
-            println!("nothing to remove: Trail is not set up here");
+            println!("nothing to remove: Tracewise is not set up here");
         }
         for r in &removed {
             println!("removed {r}");
         }
         println!(
-            "Repository histories (.git/trail) are untouched. The strict sensor, if installed, is removed with `trail strict uninstall`."
+            "Repository histories (.git/tracewise) are untouched. The strict sensor, if installed, is removed with `tracewise strict uninstall`."
         );
     }
 }

@@ -186,7 +186,7 @@ impl Database {
         Ok(())
     }
 
-    /// Marks every record made on `device` as not pushed, so the next push sends them all again (`trail share key rekey`).
+    /// Marks every record made on `device` as not pushed, so the next push sends them all again (`tracewise share key rekey`).
     pub fn mark_device_unpushed(&self, device: &str) -> Result<usize> {
         self.conn.execute("UPDATE changes SET pushed = 0 WHERE device = ?1", params![device])
     }

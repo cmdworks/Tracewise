@@ -5,13 +5,13 @@ use std::fs;
 use std::io;
 
 #[test]
-fn test_trailconfig_read_write() {
+fn test_tracewiseconfig_read_write() {
     let temp = tempfile::tempdir().unwrap();
     let root = temp.path();
-    assert!(read_trailconfig(root).is_none());
+    assert!(read_tracewiseconfig(root).is_none());
 
-    write_trailconfig(root, "file:///tmp/meta.git", "full").unwrap();
-    let cfg = read_trailconfig(root).unwrap();
+    write_tracewiseconfig(root, "file:///tmp/meta.git", "full").unwrap();
+    let cfg = read_tracewiseconfig(root).unwrap();
     assert_eq!(cfg.remote, "file:///tmp/meta.git");
     assert_eq!(cfg.level, "full");
 
@@ -19,8 +19,8 @@ fn test_trailconfig_read_write() {
     let custom_cfg = "[share] # companion remote configuration\n\
                       remote = \"https://github.com/org/repo.git?branch=main\" # remote URL\n\
                       level = \"metadata\" # share level\n";
-    fs::write(root.join(".trailconfig"), custom_cfg).unwrap();
-    let parsed = read_trailconfig(root).unwrap();
+    fs::write(root.join(".tracewiseconfig"), custom_cfg).unwrap();
+    let parsed = read_tracewiseconfig(root).unwrap();
     assert_eq!(parsed.remote, "https://github.com/org/repo.git?branch=main");
     assert_eq!(parsed.level, "metadata");
 }
@@ -45,22 +45,22 @@ fn test_validate_remote_url() {
     assert!(validate_remote_url("git@-evil:path").is_err());
     assert!(validate_remote_url("https://foo.com/repo\nevil").is_err());
 
-    // Malicious .trailconfig should be rejected by read_trailconfig
+    // Malicious .tracewiseconfig should be rejected by read_tracewiseconfig
     let temp = tempfile::tempdir().unwrap();
     let root = temp.path();
-    fs::write(root.join(".trailconfig"), "[share]\nremote = \"--upload-pack=evil\"\nlevel = \"full\"\n").unwrap();
-    assert!(read_trailconfig(root).is_none());
+    fs::write(root.join(".tracewiseconfig"), "[share]\nremote = \"--upload-pack=evil\"\nlevel = \"full\"\n").unwrap();
+    assert!(read_tracewiseconfig(root).is_none());
 }
 
 #[test]
 fn test_push_requires_approved_remote() {
     let repo = tempfile::tempdir().unwrap();
     let data = tempfile::tempdir().unwrap();
-    write_trailconfig(repo.path(), "file:///tmp/evil.git", "full").unwrap();
+    write_tracewiseconfig(repo.path(), "file:///tmp/evil.git", "full").unwrap();
 
     let err = push(repo.path(), data.path()).unwrap_err();
     assert_eq!(err.kind(), io::ErrorKind::PermissionDenied);
-    assert!(err.to_string().contains("trail share trust"));
+    assert!(err.to_string().contains("tracewise share trust"));
 
     // approving a different remote does not help
     trust_remote(data.path(), "file:///tmp/other.git").unwrap();
@@ -164,8 +164,8 @@ fn test_fetch_refuses_an_unapproved_remote_from_another_place() {
     };
     g(&["init", "-q"]);
     g(&["remote", "add", "origin", "git@github.com:theasmat/app.git"]);
-    write_trailconfig(&repo, "git@evil.example:attacker/meta.git", "full").unwrap();
-    let data = repo.join(".git/trail");
+    write_tracewiseconfig(&repo, "git@evil.example:attacker/meta.git", "full").unwrap();
+    let data = repo.join(".git/tracewise");
     fs::create_dir_all(&data).unwrap();
     let err = fetch(&repo, &data).unwrap_err();
     assert_eq!(err.kind(), io::ErrorKind::PermissionDenied);

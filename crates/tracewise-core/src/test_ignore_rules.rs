@@ -10,10 +10,10 @@ fn gitignore_rules_apply_to_single_paths() {
     fs::write(root.join(".gitignore"), "/target\n*.log\n!keep.log\nnode_modules\n").unwrap();
     fs::write(root.join("sub/.gitignore"), "*.tmp\n").unwrap();
     fs::write(root.join(".git/info/exclude"), "secret.txt\n").unwrap();
-    fs::write(root.join(".trailignore"), "generated/\n").unwrap();
+    fs::write(root.join(".tracewiseignore"), "generated/\n").unwrap();
     let mut r = IgnoreRules::load(root);
     for ignored in [
-        "target/debug/trail",
+        "target/debug/tracewise",
         "a.log",
         "deep/b.log",
         "web/node_modules/x/index.js",

@@ -3,7 +3,7 @@ use super::*;
 #[test]
 fn test_locks_crud() {
     let temp = tempfile::tempdir().unwrap();
-    let db = Database::open(&temp.path().join("trail.db")).unwrap();
+    let db = Database::open(&temp.path().join("tracewise.db")).unwrap();
 
     let claude = Actor::agent("claude", "s1");
     let codex = Actor::agent("codex", "c1");
@@ -43,7 +43,7 @@ fn test_locks_crud() {
 #[test]
 fn eight_processes_racing_for_one_file_get_exactly_one_lock() {
     let dir = tempfile::tempdir().unwrap();
-    let db_path = dir.path().join("trail.db");
+    let db_path = dir.path().join("tracewise.db");
     drop(Database::open(&db_path).unwrap()); // create the schema once
     let granted = std::sync::atomic::AtomicUsize::new(0);
     std::thread::scope(|scope| {

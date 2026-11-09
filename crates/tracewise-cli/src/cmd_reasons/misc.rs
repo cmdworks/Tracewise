@@ -7,7 +7,7 @@ pub(crate) fn run_adopt_copy(json: bool, repo_paths: &RepoPaths) {
         tracewise_core::identity::check_copy(&data_dir, &main_work_tree(repo_paths)),
         tracewise_core::identity::CopyState::Copy { .. }
     ) {
-        eprintln!("trail: this repository is not a copy of another one (nothing to adopt)");
+        eprintln!("tracewise: this repository is not a copy of another one (nothing to adopt)");
         process::exit(1);
     }
     match tracewise_core::identity::adopt_copy(&data_dir, &main_work_tree(repo_paths)) {
@@ -19,14 +19,14 @@ pub(crate) fn run_adopt_copy(json: bool, repo_paths: &RepoPaths) {
             }
         }
         Err(e) => {
-            eprintln!("trail: adopt-copy failed: {e}");
+            eprintln!("tracewise: adopt-copy failed: {e}");
             process::exit(1);
         }
     }
 }
 
 pub(crate) fn run_ps(json: bool, repo_paths: &RepoPaths) {
-    let db_path = repo_paths.data_dir().join("trail.db");
+    let db_path = repo_paths.data_dir().join("tracewise.db");
     let windows = Database::open_hot(&db_path).and_then(|db| db.list_background_windows()).unwrap_or_default();
     if json {
         let list: Vec<_> = windows
@@ -52,14 +52,14 @@ pub(crate) fn run_ps(json: bool, repo_paths: &RepoPaths) {
 pub(crate) fn run_background(json: bool, repo_paths: &RepoPaths, action: BackgroundAction) {
     match action {
         BackgroundAction::Stop { id } => {
-            let db_path = repo_paths.data_dir().join("trail.db");
+            let db_path = repo_paths.data_dir().join("tracewise.db");
             let stopped = Database::open_hot(&db_path).and_then(|db| db.stop_background_window(&id)).unwrap_or(false);
             if json {
                 println!("{}", serde_json::json!({ "stopped": stopped }));
             } else if stopped {
                 println!("stopped {id}");
             } else {
-                eprintln!("trail: no live background window {id}");
+                eprintln!("tracewise: no live background window {id}");
             }
             if !stopped {
                 process::exit(1);
@@ -84,7 +84,7 @@ fn attribution_summary(db_path: &std::path::Path, days: i64) -> Option<serde_jso
 pub(crate) fn run_doctor(json: bool, repo_paths: &RepoPaths) {
     let cov = crate::cmd_agents::coverage(repo_paths);
     let data_dir = repo_paths.data_dir();
-    let db_path = data_dir.join("trail.db");
+    let db_path = data_dir.join("tracewise.db");
     let mut problems: Vec<String> = Vec::new();
     let stuck = if db_path.exists() {
         match Database::open_hot(&db_path) {
@@ -99,7 +99,7 @@ pub(crate) fn run_doctor(json: bool, repo_paths: &RepoPaths) {
         }
     } else {
         if data_dir.is_dir() {
-            problems.push(format!("{} exists but trail.db cannot be read there (permissions on the folder?)", data_dir.display()));
+            problems.push(format!("{} exists but tracewise.db cannot be read there (permissions on the folder?)", data_dir.display()));
         }
         Vec::new()
     };
@@ -136,26 +136,26 @@ pub(crate) fn run_doctor(json: bool, repo_paths: &RepoPaths) {
     } else {
         println!("profile: {}", profile.description());
         if deprecated_lock_flag {
-            println!("trail: warning: `[locks] flag` is no longer supported");
+            println!("tracewise: warning: `[locks] flag` is no longer supported");
         }
-        let config_files = [tracewise_core::get_trail_home().join("config.toml"), repo_paths.work_tree.join(".trailconfig")];
+        let config_files = [tracewise_core::get_tracewise_home().join("config.toml"), repo_paths.work_tree.join(".tracewiseconfig")];
         for file in &config_files {
             for w in std::fs::read_to_string(file).map(|c| tracewise_core::profile::ProfileConfig::config_warnings(&c)).unwrap_or_default()
             {
-                println!("trail: warning: {}: {w}", file.display());
+                println!("tracewise: warning: {}: {w}", file.display());
             }
         }
         if stuck.is_empty() && problems.is_empty() {
-            println!("trail doctor: ok (no stuck immutable files)");
+            println!("tracewise doctor: ok (no stuck immutable files)");
         }
         for p in &problems {
-            println!("trail: PROBLEM: {p}");
+            println!("tracewise: PROBLEM: {p}");
         }
         for w in &sharing {
-            println!("trail: warning: {w}");
+            println!("tracewise: warning: {w}");
         }
         for p in &stuck {
-            println!("trail: warning: {p} is immutable with no live lock; run `trail lock release --all` to clear");
+            println!("tracewise: warning: {p} is immutable with no live lock; run `tracewise lock release --all` to clear");
         }
         if let Some(a) = attribution.as_ref().filter(|a| a["changes"].as_u64().unwrap_or(0) > 0) {
             let total = a["changes"].as_u64().unwrap_or(1).max(1);
@@ -173,7 +173,7 @@ pub(crate) fn run_doctor(json: bool, repo_paths: &RepoPaths) {
             }
         }
         if prune_candidates > 0 {
-            println!("prune candidates: {prune_candidates} record(s) under ignored paths; see `trail prune --dry-run`");
+            println!("prune candidates: {prune_candidates} record(s) under ignored paths; see `tracewise prune --dry-run`");
         }
         let yn = |b: bool| if b { "yes" } else { "NO" };
         println!("coverage:");
@@ -181,7 +181,7 @@ pub(crate) fn run_doctor(json: bool, repo_paths: &RepoPaths) {
             println!("  agent {name}: hooks {}", yn(*hooks));
             if let Some((_, missing)) = cov.missing_events.iter().find(|(a, m)| a == name && !m.is_empty()) {
                 println!(
-                    "    missing hook events: {} (changes by {name} are attributed less often; run `trail agent install {name}`)",
+                    "    missing hook events: {} (changes by {name} are attributed less often; run `tracewise agent install {name}`)",
                     missing.join(", ")
                 );
             }

@@ -151,7 +151,7 @@ fn non_utf8_argument_reaches_the_real_tool_unchanged() {
     use std::os::unix::ffi::OsStrExt;
     let d = tempfile::tempdir().unwrap();
     let shim = d.path().join("sed");
-    std::os::unix::fs::symlink(env!("CARGO_BIN_EXE_trail-shim"), &shim).unwrap();
+    std::os::unix::fs::symlink(env!("CARGO_BIN_EXE_tracewise-shim"), &shim).unwrap();
     let f = d.path().join("f");
     std::fs::write(&f, "x\n").unwrap();
     let script = std::ffi::OsStr::from_bytes(b"s/x/\xff/");

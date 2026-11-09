@@ -52,7 +52,7 @@ pub fn handle(ctx: &HookContext) -> Result<HookOutput, String> {
         for cid in &change_ids {
             if let Ok(Some(ch)) = ctx.db.get_change(cid) {
                 if ch.intent.is_none() {
-                    eprintln!("trail: {} changed ({}) without a reason. Add one: trail note {} \"<why>\"", ch.path, ch.id, ch.id);
+                    eprintln!("tracewise: {} changed ({}) without a reason. Add one: tracewise note {} \"<why>\"", ch.path, ch.id, ch.id);
                 }
             }
         }

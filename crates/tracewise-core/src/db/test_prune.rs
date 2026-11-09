@@ -27,7 +27,7 @@ fn change(n: usize, path: &str) -> Change {
 
 /// A database with one record per path, in order.
 fn db_with(dir: &std::path::Path, paths: &[&str]) -> Database {
-    let db = Database::open(&dir.join("trail.db")).unwrap();
+    let db = Database::open(&dir.join("tracewise.db")).unwrap();
     for (n, p) in paths.iter().enumerate() {
         db.insert_change(&change(n, p)).unwrap();
     }

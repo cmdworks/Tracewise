@@ -1,4 +1,4 @@
-//! `trail diff --since` shows the difference from the state at that time.
+//! `tracewise diff --since` shows the difference from the state at that time.
 mod common;
 use common::Repo;
 

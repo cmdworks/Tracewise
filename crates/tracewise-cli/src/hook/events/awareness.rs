@@ -10,8 +10,8 @@ use crate::hook::HookContext;
 use std::io::Write;
 use std::path::PathBuf;
 
-const DIGEST_PREFIX: &str = "Trail digest: ";
-const OVERLAP_PREFIX: &str = "Trail overlap: ";
+const DIGEST_PREFIX: &str = "Tracewise digest: ";
+const OVERLAP_PREFIX: &str = "Tracewise overlap: ";
 
 /// A notice that starts with a digest or overlap line is shown as it is, without the "since your last prompt" header the
 /// ordinary notice gets.

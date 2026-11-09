@@ -43,18 +43,18 @@ pub fn parse_actor_str(val: &str) -> Option<(String, String, Option<String>)> {
 }
 
 fn actor_env_non_human() -> Option<ProcWhoResult> {
-    let trimmed = std::env::var("TRAIL_ACTOR").ok()?;
+    let trimmed = std::env::var("TRACEWISE_ACTOR").ok()?;
     let (kind, name, session) = parse_actor_str(trimmed.trim()).filter(|(k, _, _)| k != "human")?;
     Some(ProcWhoResult { kind, name, session, source: "env".to_string(), matched: None })
 }
 
 fn fallback_human() -> ProcWhoResult {
-    if let Ok(actor_val) = std::env::var("TRAIL_ACTOR") {
+    if let Ok(actor_val) = std::env::var("TRACEWISE_ACTOR") {
         if let Some((kind, name, session)) = parse_actor_str(actor_val.trim()).filter(|(k, _, _)| k == "human") {
             return ProcWhoResult { kind, name, session, source: "env".to_string(), matched: None };
         }
     }
-    let human_name = std::env::var("TRAIL_HUMAN")
+    let human_name = std::env::var("TRACEWISE_HUMAN")
         .ok()
         .filter(|s| !s.trim().is_empty())
         .or_else(|| std::env::var("USER").ok().filter(|s| !s.trim().is_empty()))
@@ -63,9 +63,9 @@ fn fallback_human() -> ProcWhoResult {
 }
 
 /// Determine who is acting following the priority:
-/// 1. TRAIL_ACTOR (source "env")
+/// 1. TRACEWISE_ACTOR (source "env")
 /// 2. Nearest process in the chain matching the agent table (source "process")
-/// 3. Human default from TRAIL_HUMAN or USER (source "default")
+/// 3. Human default from TRACEWISE_HUMAN or USER (source "default")
 pub fn who(pid: Option<u32>, table: Option<&AgentTable>) -> ProcWhoResult {
     if let Some(res) = actor_env_non_human() {
         return res;
@@ -149,17 +149,17 @@ fn marker_agent() -> Option<ProcWhoResult> {
     })
 }
 
-/// Resolve `TRAIL_HOME` directory (~/.trail by default).
-pub fn trail_home_dir() -> PathBuf {
-    if let Ok(val) = std::env::var("TRAIL_HOME") {
+/// Resolve `TRACEWISE_HOME` directory (~/.tracewise by default).
+pub fn tracewise_home_dir() -> PathBuf {
+    if let Ok(val) = std::env::var("TRACEWISE_HOME") {
         let trimmed = val.trim();
         if !trimmed.is_empty() {
             return PathBuf::from(trimmed);
         }
     }
     if let Ok(home) = std::env::var("HOME") {
-        PathBuf::from(home).join(".trail")
+        PathBuf::from(home).join(".tracewise")
     } else {
-        PathBuf::from(".trail")
+        PathBuf::from(".tracewise")
     }
 }

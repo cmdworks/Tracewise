@@ -221,9 +221,9 @@ const READERS: &[&str] = &[
     "less", "more",
 ];
 const READ_ONLY_GIT: &[&str] = &["status", "log", "diff", "show", "branch", "rev-parse", "ls-files", "blame", "remote"];
-const READ_ONLY_TRAIL: &[&str] = &["log", "why", "blame", "status", "pending", "doctor", "verify", "commands", "show", "ps"];
+const READ_ONLY_TRACEWISE: &[&str] = &["log", "why", "blame", "status", "pending", "doctor", "verify", "commands", "show", "ps"];
 
-/// True when every simple command in `command` is a known reader (`ls`, `sleep`, `git status`, `trail log` ...) with no
+/// True when every simple command in `command` is a known reader (`ls`, `sleep`, `git status`, `tracewise log` ...) with no
 /// output redirection: nothing it does can change a file, so a change that appears while it runs is not its.
 pub fn only_reads(command: &str) -> bool {
     if last_unquoted_redirect(command).is_some() {
@@ -242,11 +242,11 @@ pub fn only_reads(command: &str) -> bool {
                 // an interpreter only reads when it merely prints its version
                 "node" | "python3" => tokens.iter().any(|t| t == "--version" || t == "-V"),
                 "git" => sub.is_some_and(|s| READ_ONLY_GIT.contains(&s)),
-                // `trail run --why "..." -- <command>`: it reads when the command after `--` does
-                "trail" if sub == Some("run") => {
+                // `tracewise run --why "..." -- <command>`: it reads when the command after `--` does
+                "tracewise" if sub == Some("run") => {
                     tokens.iter().position(|t| t == "--").is_some_and(|i| only_reads(&tokens[i + 1..].join(" ")))
                 }
-                "trail" => sub.is_some_and(|s| READ_ONLY_TRAIL.contains(&s)),
+                "tracewise" => sub.is_some_and(|s| READ_ONLY_TRACEWISE.contains(&s)),
                 p => READERS.contains(&p),
             }
         })

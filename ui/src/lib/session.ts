@@ -7,7 +7,7 @@ export interface SavedUi {
   file: string;
 }
 
-export const SESSION_KEY = "trail-ui-session";
+export const SESSION_KEY = "tracewise-ui-session";
 const TABS: Tab[] = ["timeline", "now", "files", "undo", "projects", "health"];
 const NOTHING: SavedUi = { repo: "", tab: "timeline", file: "" };
 

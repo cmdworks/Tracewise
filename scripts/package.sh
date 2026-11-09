@@ -22,9 +22,9 @@ fi
 name="tracewise-$version-macos-$arch"
 out=target/dist
 rm -rf "${out:?}/$name" && mkdir -p "$out/$name"
-# the list setup installs and doctor checks (setup.rs PROGRAMS); `tracewise` is shipped to run setup, and setup links it to `trail`
-programs="trail trail-git trail-shim trail-watchd trail-sensor"
-for program in tracewise $programs; do
+# the programs setup installs and doctor checks (setup.rs PROGRAMS)
+programs="tracewise tracewise-git tracewise-shim tracewise-watchd tracewise-sensor"
+for program in $programs; do
   cp "$bin_dir/$program" "$out/$name/"
 done
 (cd "$out/$name" && shasum -a 256 $programs > SHA256SUMS)

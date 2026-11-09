@@ -9,9 +9,9 @@
     <span class="badge badge-accent font-mono">GLOBAL ENVIRONMENT</span>
     <h2 class="card-title mt-1 font-mono">Tracewise Global Config</h2>
     <div class="global-kvs-grid mt-3 font-mono">
-      <div class="kv-box"><span class="kv-k">Config Path</span><span class="kv-v">~/.trail/config.toml</span></div>
+      <div class="kv-box"><span class="kv-k">Config Path</span><span class="kv-v">~/.tracewise/config.toml</span></div>
       <div class="kv-box"><span class="kv-k">Default Profile</span><span class="kv-v text-accent font-bold">core</span></div>
-      <div class="kv-box"><span class="kv-k">Registry File</span><span class="kv-v">~/.trail/repos</span></div>
+      <div class="kv-box"><span class="kv-k">Registry File</span><span class="kv-v">~/.tracewise/repos</span></div>
       <div class="kv-box"><span class="kv-k">Daemon Process</span><span class="kv-v tabular-nums">PID {app.daemonPid ?? "none"}</span></div>
     </div>
   </div>
@@ -20,7 +20,7 @@
     <div class="card-header-flex">
       <div>
         <h3 class="card-title font-mono">Registered Repositories ({app.watchedRepos.length})</h3>
-        <p class="section-sub">Discovered via <code>trail daemon status --json</code>:</p>
+        <p class="section-sub">Discovered via <code>tracewise daemon status --json</code>:</p>
       </div>
       <button type="button" class="btn btn-secondary btn-sm font-mono" onclick={fx.fetchDaemonStatus}>
         <Icon name="refresh" size={12} />
@@ -71,7 +71,7 @@
       <input
         type="text"
         class="search-input font-mono"
-        placeholder="/path/to/project (already set up with trail init)"
+        placeholder="/path/to/project (already set up with tracewise init)"
         bind:value={app.newProjectInput}
         onkeydown={(e) => e.key === "Enter" && fx.registerNewProject()}
       />

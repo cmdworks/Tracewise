@@ -24,15 +24,16 @@ fn test_reasons_mode_parse_and_defaults() {
 }
 
 #[test]
-fn test_read_reasons_mode_from_trailconfig() {
+fn test_read_reasons_mode_from_tracewiseconfig() {
     let dir = tempdir().unwrap();
     let path = dir.path();
 
-    // Default when no .trailconfig exists
+    // Default when no .tracewiseconfig exists
     assert_eq!(read_reasons_mode_from_file(path), None);
 
-    // With .trailconfig containing [reasons]
-    fs::write(path.join(".trailconfig"), "[share]\nremote = \"https://example.com/repo.git\"\n\n[reasons]\nmode = \"enforce\"\n").unwrap();
+    // With .tracewiseconfig containing [reasons]
+    fs::write(path.join(".tracewiseconfig"), "[share]\nremote = \"https://example.com/repo.git\"\n\n[reasons]\nmode = \"enforce\"\n")
+        .unwrap();
 
     assert_eq!(read_reasons_mode_from_file(path), Some(ReasonsMode::Enforce));
 }

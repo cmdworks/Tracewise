@@ -121,7 +121,7 @@ fn in_place_sed_forms_are_never_read_only() {
 }
 
 #[test]
-fn the_loop_guard_counts_only_when_trail_started_the_process() {
+fn the_loop_guard_counts_only_when_tracewise_started_the_process() {
     let here = tempfile::tempdir().unwrap();
     let elsewhere = tempfile::tempdir().unwrap();
     let make = |dir: &std::path::Path, name: &str| {
@@ -129,13 +129,13 @@ fn the_loop_guard_counts_only_when_trail_started_the_process() {
         std::fs::write(&p, b"x").unwrap();
         p
     };
-    let me = make(here.path(), "trail-shim");
-    let sibling = make(here.path(), "trail");
-    let copy = make(elsewhere.path(), "trail");
+    let me = make(here.path(), "tracewise-shim");
+    let sibling = make(here.path(), "tracewise");
+    let copy = make(elsewhere.path(), "tracewise");
     let shell = make(here.path(), "zsh");
     let applies = |parent: Option<&std::path::Path>| crate::shim_guard_applies(true, parent.and_then(|p| p.to_str()), Some(&me));
-    assert!(applies(Some(&sibling)), "a Trail binary next to this one");
-    assert!(!applies(Some(&copy)), "a copy named trail in another folder does not count");
+    assert!(applies(Some(&sibling)), "a Tracewise binary next to this one");
+    assert!(!applies(Some(&copy)), "a copy named tracewise in another folder does not count");
     assert!(!applies(Some(&shell)), "set by a shell or an agent: ignored");
     assert!(!applies(None));
     assert!(!crate::shim_guard_applies(false, sibling.to_str(), Some(&me)));

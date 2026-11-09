@@ -2,7 +2,7 @@ use super::awareness::{first_prompt_digest, overlaps_for_prompt};
 use crate::hook::{HookContext, HookOutput};
 
 /// Header the ordinary notice gets from an adapter; a notice that `is_complete` already carries its own.
-const CHANGES_HEADER: &str = "Trail: since your last prompt, other actors changed files you work on:\n";
+const CHANGES_HEADER: &str = "Tracewise: since your last prompt, other actors changed files you work on:\n";
 
 pub fn handle(ctx: &HookContext) -> Result<HookOutput, String> {
     // a new prompt: the previous turn's tool calls are over

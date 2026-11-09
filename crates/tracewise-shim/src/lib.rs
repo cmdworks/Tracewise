@@ -1,5 +1,5 @@
 //! Which files a shimmed command (sed, perl, awk, gawk, tee, mv, cp, rm, truncate, patch, ln, touch) will write.
-//! std only: shared by the tiny `trail-shim` entry binary and the full `trail`, so there is one classifier.
+//! std only: shared by the tiny `tracewise-shim` entry binary and the full `tracewise`, so there is one classifier.
 use std::path::{Path, PathBuf};
 
 pub mod fs;
@@ -14,25 +14,21 @@ pub use fs::copy_operands;
 pub use patch::parse_patch_targets;
 pub use sed::{detect_sed_targets, extract_sed_script_w_targets, find_unescaped_delim};
 
-pub fn is_trail_bin_name(name: &str) -> bool {
+pub fn is_tracewise_bin_name(name: &str) -> bool {
     matches!(
         name,
-        "trail"
-            | "trail.exe"
-            | "tracewise"
+        "tracewise"
             | "tracewise.exe"
-            | "agent-trail"
-            | "agent-trail.exe"
-            | "trail-git"
-            | "trail-git.exe"
-            | "trail-shim"
-            | "trail-shim.exe"
+            | "tracewise-git"
+            | "tracewise-git.exe"
+            | "tracewise-shim"
+            | "tracewise-shim.exe"
     )
 }
 
-pub fn is_trail_bin(path: &Path, self_exe: Option<&Path>) -> bool {
+pub fn is_tracewise_bin(path: &Path, self_exe: Option<&Path>) -> bool {
     let check_path = |p: &Path| {
-        p.file_name().and_then(|n| n.to_str()).is_some_and(is_trail_bin_name) || p.components().any(|c| c.as_os_str() == ".trail")
+        p.file_name().and_then(|n| n.to_str()).is_some_and(is_tracewise_bin_name) || p.components().any(|c| c.as_os_str() == ".tracewise")
     };
     if let Ok(canon) = path.canonicalize() {
         if self_exe == Some(canon.as_path()) || check_path(&canon) {
@@ -42,10 +38,10 @@ pub fn is_trail_bin(path: &Path, self_exe: Option<&Path>) -> bool {
     std::fs::read_link(path).is_ok_and(|target| check_path(&target))
 }
 
-/// The real `tool`: `TRAIL_REAL_<TOOL>`, else the next match on `path_var` after `shim_dir` that is not a Tracewise binary,
-/// else `/usr/bin` or `/bin`. One copy for the tiny shim and for `trail`.
+/// The real `tool`: `TRACEWISE_REAL_<TOOL>`, else the next match on `path_var` after `shim_dir` that is not a Tracewise binary,
+/// else `/usr/bin` or `/bin`. One copy for the tiny shim and for `tracewise`.
 pub fn find_real_tool_inner(tool: &str, path_var: Option<&std::ffi::OsStr>, shim_dir: Option<&Path>) -> PathBuf {
-    if let Some(p) = std::env::var_os(format!("TRAIL_REAL_{}", tool.to_uppercase())).map(PathBuf::from).filter(|p| p.is_file()) {
+    if let Some(p) = std::env::var_os(format!("TRACEWISE_REAL_{}", tool.to_uppercase())).map(PathBuf::from).filter(|p| p.is_file()) {
         return p;
     }
     let mut self_exe: Option<Option<PathBuf>> = None;
@@ -59,7 +55,7 @@ pub fn find_real_tool_inner(tool: &str, path_var: Option<&std::ffi::OsStr>, shim
         if let Ok(meta) = std::fs::symlink_metadata(&candidate) {
             // only a link can point back at Tracewise; resolving our own path is done once, lazily
             let me = || std::env::current_exe().ok().and_then(|p| p.canonicalize().ok());
-            if meta.is_symlink() && is_trail_bin(&candidate, self_exe.get_or_insert_with(me).as_deref()) {
+            if meta.is_symlink() && is_tracewise_bin(&candidate, self_exe.get_or_insert_with(me).as_deref()) {
                 continue;
             }
             return candidate;
@@ -82,16 +78,16 @@ pub fn exec_if_non_utf8(tool: &str, args: &[std::ffi::OsString], shim_dir: Optio
     if args.iter().all(|a| a.to_str().is_some()) {
         return;
     }
-    tracewise_platform::process::fast_exec(&find_real_tool(tool, shim_dir), args, Some(tool), Some(("TRAIL_SHIM_DEPTH", "1")), None);
+    tracewise_platform::process::fast_exec(&find_real_tool(tool, shim_dir), args, Some(tool), Some(("TRACEWISE_SHIM_DEPTH", "1")), None);
 }
 
-/// The loop guard `TRAIL_SHIM_DEPTH` counts only when Tracewise itself started this process: the parent is a Tracewise binary that lives
-/// in the same folder as this one. Set by anyone else (an agent, a script, a copy named `trail` elsewhere), it is ignored.
+/// The loop guard `TRACEWISE_SHIM_DEPTH` counts only when Tracewise itself started this process: the parent is a Tracewise binary that lives
+/// in the same folder as this one. Set by anyone else (an agent, a script, a copy named `tracewise` elsewhere), it is ignored.
 pub fn shim_guard_applies(depth_set: bool, parent_exe: Option<&str>, self_exe: Option<&Path>) -> bool {
     let dir_of = |p: &Path| p.canonicalize().ok().and_then(|c| c.parent().map(Path::to_path_buf));
     depth_set
         && parent_exe.map(Path::new).is_some_and(|p| {
-            p.file_name().and_then(|n| n.to_str()).is_some_and(is_trail_bin_name)
+            p.file_name().and_then(|n| n.to_str()).is_some_and(is_tracewise_bin_name)
                 && dir_of(p).is_some()
                 && dir_of(p) == self_exe.and_then(dir_of)
         })

@@ -1,7 +1,7 @@
 //! Bulk changes: a burst of file-event-only changes (formatter, generator, lockfile, multi-file replace) becomes one command.
 //!
 //! After the daemon records a batch it saw only through file events, `BULK_MIN` or more changes nobody explained are linked to one
-//! `bulk` command, so the Timeline shows one row and `trail undo --command <id>` reverts them together. Attribution is not changed.
+//! `bulk` command, so the Timeline shows one row and `tracewise undo --command <id>` reverts them together. Attribution is not changed.
 use tracewise_core::db::Database;
 use tracewise_core::model::{Actor, CommandRecord};
 
@@ -76,7 +76,7 @@ mod tests {
     #[test]
     fn a_burst_becomes_one_command_and_a_small_batch_does_not() {
         let tmp = tempdir().unwrap();
-        let db = Database::open(&tmp.path().join("trail.db")).unwrap();
+        let db = Database::open(&tmp.path().join("tracewise.db")).unwrap();
         let few: Vec<String> = (0..BULK_MIN - 1).map(|_| put(&db, "watch")).collect();
         assert!(note(&db, &few).is_none());
         let mut many = few.clone();

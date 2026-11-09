@@ -2,7 +2,7 @@ use super::*;
 
 fn repo(dir: &Path) -> PathBuf {
     let wt = dir.to_path_buf();
-    fs::create_dir_all(wt.join(".git").join("trail")).unwrap();
+    fs::create_dir_all(wt.join(".git").join("tracewise")).unwrap();
     wt
 }
 
@@ -10,13 +10,13 @@ fn repo(dir: &Path) -> PathBuf {
 fn a_copy_is_told_from_a_move() {
     let tmp = tempfile::tempdir().unwrap();
     let a = repo(&tmp.path().join("a"));
-    let data = a.join(".git").join("trail");
+    let data = a.join(".git").join("tracewise");
     assert_eq!(check_copy(&data, &a), CopyState::Original);
     let id = repo_id(&data, &a);
 
     // copy: the original is still there with the same id
     fs::create_dir_all(tmp.path().join("b").join(".git")).unwrap();
-    let b_data = tmp.path().join("b").join(".git").join("trail");
+    let b_data = tmp.path().join("b").join(".git").join("tracewise");
     fs::create_dir_all(&b_data).unwrap();
     for f in ["id", "home"] {
         fs::copy(data.join(f), b_data.join(f)).unwrap();
@@ -40,7 +40,7 @@ fn a_copy_is_told_from_a_move() {
     fs::remove_dir_all(&a).unwrap();
     let c = tmp.path().join("c");
     fs::rename(&b, &c).unwrap();
-    let c_data = c.join(".git").join("trail");
+    let c_data = c.join(".git").join("tracewise");
     assert_eq!(check_copy(&c_data, &c), CopyState::Moved);
     assert_eq!(check_copy(&c_data, &c), CopyState::Original);
 }

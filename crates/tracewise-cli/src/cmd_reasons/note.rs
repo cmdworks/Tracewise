@@ -2,15 +2,15 @@
 use super::super::*;
 
 pub(crate) fn run_note(json: bool, repo_paths: &RepoPaths, last: Option<String>, change_id: Option<String>, why: Option<String>) {
-    let db_path = repo_paths.data_dir().join("trail.db");
+    let db_path = repo_paths.data_dir().join("tracewise.db");
     if !db_path.exists() {
-        eprintln!("trail: not initialized; run trail init first");
+        eprintln!("tracewise: not initialized; run tracewise init first");
         process::exit(1);
     }
     let db = match Database::open(&db_path) {
         Ok(d) => d,
         Err(e) => {
-            eprintln!("trail: failed to open db: {e}");
+            eprintln!("tracewise: failed to open db: {e}");
             process::exit(1);
         }
     };
@@ -20,14 +20,14 @@ pub(crate) fn run_note(json: bool, repo_paths: &RepoPaths, last: Option<String>,
     } else if let (Some(cid), Some(why_text)) = (change_id, why) {
         note_by_id(&db, json, &cid, why_text);
     } else {
-        eprintln!("trail: note requires either <CHANGE_ID> <WHY> or --last <TEXT>");
+        eprintln!("tracewise: note requires either <CHANGE_ID> <WHY> or --last <TEXT>");
         process::exit(1);
     }
 }
 
 fn note_last(db: &Database, json: bool, why_text: String) {
     if let Err(e) = validate_why(&why_text) {
-        eprintln!("trail: {e}");
+        eprintln!("tracewise: {e}");
         process::exit(1);
     }
 
@@ -83,14 +83,14 @@ fn note_last(db: &Database, json: bool, why_text: String) {
 
 fn note_by_id(db: &Database, json: bool, cid: &str, why_text: String) {
     if let Err(e) = validate_why(&why_text) {
-        eprintln!("trail: {e}");
+        eprintln!("tracewise: {e}");
         process::exit(1);
     }
 
     let ch = match db.get_change(cid) {
         Ok(Some(c)) => c,
         _ => {
-            eprintln!("trail: change not found: {cid}");
+            eprintln!("tracewise: change not found: {cid}");
             process::exit(1);
         }
     };

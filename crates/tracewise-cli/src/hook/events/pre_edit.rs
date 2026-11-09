@@ -1,11 +1,11 @@
-use crate::hook::helpers::{is_trail_protected, recently_edited_by_person, record_refusal, PROTECTED_REASON};
+use crate::hook::helpers::{is_tracewise_protected, recently_edited_by_person, record_refusal, PROTECTED_REASON};
 use crate::hook::{HookContext, HookInput, HookOutput};
 use crate::util::normalize_and_validate_path;
 use std::collections::HashMap;
 use tracewise_core::model::Window;
 
 pub fn handle(ctx: &HookContext, input: HookInput) -> Result<HookOutput, String> {
-    if ctx.profile.policy && ctx.actor.kind == "agent" && input.paths.iter().any(|p| is_trail_protected(p, &ctx.repo_paths.work_tree)) {
+    if ctx.profile.policy && ctx.actor.kind == "agent" && input.paths.iter().any(|p| is_tracewise_protected(p, &ctx.repo_paths.work_tree)) {
         return Ok(HookOutput { decision: "deny", reason: Some(PROTECTED_REASON.to_string()), notice: None });
     }
     let had_input_paths = !input.paths.is_empty();
@@ -29,7 +29,7 @@ pub fn handle(ctx: &HookContext, input: HookInput) -> Result<HookOutput, String>
         for p in &rel_paths {
             let covering = ctx.db.find_covering_intent(ctx.agent, Some(ctx.session), p).ok().flatten();
             if covering.is_none() {
-                let msg = format!("no intent declared for {p}; run `trail intent add --why <reason> {p}`");
+                let msg = format!("no intent declared for {p}; run `tracewise intent add --why <reason> {p}`");
                 if ctx.profile.policy {
                     return Ok(HookOutput { decision: "deny", reason: Some(msg), notice: None });
                 } else if reminder_notice.is_none() {
@@ -81,13 +81,13 @@ pub fn handle(ctx: &HookContext, input: HookInput) -> Result<HookOutput, String>
 }
 
 /// Marks a `notice` that is the pre-edit warning; an adapter that can show it to the model looks for this prefix.
-pub const WARN_PREFIX: &str = "Trail warning: ";
+pub const WARN_PREFIX: &str = "Tracewise warning: ";
 
-/// `[hooks] warn` (or `TRAIL_WARN`): `off`, `shadow` (log only) or `on` (log and tell the agent). Default `shadow` in the
+/// `[hooks] warn` (or `TRACEWISE_WARN`): `off`, `shadow` (log only) or `on` (log and tell the agent). Default `shadow` in the
 /// `coordination` profile and `off` in `core`.
 pub(crate) fn warn_mode(ctx: &HookContext) -> String {
     let set =
-        std::env::var("TRAIL_WARN").ok().or_else(|| tracewise_core::reasons::config_value(&ctx.repo_paths.work_tree, "hooks", "warn"));
+        std::env::var("TRACEWISE_WARN").ok().or_else(|| tracewise_core::reasons::config_value(&ctx.repo_paths.work_tree, "hooks", "warn"));
     match set.as_deref().map(str::trim) {
         Some(m @ ("off" | "shadow" | "on")) => m.to_string(),
         _ => if ctx.profile.coordination { "shadow" } else { "off" }.to_string(),
@@ -145,7 +145,7 @@ fn warn(ctx: &HookContext, rel_paths: &[String]) -> Option<String> {
     }
     let more = texts.len().saturating_sub(3);
     texts.truncate(3);
-    let mut out = format!("{WARN_PREFIX}{}. Re-read before editing; see `trail file <path>`.", texts.join("; "));
+    let mut out = format!("{WARN_PREFIX}{}. Re-read before editing; see `tracewise file <path>`.", texts.join("; "));
     if more > 0 {
         out.push_str(&format!(" And {more} more."));
     }

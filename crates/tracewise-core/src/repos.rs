@@ -1,5 +1,5 @@
-//! The list of repositories one daemon watches: `$TRAIL_HOME/repos`, one `work tree<TAB>data folder` per line.
-//! `trail init` and `trail daemon start` add to it; a repository whose folders are gone drops out when read.
+//! The list of repositories one daemon watches: `$TRACEWISE_HOME/repos`, one `work tree<TAB>data folder` per line.
+//! `tracewise init` and `tracewise daemon start` add to it; a repository whose folders are gone drops out when read.
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -15,7 +15,7 @@ fn file_in(home: &Path) -> PathBuf {
 
 /// The registered repositories that still have a Tracewise database.
 pub fn list() -> Vec<Repo> {
-    list_in(&crate::get_trail_home())
+    list_in(&crate::get_tracewise_home())
 }
 
 pub fn list_in(home: &Path) -> Vec<Repo> {
@@ -26,14 +26,14 @@ pub fn list_in(home: &Path) -> Vec<Repo> {
         .filter_map(|l| {
             let (wt, dd) = l.split_once('\t')?;
             let (wt, dd) = (PathBuf::from(wt), PathBuf::from(dd));
-            (dd.join("trail.db").is_file() && wt.is_dir() && seen.insert(wt.clone())).then_some(Repo { work_tree: wt, data_dir: dd })
+            (dd.join("tracewise.db").is_file() && wt.is_dir() && seen.insert(wt.clone())).then_some(Repo { work_tree: wt, data_dir: dd })
         })
         .collect()
 }
 
 /// Adds a repository; true when it was not listed yet.
 pub fn register(work_tree: &Path, data_dir: &Path) -> bool {
-    register_in(&crate::get_trail_home(), work_tree, data_dir)
+    register_in(&crate::get_tracewise_home(), work_tree, data_dir)
 }
 
 pub fn register_in(home: &Path, work_tree: &Path, data_dir: &Path) -> bool {
@@ -66,7 +66,7 @@ pub fn prune_in(home: &Path) {
 
 /// Tells a running daemon to read the list again (SIGHUP). Never signals a stale pid.
 pub fn wake_daemon() {
-    let pid = fs::read_to_string(crate::get_trail_home().join("daemon.pid")).ok().and_then(|t| t.trim().parse::<i32>().ok());
+    let pid = fs::read_to_string(crate::get_tracewise_home().join("daemon.pid")).ok().and_then(|t| t.trim().parse::<i32>().ok());
     if let Some(pid) = pid.filter(|p| *p > 1) {
         let _ = tracewise_platform::signal::wake_daemon(pid);
     }

@@ -28,7 +28,7 @@ pub fn parse_since(since: &str) -> Option<chrono::DateTime<chrono::Utc>> {
 /// Exits with a message when `--since` is given and is not a valid duration or time.
 pub fn require_valid_since(since: Option<&str>) {
     if let Some(v) = since.filter(|v| parse_since(v).is_none()) {
-        eprintln!("trail: invalid --since '{v}': use a duration like 30m, 2h, 1d or 1w, or an RFC 3339 time");
+        eprintln!("tracewise: invalid --since '{v}': use a duration like 30m, 2h, 1d or 1w, or an RFC 3339 time");
         std::process::exit(2);
     }
 }
@@ -102,7 +102,7 @@ pub fn normalize_and_validate_path(path_str: &str, work_tree: &Path) -> Option<S
 /// Seconds a lock lives without a heartbeat (any hook event of its session renews it). A finished or crashed agent
 /// frees its files after this long; its Stop hook frees them at once.
 pub fn lock_ttl_secs() -> u64 {
-    std::env::var("TRAIL_LOCK_TTL_SECS").ok().and_then(|v| v.parse().ok()).unwrap_or(120)
+    std::env::var("TRACEWISE_LOCK_TTL_SECS").ok().and_then(|v| v.parse().ok()).unwrap_or(120)
 }
 
 pub fn get_human_actor() -> Actor {
@@ -112,10 +112,10 @@ pub fn get_human_actor() -> Actor {
     human_actor_from_system()
 }
 
-/// The person at this machine (TRAIL_HUMAN, git's user.name, USER), ignoring any agent marker in the environment:
+/// The person at this machine (TRACEWISE_HUMAN, git's user.name, USER), ignoring any agent marker in the environment:
 /// for a daemon that was started from an agent's shell.
 pub fn human_actor_from_system() -> Actor {
-    let name = std::env::var("TRAIL_HUMAN")
+    let name = std::env::var("TRACEWISE_HUMAN")
         .ok()
         .filter(|s| !s.trim().is_empty())
         .or_else(|| {
@@ -136,8 +136,8 @@ pub fn human_actor_from_system() -> Actor {
 }
 
 pub fn is_daemon_running() -> bool {
-    let trail_home = tracewise_core::get_trail_home();
-    let pid_file = trail_home.join("daemon.pid");
+    let tracewise_home = tracewise_core::get_tracewise_home();
+    let pid_file = tracewise_home.join("daemon.pid");
     if let Ok(content) = fs::read_to_string(&pid_file) {
         if let Ok(pid) = content.trim().parse::<i32>() {
             return tracewise_platform::signal::is_daemon_pid(pid);
@@ -164,7 +164,7 @@ pub fn main_work_tree(repo: &RepoPaths) -> PathBuf {
 /// `Some(original)` when this folder is an unadopted copy of another repository folder.
 pub fn copy_of(repo: &RepoPaths) -> Option<PathBuf> {
     let data_dir = repo.data_dir();
-    if !data_dir.join("trail.db").exists() {
+    if !data_dir.join("tracewise.db").exists() {
         return None;
     }
     match tracewise_core::identity::check_copy(&data_dir, &main_work_tree(repo)) {
@@ -201,7 +201,7 @@ pub fn export_destination(work_tree: &Path, cwd: &Path, tool: &str, args: &[Stri
     if dest.starts_with(&work_tree) || !sources.iter().any(|s| abs(s).starts_with(&work_tree)) {
         return None;
     }
-    let tracked_there = dest.ancestors().any(|a| a.join(".git").join("trail").join("trail.db").exists());
+    let tracked_there = dest.ancestors().any(|a| a.join(".git").join("tracewise").join("tracewise.db").exists());
     (!tracked_there).then_some(dest)
 }
 
@@ -221,13 +221,13 @@ pub fn record_export(db: &tracewise_core::Database, actor: &Actor, tool: &str, a
     });
 }
 
-/// Reasons mode for `actor`. An agent's `TRAIL_REASONS` is ignored, and the attempt is recorded as a command.
+/// Reasons mode for `actor`. An agent's `TRACEWISE_REASONS` is ignored, and the attempt is recorded as a command.
 pub fn reasons_mode_for(db: &tracewise_core::Database, root: &std::path::Path, actor: &Actor) -> tracewise_core::ReasonsMode {
     let mode = tracewise_core::get_reasons_mode_for(root, actor);
     if actor.kind == "agent" {
-        if let Ok(v) = std::env::var("TRAIL_REASONS") {
+        if let Ok(v) = std::env::var("TRACEWISE_REASONS") {
             if tracewise_core::ReasonsMode::parse(v.trim()) != Some(mode) {
-                record_ignored_switch(db, actor, &format!("TRAIL_REASONS={v}"));
+                record_ignored_switch(db, actor, &format!("TRACEWISE_REASONS={v}"));
             }
         }
     }

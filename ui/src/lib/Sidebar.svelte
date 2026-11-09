@@ -1,12 +1,12 @@
 <script lang="ts">
   import Icon from "./Icon.svelte";
-  import type { Tab, TrailStatus } from "./types";
+  import type { Tab, TracewiseStatus } from "./types";
   import { apply, load, next, save, type Theme } from "./theme";
   import { onMount } from "svelte";
 
   interface Props {
     activeTab: Tab;
-    status: TrailStatus | null;
+    status: TracewiseStatus | null;
     currentRepo?: string;
     watchedReposCount: number;
     pendingCount: number;
@@ -63,7 +63,7 @@
           <Icon name="brand" size={15} />
         </span>
         {#if !collapsed}
-          <span class="brand-title text-14">Trail</span>
+          <span class="brand-title text-14">Tracewise</span>
         {/if}
       </div>
       {#if !collapsed}

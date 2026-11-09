@@ -18,7 +18,7 @@ pub struct BatchMeta {
 }
 
 pub(crate) fn git_cmd() -> Command {
-    let target = if let Ok(p) = std::env::var("TRAIL_REAL_GIT") {
+    let target = if let Ok(p) = std::env::var("TRACEWISE_REAL_GIT") {
         p
     } else if Path::new("/usr/bin/git").is_file() {
         "/usr/bin/git".to_string()
@@ -26,7 +26,7 @@ pub(crate) fn git_cmd() -> Command {
         "git".to_string()
     };
     let mut cmd = Command::new(target);
-    cmd.env("TRAIL_GIT_DEPTH", "1");
+    cmd.env("TRACEWISE_GIT_DEPTH", "1");
     cmd
 }
 
@@ -75,7 +75,7 @@ pub fn ensure_companion_repo(remote_url: &str, remote_dir: &Path) -> io::Result<
         fs::create_dir_all(parent)?;
     }
 
-    // An empty bare repository that knows the remote, not a clone: `fetch` asks only for `trail/device/*` refs, so the companion
+    // An empty bare repository that knows the remote, not a clone: `fetch` asks only for `tracewise/device/*` refs, so the companion
     // never copies the project's own branches when the remote is the project's repository.
     let dest_str = remote_dir.to_string_lossy();
     run_git_bare(&["init", "--bare", "-q", "--", &dest_str])
@@ -91,7 +91,7 @@ pub fn ensure_companion_repo(remote_url: &str, remote_dir: &Path) -> io::Result<
 }
 
 pub(crate) fn copy_remote_batches(remote_dir: &Path, data_dir: &Path) -> io::Result<()> {
-    let refs_out = run_git(remote_dir, &["for-each-ref", "--format=%(refname)", "refs/heads/trail/device/", "refs/trail/device/"])?;
+    let refs_out = run_git(remote_dir, &["for-each-ref", "--format=%(refname)", "refs/heads/tracewise/device/", "refs/tracewise/device/"])?;
     for branch_ref in String::from_utf8_lossy(&refs_out.stdout).lines() {
         let branch_ref = branch_ref.trim();
         if branch_ref.is_empty() {
@@ -155,7 +155,7 @@ fn copy_commit_files(remote_dir: &Path, commit: &str, dest_root: &Path) -> io::R
 /// Imports every local batch in one transaction: all of them, or (on any error) none. `respect_notes` skips batches the database already
 /// noted as imported (`fetch`); `rebuild` reads every batch.
 pub(crate) fn import_all_batches(data_dir: &Path, repo_root: &Path, respect_notes: bool) -> io::Result<usize> {
-    let mut db = Database::open(&data_dir.join("trail.db")).map_err(|e| io::Error::other(e.to_string()))?;
+    let mut db = Database::open(&data_dir.join("tracewise.db")).map_err(|e| io::Error::other(e.to_string()))?;
     db.begin_batch().map_err(|e| io::Error::other(e.to_string()))?;
     match import_all_batches_with(&mut db, data_dir, repo_root, respect_notes) {
         Ok(n) => db.commit_batch().map(|_| n).map_err(|e| io::Error::other(e.to_string())),

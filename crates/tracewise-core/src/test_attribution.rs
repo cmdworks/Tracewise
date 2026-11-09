@@ -4,7 +4,7 @@ use crate::model::{Change, GitInfo, Intent, TimeRange};
 #[test]
 fn test_attribute_window_reads_only_returns_empty() {
     let temp = tempfile::tempdir().unwrap();
-    let db = Database::open(&temp.path().join("trail.db")).unwrap();
+    let db = Database::open(&temp.path().join("tracewise.db")).unwrap();
 
     let window = Window {
         id: "win1".to_string(),
@@ -24,7 +24,7 @@ fn test_attribute_window_reads_only_returns_empty() {
 #[test]
 fn test_attribute_window_claims_unknown_and_links_intent() {
     let temp = tempfile::tempdir().unwrap();
-    let db = Database::open(&temp.path().join("trail.db")).unwrap();
+    let db = Database::open(&temp.path().join("tracewise.db")).unwrap();
 
     let window_start = "2026-10-25T10:00:00.000Z";
     let agent = Actor::agent("claude", "s1");
@@ -91,7 +91,7 @@ fn test_attribute_window_claims_unknown_and_links_intent() {
 #[test]
 fn a_bulk_edit_over_one_hundred_files_is_all_attributed() {
     let temp = tempfile::tempdir().unwrap();
-    let db = Database::open(&temp.path().join("trail.db")).unwrap();
+    let db = Database::open(&temp.path().join("tracewise.db")).unwrap();
     let agent = Actor::agent("claude", "s1");
     let start = "2026-10-25T10:00:00.000Z";
     db.insert_intent(&Intent {
@@ -149,7 +149,7 @@ fn a_bulk_edit_over_one_hundred_files_is_all_attributed() {
 #[test]
 fn a_failed_write_is_an_error_not_a_success() {
     let temp = tempfile::tempdir().unwrap();
-    let db = Database::open(&temp.path().join("trail.db")).unwrap();
+    let db = Database::open(&temp.path().join("tracewise.db")).unwrap();
     let agent = Actor::agent("claude", "s1");
     let change = |id: &str, actor: Actor| Change {
         id: id.to_string(),

@@ -14,7 +14,7 @@ pub(crate) fn run_intent(json: bool, repo_paths: &RepoPaths, action: IntentActio
     match action {
         IntentAction::Add { why, task, agent, session, paths } => {
             if let Err(e) = validate_why(&why) {
-                eprintln!("trail: {e}");
+                eprintln!("tracewise: {e}");
                 process::exit(1);
             }
 
@@ -46,7 +46,7 @@ pub(crate) fn run_intent(json: bool, repo_paths: &RepoPaths, action: IntentActio
                 ended: 0,
             };
 
-            let db_path = repo_paths.data_dir().join("trail.db");
+            let db_path = repo_paths.data_dir().join("tracewise.db");
             if db_path.exists() {
                 if let Ok(db) = Database::open(&db_path) {
                     let _ = db.insert_intent(&intent);
@@ -60,7 +60,7 @@ pub(crate) fn run_intent(json: bool, repo_paths: &RepoPaths, action: IntentActio
             }
         }
         IntentAction::List { session } => {
-            let db_path = repo_paths.data_dir().join("trail.db");
+            let db_path = repo_paths.data_dir().join("tracewise.db");
             let list = if db_path.exists() {
                 Database::open(&db_path).and_then(|db| db.list_intents(session.as_deref())).unwrap_or_default()
             } else {
@@ -79,7 +79,7 @@ pub(crate) fn run_intent(json: bool, repo_paths: &RepoPaths, action: IntentActio
 }
 
 pub(crate) fn run_pending(json: bool, repo_paths: &RepoPaths) {
-    let db_path = repo_paths.data_dir().join("trail.db");
+    let db_path = repo_paths.data_dir().join("tracewise.db");
     let items =
         if db_path.exists() { Database::open(&db_path).and_then(|db| db.list_pending_changes()).unwrap_or_default() } else { Vec::new() };
 

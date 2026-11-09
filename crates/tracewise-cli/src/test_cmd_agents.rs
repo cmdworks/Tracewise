@@ -36,22 +36,22 @@ fn test_agent_install_uninstall_and_idempotence() {
 
     let installed_settings = fs::read_to_string(&claude_cfg).unwrap();
     assert!(installed_settings.contains("echo mine"));
-    assert!(installed_settings.contains("trail hook"));
+    assert!(installed_settings.contains("tracewise hook"));
     assert!(installed_settings.contains("--from claude"));
 
-    let skill_file = work_tree.join(".claude/skills/trail/SKILL.md");
+    let skill_file = work_tree.join(".claude/skills/tracewise/SKILL.md");
     assert!(skill_file.exists());
     let skill_text = fs::read_to_string(&skill_file).unwrap();
-    assert!(skill_text.contains("trail intent add"));
-    assert!(skill_text.contains("trail run --why"));
-    assert!(skill_text.contains("trail pending"));
-    assert!(skill_text.contains("trail note"));
+    assert!(skill_text.contains("tracewise intent add"));
+    assert!(skill_text.contains("tracewise run --why"));
+    assert!(skill_text.contains("tracewise pending"));
+    assert!(skill_text.contains("tracewise note"));
 
     let agents_text = fs::read_to_string(&agents_md).unwrap();
     assert!(agents_text.contains("Keep this line."));
-    assert!(agents_text.contains("<!-- trail:start -->"));
-    assert!(agents_text.contains("<!-- trail:end -->"));
-    assert!(agents_text.contains("trail intent add"));
+    assert!(agents_text.contains("<!-- tracewise:start -->"));
+    assert!(agents_text.contains("<!-- tracewise:end -->"));
+    assert!(agents_text.contains("tracewise intent add"));
 
     // 2. Install again (idempotent)
     let before_cfg = fs::read_to_string(&claude_cfg).unwrap();
@@ -66,19 +66,19 @@ fn test_agent_install_uninstall_and_idempotence() {
     handle_agent_uninstall(&repo_paths, "claude", false).unwrap();
     let uninstalled_settings = fs::read_to_string(&claude_cfg).unwrap();
     assert!(uninstalled_settings.contains("echo mine"));
-    assert!(!uninstalled_settings.contains("trail hook"));
+    assert!(!uninstalled_settings.contains("tracewise hook"));
     assert!(!skill_file.exists());
 
     let uninstalled_agents = fs::read_to_string(&agents_md).unwrap();
     assert!(uninstalled_agents.contains("Keep this line."));
-    assert!(!uninstalled_agents.contains("<!-- trail:start -->"));
+    assert!(!uninstalled_agents.contains("<!-- tracewise:start -->"));
 }
 
 #[test]
 fn a_config_missing_hook_events_is_reported() {
-    let full = "trail hook PreToolUse --from cursor trail hook PostToolUse --from cursor trail hook Stop --from cursor trail hook SessionEnd --from cursor";
+    let full = "tracewise hook PreToolUse --from cursor tracewise hook PostToolUse --from cursor tracewise hook Stop --from cursor tracewise hook SessionEnd --from cursor";
     assert!(super::missing_events("cursor", full).is_empty());
-    let partial = "trail hook PreToolUse --from cursor trail hook Stop --from cursor";
+    let partial = "tracewise hook PreToolUse --from cursor tracewise hook Stop --from cursor";
     assert_eq!(super::missing_events("cursor", partial), ["PostToolUse", "SessionEnd"]);
     // the same text is for another agent: nothing counts
     assert_eq!(super::missing_events("codex", partial).len(), 4);
@@ -87,13 +87,13 @@ fn a_config_missing_hook_events_is_reported() {
     assert_eq!(super::missing_events("claude", &claude), ["UserPromptSubmit", "PostToolUseFailure"]);
     assert!(super::missing_events(
         "antigravity",
-        "trail hook PreToolUse --from antigravity trail hook PostToolUse --from antigravity trail hook Stop --from antigravity"
+        "tracewise hook PreToolUse --from antigravity tracewise hook PostToolUse --from antigravity tracewise hook Stop --from antigravity"
     )
     .is_empty());
 }
 
 #[test]
-fn claude_install_adds_deny_rules_for_trails_own_files_and_keeps_the_persons_own() {
+fn claude_install_adds_deny_rules_for_tracewises_own_files_and_keeps_the_persons_own() {
     let tmp = tempdir().unwrap();
     let work_tree = tmp.path().to_path_buf();
     let git_dir = work_tree.join(".git");
@@ -107,7 +107,7 @@ fn claude_install_adds_deny_rules_for_trails_own_files_and_keeps_the_persons_own
     handle_agent_install(&repo_paths, "claude", "project", false).unwrap(); // twice: no duplicates
     let v: Value = serde_json::from_str(&fs::read_to_string(&cfg).unwrap()).unwrap();
     let deny: Vec<&str> = v["permissions"]["deny"].as_array().unwrap().iter().filter_map(|d| d.as_str()).collect();
-    assert_eq!(deny.iter().filter(|d| **d == "Edit(**/.git/trail/**)").count(), 1);
+    assert_eq!(deny.iter().filter(|d| **d == "Edit(**/.git/tracewise/**)").count(), 1);
     for rule in CLAUDE_DENY {
         assert!(deny.contains(&rule), "{rule} missing");
     }
