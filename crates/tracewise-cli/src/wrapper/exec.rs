@@ -2,10 +2,7 @@
 use super::*;
 
 pub(crate) fn is_tracewise_bin_name(name: &str) -> bool {
-    name == "tracewise"
-        || name == "tracewise.exe"
-        || name == "tracewise-git"
-        || name == "tracewise-git.exe"
+    name == "tracewise" || name == "tracewise.exe" || name == "tracewise-git" || name == "tracewise-git.exe"
 }
 
 pub fn find_real_git_inner(path_var: Option<&str>, wrapper_dir: Option<&Path>) -> PathBuf {

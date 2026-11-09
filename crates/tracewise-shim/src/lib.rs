@@ -15,15 +15,7 @@ pub use patch::parse_patch_targets;
 pub use sed::{detect_sed_targets, extract_sed_script_w_targets, find_unescaped_delim};
 
 pub fn is_tracewise_bin_name(name: &str) -> bool {
-    matches!(
-        name,
-        "tracewise"
-            | "tracewise.exe"
-            | "tracewise-git"
-            | "tracewise-git.exe"
-            | "tracewise-shim"
-            | "tracewise-shim.exe"
-    )
+    matches!(name, "tracewise" | "tracewise.exe" | "tracewise-git" | "tracewise-git.exe" | "tracewise-shim" | "tracewise-shim.exe")
 }
 
 pub fn is_tracewise_bin(path: &Path, self_exe: Option<&Path>) -> bool {

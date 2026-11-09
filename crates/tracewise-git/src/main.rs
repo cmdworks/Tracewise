@@ -5,10 +5,7 @@ mod read_only;
 use read_only::is_read_only_git;
 
 pub fn is_tracewise_bin_name(name: &str) -> bool {
-    name == "tracewise"
-        || name == "tracewise.exe"
-        || name == "tracewise-git"
-        || name == "tracewise-git.exe"
+    name == "tracewise" || name == "tracewise.exe" || name == "tracewise-git" || name == "tracewise-git.exe"
 }
 
 pub fn find_real_git_inner(path_var: Option<&str>, wrapper_dir: Option<&Path>) -> PathBuf {
