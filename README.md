@@ -52,6 +52,29 @@ Coding agents edit many files quickly, often several at once, and git only sees 
   </tr>
 </table>
 
+**One line** — downloads the newest release, checks it, and sets everything up (programs, command wrappers, git wrapper, shell hook, watcher; no `sudo`):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/cmdworks/Tracewise/main/scripts/install.sh | sh
+```
+
+Options go after `sh -s --`, for example `| sh -s -- --login yes --fish`:
+
+| Option | |
+|---|---|
+| `--version <tag>` | a given release instead of the newest |
+| `--login yes\|no` | start the watcher at login |
+| `--no-start` | do not start the watcher now |
+| `--fish` | also bind fish (automatic when fish is your shell) |
+| `--no-shell` | leave shell files alone |
+| `--agents claude,codex,...` | hooks for coding agents in the repository you run it from |
+| `--profile core\|full` | default profile |
+| `--strict` | also install the strict sensor (asks for `sudo`) |
+| `--archive <file>` | install from a downloaded archive |
+| `--uninstall` | remove it all again; project histories stay |
+
+**By hand** — download the archive for your Mac from the table above, then:
+
 ```bash
 tar -xzf tracewise-*-macos-*.tar.gz && cd tracewise-*
 ./tracewise setup          # programs in ~/.trail/bin, one block in ~/.zshrc, the background watcher; no sudo
