@@ -1,0 +1,25 @@
+[package]
+name = "tracewise-core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+rusqlite = { workspace = true }
+blake3 = { workspace = true }
+zstd = { workspace = true }
+ulid = { workspace = true }
+chrono = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+similar = { workspace = true }
+sha1 = { workspace = true }
+flate2 = { workspace = true }
+tracewise-platform = { path = "../tracewise-platform" }
+ignore = { workspace = true }
+ed25519-dalek = { workspace = true }
+getrandom = { workspace = true }
+chacha20poly1305 = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }

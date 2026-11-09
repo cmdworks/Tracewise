@@ -1,0 +1,15 @@
+[package]
+name = "tracewise-shim"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "trail-shim"
+path = "src/main.rs"
+
+[dependencies]
+tracewise-platform = { path = "../tracewise-platform" }
+
+[dev-dependencies]
+tempfile = { workspace = true }

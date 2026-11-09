@@ -1,0 +1,33 @@
+{
+  "name": "ui",
+  "version": "0.1.0",
+  "description": "",
+  "type": "module",
+  "scripts": {
+    "dev": "vite dev",
+    "build": "vite build",
+    "preview": "vite preview",
+    "prepare": "svelte-kit sync || echo ''",
+    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+    "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+    "tauri": "tauri",
+    "test": "node --test src/lib/result.test.ts src/lib/search.test.ts src/lib/undos.test.ts src/lib/attribution.test.ts src/lib/pending.test.ts src/lib/virtual.test.ts src/lib/api.test.ts src/lib/session.test.ts src/lib/actors.test.ts src/lib/live.test.ts src/lib/timeline-view.test.ts src/lib/now-grouping.test.ts src/lib/blame-view.test.ts src/lib/protection.test.ts src/lib/theme.test.ts src/lib/settings.test.ts"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@fontsource/ibm-plex-sans": "^5.3.0",
+    "@fontsource/jetbrains-mono": "^5.3.0",
+    "@tauri-apps/api": "^2",
+    "@tauri-apps/plugin-opener": "^2"
+  },
+  "devDependencies": {
+    "@sveltejs/adapter-static": "^3.0.10",
+    "@sveltejs/kit": "^2.65.1",
+    "@sveltejs/vite-plugin-svelte": "^7.1.2",
+    "@tauri-apps/cli": "^2",
+    "svelte": "^5.56.3",
+    "svelte-check": "^4.6.0",
+    "typescript": "~6.0.3",
+    "vite": "^8.0.16"
+  }
+}

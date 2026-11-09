@@ -1,0 +1,17 @@
+[package]
+name = "tracewise-watch"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "trail-watchd"
+path = "src/main.rs"
+
+[dependencies]
+notify = { workspace = true }
+serde_json = { workspace = true }
+tracewise-sensor = { path = "../tracewise-sensor" }
+tracewise-proc = { path = "../tracewise-proc" }
+tracewise-core = { path = "../tracewise-core" }
+tracewise-platform = { path = "../tracewise-platform" }

@@ -1,0 +1,18 @@
+[package]
+name = "tracewise-platform"
+version = "0.1.0"
+edition = "2021"
+description = "Operating-system abstraction layer for Trail"
+license = "MIT"
+authors = ["Asmat"]
+
+[features]
+default = []
+platform-stub = []
+
+[dependencies]
+libc = { workspace = true }
+serde = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }

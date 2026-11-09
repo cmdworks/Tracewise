@@ -1,0 +1,7 @@
+/target
+.DS_Store
+node_modules/
+ui/build/
+ui/.svelte-kit/
+ui/src-tauri/target/
+ui/src-tauri/gen/

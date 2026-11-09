@@ -1,0 +1,178 @@
+:root,
+[data-theme="dark"] {
+  /* Stitch Dark Mode Tokens */
+  --bg: #111318;
+  --bg-subtle: #171a21;
+  --sidebar-bg: #171a21;
+  --card: #171a21;
+  --card-elevated: #1e2025;
+  --surface-container-high: #282a2f;
+  --surface-container-highest: #33353a;
+  --muted: #1e2025;
+  --muted-foreground: #9aa0ad;
+  --foreground: #e6e8ee;
+  --border: #2a2e38;
+  --border-strong: #3b404d;
+  --border-accent: rgba(59, 91, 219, 0.5);
+
+  /* Primary Accent & Focus */
+  --accent: #3b5bdb;
+  --accent-hover: #3451c7;
+  --accent-dim: rgba(59, 91, 219, 0.15);
+  --ring: #3b5bdb;
+  --ring-glow: 0 0 12px rgba(59, 91, 219, 0.35);
+
+  /* Alert & Attention Colors */
+  --warning: #fbbf24;
+  --warning-dim: rgba(217, 119, 6, 0.2);
+  --warning-border: #d97706;
+  --destructive: #f87171;
+  --destructive-dim: rgba(239, 68, 68, 0.15);
+
+  /* Actor Identity Tokens */
+  --actor-you: #9aa0ad;
+  --actor-claude: #f59e0b;
+  --actor-codex: #a855f7;
+  --actor-gemini: #2dd4bf;
+  --actor-cursor: #06b6d4;
+  --actor-antigravity: #ec4899;
+  --actor-unknown: #94a3b8;
+  --actor-baseline: #7a8aa0;
+
+  /* Unified Diff Styling */
+  --diff-add-bg: rgba(46, 160, 67, 0.15);
+  --diff-add-fg: #7ee787;
+  --diff-del-bg: rgba(248, 81, 73, 0.15);
+  --diff-del-fg: #ff7b72;
+  --diff-hunk-bg: rgba(59, 91, 219, 0.1);
+  --diff-hunk-fg: #93c5fd;
+
+  /* Layering Z-index Scale */
+  --z-dropdown: 50;
+  --z-toast: 60;
+  --z-modal: 70;
+  --z-tooltip: 80;
+
+  /* Spacing Rhythm */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 24px;
+
+  /* Font Families */
+  --font-ui: -apple-system, "Inter", BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "SF Mono", "JetBrains Mono", Menlo, Monaco, Consolas, monospace;
+}
+
+[data-theme="light"] {
+  /* Stitch Light Mode Tokens */
+  --bg: #fbf8ff;
+  --bg-subtle: #f3f2ff;
+  --sidebar-bg: #f3f2ff;
+  --card: #ffffff;
+  --card-elevated: #ececff;
+  --surface-container-high: #e5e7fd;
+  --surface-container-highest: #dfe1fb;
+  --muted: #ececff;
+  --muted-foreground: #5b5e74;
+  --foreground: #2e3145;
+  --border: #dfe1fb;
+  --border-strong: #aeb0c9;
+  --border-accent: rgba(59, 91, 219, 0.5);
+
+  --accent: #3b5bdb;
+  --accent-hover: #3451c7;
+  --accent-dim: rgba(59, 91, 219, 0.12);
+  --ring: #3b5bdb;
+  --ring-glow: 0 0 12px rgba(59, 91, 219, 0.35);
+
+  --warning: #b45309;
+  --warning-dim: #fef3c7;
+  --warning-border: #fcd34d;
+  --destructive: #9e3f4e;
+  --destructive-dim: #fee2e2;
+
+  --actor-you: #5b5e74;
+  --actor-claude: #d97706;
+  --actor-codex: #7c3aed;
+  --actor-gemini: #0d9488;
+  --actor-cursor: #0891b2;
+  --actor-antigravity: #db2777;
+  --actor-unknown: #64748b;
+  --actor-baseline: #5b5e74;
+
+  --diff-add-bg: rgba(22, 163, 74, 0.12);
+  --diff-add-fg: #15803d;
+  --diff-del-bg: rgba(220, 38, 38, 0.12);
+  --diff-del-fg: #b91c1c;
+  --diff-hunk-bg: rgba(59, 91, 219, 0.08);
+  --diff-hunk-fg: #2563eb;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg);
+  color: var(--foreground);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  line-height: 18px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow: hidden;
+  height: 100%;
+  width: 100%;
+}
+
+/* Custom sleek developer scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted-foreground);
+}
+
+::selection {
+  background: var(--accent-dim);
+  color: var(--foreground);
+}
+
+/* Three strict text sizes per Stitch design: 12px, 13px, 14px */
+.text-12 {
+  font-size: 12px;
+  line-height: 16px;
+}
+.text-13 {
+  font-size: 13px;
+  line-height: 18px;
+}
+.text-14 {
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* WCAG 2.2 target size (2.5.8): every control is at least 24 x 24 CSS px */
+button,
+select,
+input:not([type="range"]):not([type="checkbox"]):not([type="radio"]):not([type="hidden"]) {
+  min-height: 24px;
+}
+button {
+  min-width: 24px;
+}

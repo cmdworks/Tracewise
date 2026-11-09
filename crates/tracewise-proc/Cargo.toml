@@ -1,0 +1,9 @@
+[package]
+name = "tracewise-proc"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+tracewise-platform = { path = "../tracewise-platform" }
+serde = { workspace = true }

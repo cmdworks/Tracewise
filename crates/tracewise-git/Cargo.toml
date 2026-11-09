@@ -1,0 +1,16 @@
+[package]
+name = "tracewise-git"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "trail-git"
+path = "src/main.rs"
+
+[dependencies]
+ignore = { workspace = true }
+tracewise-platform = { path = "../tracewise-platform" }
+
+[dev-dependencies]
+tempfile = { workspace = true }
