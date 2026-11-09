@@ -4,17 +4,24 @@ Tracewise keeps a second, much finer history next to git: one record for every c
 
 ## The big picture
 
-```
-  coding agents ── hooks ─────────────┐
-  your terminal ── shell hook ────────┤
-  write tools   ── command wrappers ──┤
-  git           ── git wrapper/hooks ─┼──▶  tracewise-core  ──▶  .git/trail/
-  any other write ── file watcher ────┘          ▲               ├── trail.db   (records, SQLite)
-                                                 │               └── objects/   (file versions)
-  you ── log · blame · why · undo · restore ─────┘
-                                                        push / fetch (optional)
-                                                                 ▼
-                                                    a git remote, one ref per machine
+```mermaid
+flowchart LR
+    agents["Coding agents"] -- hooks --> core
+    terminal["Your terminal"] -- shell hook --> core
+    tools["Write tools<br/>sed · mv · cp · rm · tee"] -- command wrappers --> core
+    git["git and git apps"] -- "git wrapper / hooks" --> core
+    other["Any other write"] -- file watcher --> core
+
+    you(["You"]) -- "log · blame · why · undo · restore" --> core
+
+    core{{"tracewise-core"}} --> store
+
+    subgraph store [".git/trail/"]
+        db[("trail.db<br/>records, SQLite")]
+        objects[("objects/<br/>file versions")]
+    end
+
+    store -. "push / fetch (optional)" .-> remote[("Git remote<br/>one ref per machine")]
 ```
 
 One library, `tracewise-core`, owns the data. Several small programs are the ways in: each sees writes from a different place, and together they leave no gap.
