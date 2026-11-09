@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%">
+  <!-- macOS Rounded Square Container (remove <rect> for a transparent favicon) -->
+  <rect x="6" y="6" width="88" height="88" rx="20" fill="#FFFFFF" stroke="#E5E5EA" stroke-width="1.5" />
+
+  <!-- Trace Lines -->
+  <g fill="none" stroke="#E06324" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Top Horizontal Bar -->
+    <line x1="26" y1="28" x2="74" y2="28" />
+    <!-- Zigzag Stem -->
+    <polyline points="46,28 63,49 48,70" />
+  </g>
+
+  <!-- Checkpoint Nodes -->
+  <g fill="#FFFFFF" stroke="#E06324" stroke-width="5">
+    <circle cx="26" cy="28" r="6" />
+    <circle cx="74" cy="28" r="6" />
+    <circle cx="63" cy="49" r="6" />
+    <circle cx="48" cy="70" r="6" />
+  </g>
+</svg>

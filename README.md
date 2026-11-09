@@ -1,10 +1,21 @@
+<div align="center">
+
+<img alt="" title="Tracewise" src="assets/logo.svg" width="128"/>
+
 # Tracewise
 
-**A flight recorder for your code.** Tracewise records every file change in a project — who made it, when, and why — whether it was you, a coding agent, a script or a git command. You can see the story behind any line and step back to any point, without touching your git history.
+<a href="#download"><img alt="Download" src="https://img.shields.io/badge/download-macOS-E06324?style=for-the-badge"/></a>
+<a href="docs/getting-started.md"><img alt="Getting started" src="https://img.shields.io/badge/getting%20started-guide-1f2328?style=for-the-badge"/></a>
+<a href="docs/commands.md"><img alt="Commands" src="https://img.shields.io/badge/commands-reference-1f2328?style=for-the-badge"/></a>
+<a href="https://github.com/cmdworks/Tracewise/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/cmdworks/Tracewise/ci.yml?branch=main&style=for-the-badge&label=CI"/></a>
 
-[![CI](https://github.com/cmdworks/Tracewise/actions/workflows/ci.yml/badge.svg)](https://github.com/cmdworks/Tracewise/actions/workflows/ci.yml)
-[![Release](https://img.shields.io/github/v/release/cmdworks/Tracewise)](https://github.com/cmdworks/Tracewise/releases)
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+A flight recorder for your code.<br>
+Who changed every line, when, and why — you, a coding agent, a script or git.<br>
+Recorded. Explained. Reversible.
+
+</div>
+
+<br>
 
 ```console
 $ tracewise blame src/parser.rs
@@ -20,30 +31,37 @@ Why: handle empty input without panicking
 $ tracewise undo --actor claude --since 1h     # take it all back; your own edits stay
 ```
 
-## Why
+Coding agents edit many files quickly, often several at once, and git only sees the result when someone commits. Tracewise fills the gap between commits, without touching your git history.
 
-Coding agents edit many files quickly, often several at once, and git only sees the result when someone commits. Tracewise fills the gap between commits:
+## Download
 
-- **Every change, attributed.** Each edit is recorded with its author (you, Claude Code, Codex, Cursor, Gemini, a script, git) and how sure Tracewise is about it.
-- **Every change, explained.** Agents declare a reason before they edit; people can add one later. `why` shows it for any line.
-- **Any step, reversible.** Undo one change, everything an agent did in the last hour, or one whole task — your own edits to the same files stay.
-- **No two writers on one file.** Optional locks stop two agents (or an agent and you) from editing the same file at the same time.
-- **Out of your way.** History lives inside `.git`, never in your commits or branches. Tracewise never blocks git, your shell or an agent when something goes wrong.
+<a href="https://github.com/cmdworks/Tracewise/releases"><img alt="Latest release" src="https://img.shields.io/github/v/release/cmdworks/Tracewise?include_prereleases&style=for-the-badge&color=E06324" height="28px"/></a>
+<a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/license-MIT-1f2328?style=for-the-badge" height="28px"/></a>
 
-## Install
-
-Tracewise runs on **macOS** (Apple silicon and Intel). Linux and Windows are planned.
-
-**From a release** — download the archive for your Mac from [Releases](https://github.com/cmdworks/Tracewise/releases), then:
+<table>
+  <tr>
+    <td><b>macOS</b></td>
+    <td>
+      <a href="https://github.com/cmdworks/Tracewise/releases/download/v0.1.0/tracewise-0.1.0-macos-arm64.tar.gz">Apple silicon</a> |
+      <a href="https://github.com/cmdworks/Tracewise/releases/download/v0.1.0/tracewise-0.1.0-macos-x86_64.tar.gz">Intel</a>
+    </td>
+  </tr>
+  <tr>
+    <td><b>Linux</b>, <b>Windows</b></td>
+    <td>planned</td>
+  </tr>
+</table>
 
 ```bash
 tar -xzf tracewise-*-macos-*.tar.gz && cd tracewise-*
-./tracewise setup
+./tracewise setup          # programs in ~/.trail/bin, one block in ~/.zshrc, the background watcher; no sudo
+tracewise doctor --all     # in a new terminal: check the installation
 ```
 
-Release builds are not notarized yet. If macOS blocks them, clear the download flag first: `xattr -dr com.apple.quarantine .`
+> [!NOTE]
+> Release builds are not notarized yet. If macOS blocks them, clear the download flag first: `xattr -dr com.apple.quarantine .`
 
-**From source** — needs a current stable Rust from [rustup](https://rustup.rs):
+**From source** (needs a current stable Rust from [rustup](https://rustup.rs)):
 
 ```bash
 git clone https://github.com/cmdworks/Tracewise && cd Tracewise
@@ -51,11 +69,22 @@ cargo build --release
 ./target/release/tracewise setup
 ```
 
-`setup` installs the programs in `~/.trail/bin`, adds one block to `~/.zshrc` and starts the background watcher. It needs no `sudo`. Open a new terminal and check the installation:
+## Features
 
-```bash
-tracewise doctor --all
-```
+- 📝 records **every file change** in a project, with its author and how sure Tracewise is about it
+- 🤖 knows **Claude Code, Codex, Cursor, Gemini and Antigravity** apart from you, a script or git
+- 💬 keeps **the reason** for each change: agents declare it before they edit, people add it later
+- 🔍 `blame` and `why` show **the story behind any line**, also as it was at any earlier change
+- ⏪ **undo** one change, everything an agent did in the last hour, or one whole task, and **redo** it
+- 🕰️ **restore** any file to how it was at any point
+- 🔒 optional **locks** stop two agents, or an agent and you, from editing one file at once
+- 🐚 captures edits from **agent hooks, zsh, bash, fish, PowerShell, nushell, git and git apps**, with a watcher for the rest
+- ⛓️ a **hash-chained history** inside `.git`: `verify` finds any changed or missing record
+- 🔄 optional **sharing between machines**, signed per device and optionally encrypted
+- 🖥️ a **desktop app** (preview) with a live timeline, file history, undo and health
+- 🧪 a **GitHub Action** that verifies the history and adds a report to the job summary
+- ⚡ fast enough to forget: about **5 ms per agent edit**, **0% CPU** when idle
+- ...and it **never blocks** git, your shell or an agent when something goes wrong
 
 ## Quick start
 
@@ -71,8 +100,6 @@ tracewise why src/app.rs:42         # why this line looks the way it does
 tracewise undo <change id>          # take one change back
 ```
 
-The full walkthrough is in [Getting started](docs/getting-started.md).
-
 ## Documentation
 
 | | |
@@ -85,11 +112,7 @@ The full walkthrough is in [Getting started](docs/getting-started.md).
 
 ## Status
 
-Tracewise is young (0.x). The record format may still change between minor versions, and the macOS binaries are not yet signed — see [Getting started](docs/getting-started.md#unsigned-binaries). Bug reports and ideas are welcome in [Issues](https://github.com/cmdworks/Tracewise/issues).
-
-## Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md). Security issues: [SECURITY.md](SECURITY.md).
+Tracewise is young (0.x). The record format may still change between minor versions. Bug reports and ideas are welcome in [Issues](https://github.com/cmdworks/Tracewise/issues); please report security problems privately as described in [SECURITY.md](SECURITY.md).
 
 ## License
 
