@@ -1,5 +1,7 @@
 # Tracewise desktop app (preview)
 
+Using the app: see [docs/desktop-app.md](../docs/desktop-app.md). This page is for working on it.
+
 Tauri 2 and Svelte 5. The app runs the `tracewise` program for every read and action; it holds no data of its own.
 
 ```bash
