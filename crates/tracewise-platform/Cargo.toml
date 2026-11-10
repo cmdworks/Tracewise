@@ -3,7 +3,7 @@ name = "tracewise-platform"
 version = "0.1.0"
 edition = "2021"
 description = "Operating-system abstraction layer for Tracewise"
-license = "MIT"
+license = "GPL-3.0-or-later"
 authors = ["Asmat"]
 
 [features]

@@ -13,7 +13,7 @@
     "tauri": "tauri",
     "test": "node --test src/lib/result.test.ts src/lib/search.test.ts src/lib/undos.test.ts src/lib/attribution.test.ts src/lib/pending.test.ts src/lib/virtual.test.ts src/lib/api.test.ts src/lib/session.test.ts src/lib/actors.test.ts src/lib/live.test.ts src/lib/timeline-view.test.ts src/lib/now-grouping.test.ts src/lib/blame-view.test.ts src/lib/protection.test.ts src/lib/theme.test.ts src/lib/settings.test.ts"
   },
-  "license": "MIT",
+  "license": "GPL-3.0-or-later",
   "dependencies": {
     "@fontsource/ibm-plex-sans": "^5.3.0",
     "@fontsource/jetbrains-mono": "^5.3.0",

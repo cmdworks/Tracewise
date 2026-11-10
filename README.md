@@ -36,7 +36,7 @@ Coding agents edit many files quickly, often several at once, and git only sees 
 ## Download
 
 <a href="https://github.com/cmdworks/Tracewise/releases"><img alt="Latest release" src="https://img.shields.io/github/v/release/cmdworks/Tracewise?include_prereleases&style=for-the-badge&color=E06324" height="28px"/></a>
-<a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/license-MIT-1f2328?style=for-the-badge" height="28px"/></a>
+<a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/license-GPL--3.0-1f2328?style=for-the-badge" height="28px"/></a>
 
 <table>
   <tr>
@@ -145,4 +145,4 @@ Tracewise is young (0.x). The record format may still change between minor versi
 
 ## License
 
-[MIT](LICENSE)
+[GNU GPL v3 or later](LICENSE). You may use, change and share Tracewise, but any version you distribute must stay open source under the same license.

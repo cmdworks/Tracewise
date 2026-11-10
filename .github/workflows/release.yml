@@ -8,8 +8,23 @@ permissions:
   contents: write
 
 jobs:
+  version:
+    name: Tag is a new, higher version
+    runs-on: ubuntu-latest
+    steps:
+      - name: Compare with the newest release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          latest=$(gh api "repos/$GITHUB_REPOSITORY/releases?per_page=100" --jq '.[].tag_name' | sort -V | tail -1)
+          echo "this tag: $GITHUB_REF_NAME, newest release: ${latest:-none}"
+          [ -z "$latest" ] && exit 0
+          top=$(printf '%s\n%s\n' "$latest" "$GITHUB_REF_NAME" | sort -V | tail -1)
+          { [ "$top" = "$GITHUB_REF_NAME" ] && [ "$latest" != "$GITHUB_REF_NAME" ]; } || { echo "$GITHUB_REF_NAME is not higher than $latest"; exit 1; }
+
   build:
     name: Build ${{ matrix.target }}
+    needs: version
     strategy:
       matrix:
         target: [aarch64-apple-darwin, x86_64-apple-darwin]

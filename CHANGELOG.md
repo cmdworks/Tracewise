@@ -5,6 +5,8 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 ## [Unreleased]
 
 ### Changed
+- License changed to GNU GPL v3 or later: changed versions that are distributed must stay open source under the same license.
+- A release is built only from a `vX.Y.Z` tag that is higher than the newest existing release and matches the version in `Cargo.toml`; normal CI does not run on tags.
 - Everything is now named Tracewise; the old Trail names are gone (no migration):
   programs `tracewise`, `tracewise-git`, `tracewise-shim`, `tracewise-watchd`, `tracewise-sensor` (the `trail` command is removed);
   `~/.tracewise` instead of `~/.trail`; each project's history in `.git/tracewise` instead of `.git/trail`;
