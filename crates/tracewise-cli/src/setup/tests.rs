@@ -46,6 +46,7 @@ fn setup_installs_everything_and_uninstall_removes_exactly_that() {
         assert!(env.bin().join(n).is_file(), "{n}");
     }
     assert!(env.bin().join("git").is_symlink());
+    assert!(env.bin().join("tw").is_symlink(), "tw is the short name of tracewise");
     assert_eq!(fs::read_dir(env.shims()).unwrap().count(), crate::cmd_shims::SHIM_TOOLS.len());
     let rc = fs::read_to_string(env.zshrc()).unwrap();
     assert_eq!(rc.matches(BLOCK_START).count(), 1);

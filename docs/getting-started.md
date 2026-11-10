@@ -25,7 +25,7 @@ cargo build --release
 
 `setup` asks whether the watcher should start at login, then:
 
-- copies the programs to `~/.tracewise/bin`;
+- copies the programs to `~/.tracewise/bin`, with `tw` as a short name for `tracewise` (every example below works with either);
 - adds a `git` wrapper and a few command wrappers (`sed`, `mv`, `cp`, `rm`, `tee`) there, so writes made through them are attributed;
 - adds one clearly marked block to `~/.zshenv` and `~/.zshrc` (your other lines are kept; a backup is written);
 - starts the background watcher.

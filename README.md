@@ -126,7 +126,7 @@ cargo build --release
 ## Quick start
 
 ```bash
-cd your-project
+cd your-project              # `tw` is a short name for `tracewise`
 tracewise init                      # start recording this repository
 tracewise agent install claude      # optional: hooks for an agent (claude, codex, cursor, gemini, antigravity)
 

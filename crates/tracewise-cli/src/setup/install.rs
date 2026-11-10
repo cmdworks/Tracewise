@@ -153,6 +153,8 @@ fn install_programs(env: &Env) -> Result<Vec<String>, String> {
     }
     let link = bin.join("git");
     tracewise_platform::shims::create_shim_link(&bin.join("tracewise-git"), &link).map_err(|e| format!("cannot link git: {e}"))?;
+    // `tw` is the short name for `tracewise`
+    tracewise_platform::shims::create_shim_link(&bin.join("tracewise"), &bin.join("tw")).map_err(|e| format!("cannot link tw: {e}"))?;
     Ok(done)
 }
 
@@ -309,7 +311,7 @@ pub fn uninstall_in(env: &Env, purge: bool, live: bool) -> Vec<String> {
         }
     }
     let programs = read_manifest(env).map(|m| m.programs).unwrap_or_else(|| PROGRAMS.iter().map(|s| s.to_string()).collect());
-    for name in programs.iter().map(String::as_str).chain(["git", CHECKSUM_FILE]) {
+    for name in programs.iter().map(String::as_str).chain(["git", "tw", CHECKSUM_FILE]) {
         let p = env.bin().join(name);
         if p.is_symlink() || p.is_file() {
             let _ = fs::remove_file(&p);

@@ -1,6 +1,6 @@
 # Commands
 
-Every command accepts `--json` for scripts and tools, and `-C <dir>` to run as if started in another folder. `tracewise <command> --help` shows all options with examples.
+`tw` is a short name for `tracewise`: `tw log` is `tracewise log`. Every command accepts `--json` for scripts and tools, and `-C <dir>` to run as if started in another folder. `tracewise <command> --help` shows all options with examples.
 
 Change ids are the 26-character ids shown by `log` (for example `01M6ZGHB9C46J2SNR4HTTJV60E`). Times accept durations like `30m`, `2h`, `7d`, or a date and time.
 
