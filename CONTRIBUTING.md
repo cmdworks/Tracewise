@@ -24,7 +24,7 @@ cargo fmt --all && cargo clippy --workspace --all-targets -- -D warnings && carg
 
 ## Documentation site
 
-The site at https://cmdworks.github.io/Tracewise/ is built from `docs/` and a few root files (`UI.md`, `CHANGELOG.md`, `CONTRIBUTING.md`). Edit those; never edit `site/src`, which is generated. The home page and the look are in `site/`.
+The site at https://cmdworks.github.io/tracewise/ is built from `docs/` and a few root files (`UI.md`, `CHANGELOG.md`, `CONTRIBUTING.md`). Edit those; never edit `site/src`, which is generated. The home page and the look are in `site/`.
 
 ```bash
 cd site && pnpm install && pnpm dev     # live preview

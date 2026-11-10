@@ -4,7 +4,7 @@
   import { installCommandLine, checkCli } from "$lib/app/fx-cli";
   import { loadAll } from "$lib/app/lifecycle";
 
-  const oneLine = "curl -fsSL https://raw.githubusercontent.com/cmdworks/Tracewise/main/scripts/install.sh | sh";
+  const oneLine = "curl -fsSL https://raw.githubusercontent.com/cmdworks/tracewise/main/scripts/install.sh | sh";
   let copied = $state(false);
 
   async function copy() {

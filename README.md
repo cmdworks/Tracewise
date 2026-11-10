@@ -7,7 +7,7 @@
 <a href="#download"><img alt="Download" src="https://img.shields.io/badge/download-macOS-E06324?style=for-the-badge"/></a>
 <a href="docs/getting-started.md"><img alt="Getting started" src="https://img.shields.io/badge/getting%20started-guide-1f2328?style=for-the-badge"/></a>
 <a href="docs/commands.md"><img alt="Commands" src="https://img.shields.io/badge/commands-reference-1f2328?style=for-the-badge"/></a>
-<a href="https://github.com/cmdworks/Tracewise/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/cmdworks/Tracewise/ci.yml?branch=main&style=for-the-badge&label=CI"/></a>
+<a href="https://github.com/cmdworks/tracewise/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/cmdworks/tracewise/ci.yml?branch=main&style=for-the-badge&label=CI"/></a>
 
 A flight recorder for your code.<br>
 Who changed every line, when, and why — you, a coding agent, a script or git.<br>
@@ -35,22 +35,22 @@ Coding agents edit many files quickly, often several at once, and git only sees 
 
 ## Download
 
-<a href="https://github.com/cmdworks/Tracewise/releases"><img alt="Latest release" src="https://img.shields.io/github/v/release/cmdworks/Tracewise?include_prereleases&style=for-the-badge&color=E06324" height="28px"/></a>
+<a href="https://github.com/cmdworks/tracewise/releases"><img alt="Latest release" src="https://img.shields.io/github/v/release/cmdworks/tracewise?include_prereleases&style=for-the-badge&color=E06324" height="28px"/></a>
 <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/license-GPL--3.0-1f2328?style=for-the-badge" height="28px"/></a>
 
 <table>
   <tr>
     <td><b>macOS</b></td>
     <td>
-      <a href="https://github.com/cmdworks/Tracewise/releases/download/v0.2.0/tracewise-0.2.0-macos-arm64.tar.gz">Apple silicon</a> |
-      <a href="https://github.com/cmdworks/Tracewise/releases/download/v0.2.0/tracewise-0.2.0-macos-x86_64.tar.gz">Intel</a>
+      <a href="https://github.com/cmdworks/tracewise/releases/download/v0.2.0/tracewise-0.2.0-macos-arm64.tar.gz">Apple silicon</a> |
+      <a href="https://github.com/cmdworks/tracewise/releases/download/v0.2.0/tracewise-0.2.0-macos-x86_64.tar.gz">Intel</a>
     </td>
   </tr>
   <tr>
     <td><b>Desktop app</b> (preview)</td>
     <td>
-      <a href="https://github.com/cmdworks/Tracewise/releases/download/v0.2.0/tracewise-desktop-0.2.0-macos-arm64.dmg">Apple silicon</a> |
-      <a href="https://github.com/cmdworks/Tracewise/releases/download/v0.2.0/tracewise-desktop-0.2.0-macos-x86_64.dmg">Intel</a>
+      <a href="https://github.com/cmdworks/tracewise/releases/download/v0.2.0/tracewise-desktop-0.2.0-macos-arm64.dmg">Apple silicon</a> |
+      <a href="https://github.com/cmdworks/tracewise/releases/download/v0.2.0/tracewise-desktop-0.2.0-macos-x86_64.dmg">Intel</a>
     </td>
   </tr>
   <tr>
@@ -62,7 +62,7 @@ Coding agents edit many files quickly, often several at once, and git only sees 
 **One line** — downloads the newest release, checks it, and sets everything up (programs, command wrappers, git wrapper, shell hook, watcher; no `sudo`):
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/cmdworks/Tracewise/main/scripts/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/cmdworks/tracewise/main/scripts/install.sh | sh
 ```
 
 Options go after `sh -s --`, for example `| sh -s -- --login yes --fish`:
@@ -94,7 +94,7 @@ tracewise doctor --all     # in a new terminal: check the installation
 **From source** (needs a current stable Rust from [rustup](https://rustup.rs)):
 
 ```bash
-git clone https://github.com/cmdworks/Tracewise && cd Tracewise
+git clone https://github.com/cmdworks/tracewise && cd tracewise
 cargo build --release
 ./target/release/tracewise setup
 ```
@@ -132,7 +132,7 @@ tracewise undo <change id>          # take one change back
 
 ## Documentation
 
-Read it as a website: **https://cmdworks.github.io/Tracewise/** (searchable, with dark mode). The same pages:
+Read it as a website: **https://cmdworks.github.io/tracewise/** (searchable, with dark mode). The same pages:
 
 | | |
 |---|---|
@@ -145,7 +145,7 @@ Read it as a website: **https://cmdworks.github.io/Tracewise/** (searchable, wit
 
 ## Status
 
-Tracewise is young (0.x). The record format may still change between minor versions. Bug reports and ideas are welcome in [Issues](https://github.com/cmdworks/Tracewise/issues); please report security problems privately as described in [SECURITY.md](SECURITY.md).
+Tracewise is young (0.x). The record format may still change between minor versions. Bug reports and ideas are welcome in [Issues](https://github.com/cmdworks/tracewise/issues); please report security problems privately as described in [SECURITY.md](SECURITY.md).
 
 ## License
 

@@ -287,7 +287,7 @@ const INSTALL_TIMEOUT: Duration = Duration::from_secs(300);
 pub fn install_script(version: &str) -> String {
     format!(
         "set -eu\nf=$(mktemp \"${{TMPDIR:-/tmp}}/tracewise-install.XXXXXX\")\ntrap 'rm -f \"$f\"' EXIT\n\
-         curl -fsSL \"https://raw.githubusercontent.com/cmdworks/Tracewise/v{version}/scripts/install.sh\" -o \"$f\"\n\
+         curl -fsSL \"https://raw.githubusercontent.com/cmdworks/tracewise/v{version}/scripts/install.sh\" -o \"$f\"\n\
          sh \"$f\" --version v{version} --login no\n"
     )
 }
@@ -325,7 +325,7 @@ mod tests {
     fn the_install_script_fetches_the_installer_of_the_same_version_to_a_file_first() {
         let s = install_script("0.2.0");
         assert!(s.starts_with("set -eu"));
-        assert!(s.contains("Tracewise/v0.2.0/scripts/install.sh\" -o \"$f\""));
+        assert!(s.contains("tracewise/v0.2.0/scripts/install.sh\" -o \"$f\""));
         assert!(s.contains("--version v0.2.0 --login no"));
         assert!(!s.contains("| sh"), "a failed download must not run an empty script");
     }

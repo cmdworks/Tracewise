@@ -35,7 +35,7 @@ if ! grep -q "^## \[$v\]" CHANGELOG.md; then
   mv CHANGELOG.new CHANGELOG.md
   rm -f "$section"
 fi
-grep -q "^\[$v\]:" CHANGELOG.md || printf '[%s]: https://github.com/cmdworks/Tracewise/releases/tag/v%s\n' "$v" "$v" >>CHANGELOG.md
+grep -q "^\[$v\]:" CHANGELOG.md || printf '[%s]: https://github.com/cmdworks/tracewise/releases/tag/v%s\n' "$v" "$v" >>CHANGELOG.md
 
 git commit -qam "chore(release): v$v"
 git tag -a "v$v" -m "Tracewise v$v"

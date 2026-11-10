@@ -17,8 +17,8 @@ cd tracewise-0.2.0-macos-arm64
 **From source** (needs a current stable Rust from [rustup](https://rustup.rs)):
 
 ```bash
-git clone https://github.com/cmdworks/Tracewise
-cd Tracewise
+git clone https://github.com/cmdworks/tracewise
+cd tracewise
 cargo build --release
 ./target/release/tracewise setup
 ```

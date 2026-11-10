@@ -4,7 +4,7 @@ The desktop app shows what Tracewise records: a live timeline of changes, who is
 
 ## Install
 
-1. Download the `.dmg` for your Mac from the [latest release](https://github.com/cmdworks/Tracewise/releases/latest): `tracewise-desktop-<version>-macos-arm64.dmg` (Apple silicon) or `-x86_64.dmg` (Intel). A `.sha256` file sits next to each.
+1. Download the `.dmg` for your Mac from the [latest release](https://github.com/cmdworks/tracewise/releases/latest): `tracewise-desktop-<version>-macos-arm64.dmg` (Apple silicon) or `-x86_64.dmg` (Intel). A `.sha256` file sits next to each.
 2. Open it and drag Tracewise to Applications.
 3. The app is not signed by Apple yet, so macOS blocks the first start. Either right-click the app and choose **Open**, or clear the download flag once:
 

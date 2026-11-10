@@ -2,14 +2,14 @@
 # Installs Tracewise for this user: downloads a release, checks it, and runs `tracewise setup`
 # (programs, command wrappers, git wrapper, shell hook, watcher), then optional shell bindings and agent hooks.
 #
-#   curl -fsSL https://raw.githubusercontent.com/cmdworks/Tracewise/main/scripts/install.sh | sh
+#   curl -fsSL https://raw.githubusercontent.com/cmdworks/tracewise/main/scripts/install.sh | sh
 #   curl -fsSL .../install.sh | sh -s -- --fish --login yes
 #   cd my-project && curl -fsSL .../install.sh | sh -s -- --agents claude,codex
 #
 # Run with --help for every option. Needs no sudo (except --strict).
 set -eu
 
-REPO="cmdworks/Tracewise"
+REPO="cmdworks/tracewise"
 VERSION=""
 ARCHIVE=""
 SHELL_RC=1
