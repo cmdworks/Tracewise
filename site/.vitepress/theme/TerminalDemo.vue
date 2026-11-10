@@ -107,7 +107,7 @@ function toggle() {
 onMounted(() => {
   reduced.value = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   if (reduced.value) return showEnd();
-  observer = new IntersectionObserver(([entry]) => (visible = entry.isIntersecting), { threshold: 0.2 });
+  observer = new IntersectionObserver(([entry]) => (visible = entry.isIntersecting), { threshold: 0 });
   if (root.value) observer.observe(root.value);
   show();
 });
@@ -315,13 +315,19 @@ const label = computed(() => (paused.value ? "Play the animation" : "Pause the a
 .bar.bs {
   background: #5b6272;
 }
+.fr > * {
+  flex: none;
+}
 .fr .no {
   width: 2.5ch;
 }
 .fr .who {
   width: 12ch;
 }
-.code {
+.fr .code {
+  flex: 1 1 0;
+  min-width: 0;
+  overflow: hidden;
   color: #e6e8ee;
 }
 .kept {

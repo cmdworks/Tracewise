@@ -18,8 +18,8 @@ Recorded. Explained. Reversible.
 <br>
 
 <div align="center">
-<a href="assets/demo.mp4"><img src="assets/demo.jpg" alt="Watch the 23-second Tracewise demo: blame, why, undo, and the desktop app" width="880"/></a>
-<br><sub>▶ Watch the 23-second demo</sub>
+<img src="assets/demo.gif" alt="Tracewise in 23 seconds: who changed that line, blame, why, undo by line, and the desktop app" width="880"/>
+<br><sub><a href="assets/demo.mp4">Watch it with sound</a></sub>
 </div>
 
 <br>

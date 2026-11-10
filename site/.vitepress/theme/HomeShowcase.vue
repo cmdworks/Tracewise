@@ -6,7 +6,6 @@ import appWindow from "@phosphor-icons/core/assets/duotone/app-window-duotone.sv
 import copyIcon from "@phosphor-icons/core/assets/duotone/copy-duotone.svg?raw";
 import checkIcon from "@phosphor-icons/core/assets/duotone/check-circle-duotone.svg?raw";
 import download from "@phosphor-icons/core/assets/duotone/download-simple-duotone.svg?raw";
-import TerminalDemo from "./TerminalDemo.vue";
 import book from "@phosphor-icons/core/assets/duotone/book-open-duotone.svg?raw";
 
 const installCmd = "curl -fsSL https://raw.githubusercontent.com/cmdworks/tracewise/main/scripts/install.sh | sh";
@@ -66,7 +65,17 @@ async function copy() {
     </div>
 
     <div v-show="active === 'cli'" id="panel-cli" role="tabpanel" aria-labelledby="tab-cli" tabindex="0" class="panel">
-      <TerminalDemo />
+      <div class="term quick">
+        <div class="bar"><i /><i /><i /></div>
+<pre><span class="c"># in your project</span>
+<span class="p">$</span> tracewise init
+<span class="p">$</span> tracewise agent install claude
+
+<span class="c"># ...edit files, let agents edit files...</span>
+<span class="p">$</span> tracewise log
+<span class="p">$</span> tracewise why src/app.rs:42
+<span class="p">$</span> tracewise undo &lt;change id&gt;</pre>
+      </div>
       <div class="side">
         <ul class="points">
           <li><b>Every command speaks JSON</b> with <code>--json</code>, for scripts and agents.</li>
@@ -232,7 +241,7 @@ h2 {
   color: #e06324;
   user-select: none;
 }
-.term .why {
+.term .c {
   color: #9aa0ad;
 }
 .shots {

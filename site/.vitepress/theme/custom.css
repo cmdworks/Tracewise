@@ -32,3 +32,57 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* the animated demo is the hero's picture: under the text until the window is wide, then beside it; no glow disc */
+.hero-demo {
+  width: 100%;
+  max-width: 680px;
+  margin: 0;
+}
+.VPHero .container {
+  flex-direction: column !important;
+  align-items: stretch;
+  max-width: 1152px;
+}
+.VPHero .main {
+  max-width: 720px;
+  text-align: left;
+}
+.VPHero .actions {
+  justify-content: flex-start;
+}
+.VPHero .image {
+  order: 2;
+  width: 100%;
+  margin: 32px 0 0;
+}
+.VPHero .image-container {
+  width: 100% !important;
+  height: auto !important;
+  transform: none !important;
+}
+.VPHero .image-bg {
+  display: none;
+}
+@media (min-width: 1000px) {
+  .VPHero .container {
+    flex-direction: row !important;
+    align-items: center;
+    gap: 40px;
+  }
+  .VPHero .main {
+    flex: 0 0 400px;
+    max-width: 400px;
+  }
+  .VPHero .image {
+    flex: 1 1 0;
+    min-width: 0;
+    margin: 0;
+  }
+}
+.VPHero .name,
+.VPHero .text,
+.VPHero .tagline {
+  text-align: left;
+  justify-content: flex-start;
+}

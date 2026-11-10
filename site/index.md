@@ -7,9 +7,6 @@ hero:
   name: Tracewise
   text: A flight recorder for your code
   tagline: Who changed every line, when, and why — you, a coding agent, a script or git. Recorded. Explained. Reversible.
-  image:
-    src: /logo.svg
-    alt: Tracewise logo
   actions:
     - theme: brand
       text: Get started
@@ -59,5 +56,3 @@ features:
     title: CLI and desktop app
     details: Everything from the terminal, or a live timeline, blame and undo in the desktop app.
 ---
-
-<HomeShowcase />
