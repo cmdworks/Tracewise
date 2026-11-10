@@ -24,3 +24,12 @@ updates:
       interval: monthly
     commit-message:
       prefix: "chore(deps)"
+  - package-ecosystem: npm
+    directory: /site
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      site:
+        patterns: ["*"]

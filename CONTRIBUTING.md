@@ -22,6 +22,17 @@ Add `!` after the type (`feat!: ...`) for a breaking change. CI checks every com
 cargo fmt --all && cargo clippy --workspace --all-targets -- -D warnings && cargo test --workspace
 ```
 
+## Documentation site
+
+The site at https://cmdworks.github.io/Tracewise/ is built from `docs/` and a few root files (`UI.md`, `CHANGELOG.md`, `CONTRIBUTING.md`). Edit those; never edit `site/src`, which is generated. The home page and the look are in `site/`.
+
+```bash
+cd site && pnpm install && pnpm dev     # live preview
+pnpm build                              # fails on a broken link
+```
+
+Changes to the docs on `main` are published by the `Docs site` workflow.
+
 ## Releasing (maintainers)
 
 ```bash

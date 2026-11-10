@@ -132,6 +132,8 @@ tracewise undo <change id>          # take one change back
 
 ## Documentation
 
+Read it as a website: **https://cmdworks.github.io/Tracewise/** (searchable, with dark mode). The same pages:
+
 | | |
 |---|---|
 | [Getting started](docs/getting-started.md) | Install, first project, agents, everyday commands |

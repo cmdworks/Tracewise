@@ -1,0 +1,15 @@
+{
+  "name": "tracewise-site",
+  "private": true,
+  "type": "module",
+  "license": "GPL-3.0-or-later",
+  "scripts": {
+    "sync": "node sync.mjs",
+    "dev": "node sync.mjs && vitepress dev --open",
+    "build": "node sync.mjs && vitepress build",
+    "preview": "vitepress preview"
+  },
+  "devDependencies": {
+    "vitepress": "1.6.4"
+  }
+}

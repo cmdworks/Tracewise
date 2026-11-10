@@ -1,0 +1,34 @@
+/* Brand: the orange of the logo. Text on it is dark enough for 4.5:1; links in light mode use the deeper shade. */
+:root {
+  --vp-c-brand-1: #b8480f;
+  --vp-c-brand-2: #cf5712;
+  --vp-c-brand-3: #e06324;
+  --vp-c-brand-soft: rgba(224, 99, 36, 0.14);
+  --vp-button-brand-bg: #e06324;
+  --vp-button-brand-hover-bg: #cf5712;
+  --vp-button-brand-active-bg: #b8480f;
+  --vp-button-brand-text: #1a0d05;
+  --vp-button-brand-hover-text: #1a0d05;
+  --vp-home-hero-name-color: transparent;
+  --vp-home-hero-name-background: linear-gradient(120deg, #e06324 30%, #f0a070);
+}
+.dark {
+  --vp-c-brand-1: #f08a50;
+  --vp-c-brand-2: #e8763a;
+  --vp-c-brand-3: #e06324;
+}
+.VPHero .image-src {
+  max-width: 200px;
+  max-height: 200px;
+}
+/* long command lines and tables scroll inside their block instead of widening the page on a phone */
+.vp-doc table {
+  display: block;
+  overflow-x: auto;
+}
+@media (prefers-reduced-motion: reduce) {
+  * {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
