@@ -9,8 +9,8 @@ Tracewise runs on macOS (Apple silicon and Intel).
 **From a release:**
 
 ```bash
-tar -xzf tracewise-0.2.0-macos-arm64.tar.gz    # or -x86_64 on an Intel Mac
-cd tracewise-0.2.0-macos-arm64
+tar -xzf tracewise-0.3.0-macos-arm64.tar.gz    # or -x86_64 on an Intel Mac
+cd tracewise-0.3.0-macos-arm64
 ./tracewise setup
 ```
 

@@ -49,15 +49,15 @@ Coding agents edit many files quickly, often several at once, and git only sees 
   <tr>
     <td><b>macOS</b></td>
     <td>
-      <a href="https://github.com/cmdworks/tracewise/releases/download/v0.2.0/tracewise-0.2.0-macos-arm64.tar.gz">Apple silicon</a> |
-      <a href="https://github.com/cmdworks/tracewise/releases/download/v0.2.0/tracewise-0.2.0-macos-x86_64.tar.gz">Intel</a>
+      <a href="https://github.com/cmdworks/tracewise/releases/download/v0.3.0/tracewise-0.3.0-macos-arm64.tar.gz">Apple silicon</a> |
+      <a href="https://github.com/cmdworks/tracewise/releases/download/v0.3.0/tracewise-0.3.0-macos-x86_64.tar.gz">Intel</a>
     </td>
   </tr>
   <tr>
     <td><b>Desktop app</b> (preview)</td>
     <td>
-      <a href="https://github.com/cmdworks/tracewise/releases/download/v0.2.0/tracewise-desktop-0.2.0-macos-arm64.dmg">Apple silicon</a> |
-      <a href="https://github.com/cmdworks/tracewise/releases/download/v0.2.0/tracewise-desktop-0.2.0-macos-x86_64.dmg">Intel</a>
+      <a href="https://github.com/cmdworks/tracewise/releases/download/v0.3.0/tracewise-desktop-0.3.0-macos-arm64.dmg">Apple silicon</a> |
+      <a href="https://github.com/cmdworks/tracewise/releases/download/v0.3.0/tracewise-desktop-0.3.0-macos-x86_64.dmg">Intel</a>
     </td>
   </tr>
   <tr>

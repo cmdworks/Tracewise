@@ -2,6 +2,30 @@
 
 All notable changes are listed here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versions follow [Semantic Versioning](https://semver.org/).
 
+## [0.3.0] - 2026-11-10
+
+### Added
+- **desktop:** Offer to install the command line, and ship the app as a disk image
+- **cli:** Tw, a short name for tracewise
+
+
+### Documentation
+- Desktop app page
+- Fix the install link in the desktop page
+- Move the desktop app page to UI.md in the root and link it from the README
+- Drop the private-repository install note
+- **site:** A searchable, responsive documentation site for GitHub Pages
+- **site:** Lowercase URL, docs under /docs, Phosphor icons and a CLI/desktop showcase
+- Demo video in the README and an animated terminal on the site
+- Link the demo poster to the video (GitHub strips video tags in READMEs)
+- Demo video without music (sound effects only)
+- **site:** The animated demo leads the home page; README plays the demo as a GIF
+
+
+### Fixed
+- **deps:** Update rusqlite to 0.41 for the bundled SQLite security fix
+
+
 ## [0.2.0] - 2026-11-10
 
 ### Changed
@@ -35,3 +59,4 @@ First public release, for macOS (Apple silicon and Intel). Builds are not notari
 
 [0.1.0]: https://github.com/cmdworks/tracewise/releases/tag/v0.1.0
 [0.2.0]: https://github.com/cmdworks/tracewise/releases/tag/v0.2.0
+[0.3.0]: https://github.com/cmdworks/tracewise/releases/tag/v0.3.0
