@@ -45,6 +45,7 @@ export default defineConfig({
       {
         text: "Project",
         items: [
+          { text: "Roadmap", link: "/docs/roadmap" },
           { text: "Changelog", link: "/docs/changelog" },
           { text: "Contributing", link: "/docs/contributing" },
         ],

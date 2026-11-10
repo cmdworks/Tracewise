@@ -20,5 +20,6 @@ Everything about Tracewise, from the first install to every command.
 
 ## Project
 
+- [Roadmap](./roadmap) — what is planned next.
 - [Changelog](./changelog) — what changed in each release.
 - [Contributing](./contributing) — commit style, tests, releases.
