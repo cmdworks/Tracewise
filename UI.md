@@ -16,7 +16,7 @@ xattr -dr com.apple.quarantine /Applications/Tracewise.app
 
 The app needs the `tracewise` program. At start it looks in `~/.tracewise/bin`, then in `PATH`. When it finds none it shows a screen with:
 
-- **Install the command line** — runs the release installer of the app's own version (the same as the [one-line install](../README.md#download)): programs, command wrappers, shell hook and watcher in `~/.tracewise`. No password is asked.
+- **Install the command line** — runs the release installer of the app's own version (the same as the [one-line install](README.md#download)): programs, command wrappers, shell hook and watcher in `~/.tracewise`. No password is asked.
 - **Check again** — after you installed it yourself.
 - The one-line command, to copy into a terminal instead.
 
@@ -38,7 +38,7 @@ Pick a project (one that `tracewise init` has registered) in the sidebar; the ap
 
 Other keys: `j`/`k` or the arrow keys move through changes, `/` searches, `u` undoes the selected change (after a preview), `b` opens its file, `i` toggles the inspector, `r` refreshes, `⌘B` hides the sidebar, `?` lists the keys.
 
-Undo works on lines, not whole files, and every undo is itself recorded. See [Getting started](getting-started.md#6-go-back).
+Undo works on lines, not whole files, and every undo is itself recorded. See [Getting started](docs/getting-started.md#6-go-back).
 
 ## What the app may do
 
@@ -69,7 +69,7 @@ cargo build --release --workspace
 TRACEWISE_BIN=$PWD/target/release/tracewise cargo test --manifest-path ui/src-tauri/Cargo.toml
 ```
 
-To work on the page in an ordinary browser against real history, see [ui/README.md](../ui/README.md).
+To work on the page in an ordinary browser against real history, see [ui/README.md](ui/README.md).
 
 ## Releases
 

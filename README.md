@@ -144,7 +144,7 @@ tracewise undo <change id>          # take one change back
 | [How it works](docs/how-it-works.md) | How changes are captured, attributed, stored and undone |
 | [Commands](docs/commands.md) | Every command, grouped by task |
 | [Configuration](docs/configuration.md) | Profiles, reasons, ignore rules, settings |
-| [Desktop app](docs/desktop-app.md) | Install the app, its tabs and keys, what it may do, building it |
+| [Desktop app](UI.md) | Install the app, its tabs and keys, what it may do, building it |
 | [Sharing](docs/sharing.md) | Sharing history between machines, optionally encrypted |
 
 ## Status
