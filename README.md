@@ -58,6 +58,12 @@ Coding agents edit many files quickly, often several at once, and git only sees 
 curl -fsSL https://raw.githubusercontent.com/cmdworks/Tracewise/main/scripts/install.sh | sh
 ```
 
+While the repository is private, pass a GitHub token (here from the [GitHub CLI](https://cli.github.com)):
+
+```bash
+curl -fsSL -H "Authorization: Bearer $(gh auth token)" https://raw.githubusercontent.com/cmdworks/Tracewise/main/scripts/install.sh | GITHUB_TOKEN=$(gh auth token) sh
+```
+
 Options go after `sh -s --`, for example `| sh -s -- --login yes --fish`:
 
 | Option | |

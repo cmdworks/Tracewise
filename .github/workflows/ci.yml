@@ -3,6 +3,7 @@ name: CI
 on:
   push:
     branches: [main]
+    tags-ignore: ["**"] # a tag runs only release.yml
   pull_request:
 
 concurrency:
