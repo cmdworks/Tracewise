@@ -41,7 +41,7 @@ jobs:
       - run: cargo test --locked --workspace
       - name: Package
         run: scripts/package.sh ${{ matrix.target }}
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.target }}
           path: |
@@ -85,7 +85,7 @@ jobs:
           out="dmg/tracewise-desktop-$version-macos-${{ matrix.arch }}.dmg"
           cp ui/src-tauri/target/${{ matrix.target }}/release/bundle/dmg/*.dmg "$out"
           (cd dmg && shasum -a 256 "$(basename "$out")" > "$(basename "$out").sha256")
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: desktop-${{ matrix.target }}
           path: dmg/*
