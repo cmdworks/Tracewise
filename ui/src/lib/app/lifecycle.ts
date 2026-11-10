@@ -4,6 +4,21 @@ import { stepSelection, toggleSidebar } from "./fx-core";
 import { fetchAgents, fetchBackground, fetchDaemonStatus, fetchDoctor, fetchLocks, fetchPending, fetchStatus, fetchTimeline, openFileBlame, refreshAll, pollStatus } from "./fx-load";
 import { formatRelativeTime, isStatusStale } from "$lib/live";
 import { openUndoModal } from "./fx-act";
+import { checkCli } from "./fx-cli";
+
+/** Loads everything the panels show; runs once the command line is there. */
+export function loadAll(): void {
+    fetchDaemonStatus();
+    fetchStatus();
+    fetchTimeline();
+    fetchAgents();
+    // the first change is selected on load; in a narrow window its inspector would cover the list, so it waits for a click
+    app.inspectorVisible = window.innerWidth >= 1100;
+    fetchLocks(); // the Timeline marks locked files, so it needs them before Now is opened
+    fetchPending();
+    fetchDoctor();
+    if (app.currentRepo && app.activeTab === "files" && app.selectedFilePath) openFileBlame(app.selectedFilePath);
+}
 
 /** Starts the page: reads the saved layout, loads everything, listens for keys. Returns what stops it. */
 export function start(): () => void {
@@ -22,16 +37,10 @@ export function start(): () => void {
     }
     app.sessionReady = true;
 
-    fetchDaemonStatus();
-    fetchStatus();
-    fetchTimeline();
-    fetchAgents();
-    // the first change is selected on load; in a narrow window its inspector would cover the list, so it waits for a click
-    app.inspectorVisible = window.innerWidth >= 1100;
-    fetchLocks(); // the Timeline marks locked files, so it needs them before Now is opened
-    fetchPending();
-    fetchDoctor();
-    if (saved.repo && saved.tab === "files" && saved.file) openFileBlame(saved.file);
+    // nothing is loaded before the command line is found; when it is missing the page offers to install it
+    checkCli().then((found) => {
+      if (found) loadAll();
+    });
 
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {

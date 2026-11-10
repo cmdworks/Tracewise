@@ -19,6 +19,7 @@ top=$(printf '%s\n%s\n' "${latest:-0.0.0}" "$v" | sort -V | tail -1)
 perl -0pi -e 's/^version = "[^"]*"/version = "'"$v"'"/m' Cargo.toml crates/tracewise-platform/Cargo.toml ui/src-tauri/Cargo.toml
 perl -0pi -e 's/"version": "[^"]*"/"version": "'"$v"'"/' ui/package.json ui/src-tauri/tauri.conf.json
 perl -pi -e 's#download/v[0-9.]+/tracewise-[0-9.]+-#download/v'"$v"'/tracewise-'"$v"'-#g' README.md
+perl -pi -e 's#download/v[0-9.]+/tracewise-desktop-[0-9.]+-#download/v'"$v"'/tracewise-desktop-'"$v"'-#g' README.md
 perl -pi -e 's#tracewise-[0-9.]+-macos-#tracewise-'"$v"'-macos-#g' docs/getting-started.md
 cargo update -w --offline >/dev/null
 cargo update -w --offline --manifest-path ui/src-tauri/Cargo.toml >/dev/null

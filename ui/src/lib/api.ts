@@ -1,4 +1,4 @@
-import type { TracewiseResult } from "./types";
+import type { CliStatus, TracewiseResult } from "./types";
 
 /**
  * The repository to send with a call: a path, or null for "the one the app is in". The page starts with no project chosen (an empty
@@ -20,4 +20,20 @@ export async function invokeTracewise(args: string[], repoOverride?: string | nu
     }
     throw e;
   }
+}
+
+/** Where the command line is. Null outside the desktop app (or with the dev bridge): nothing to install there, so the page carries on. */
+export async function cliStatus(): Promise<CliStatus | null> {
+  try {
+    const { invoke } = await import("@tauri-apps/api/core");
+    return (await invoke<CliStatus | null>("cli_status")) ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/** Installs the command line of this app's version; the reply holds the installer's output and exit code. */
+export async function installCli(): Promise<TracewiseResult> {
+  const { invoke } = await import("@tauri-apps/api/core");
+  return await invoke<TracewiseResult>("install_cli");
 }

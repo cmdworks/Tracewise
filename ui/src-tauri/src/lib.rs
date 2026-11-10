@@ -252,19 +252,83 @@ async fn tracewise(args: Vec<String>, repo: Option<String>) -> Result<TracewiseR
         .map_err(|e| format!("tracewise task failed: {e}"))?
 }
 
+#[derive(serde::Serialize, Debug, PartialEq, Eq)]
+pub struct CliStatus {
+    pub installed: bool,
+    pub path: Option<String>,
+    pub version: Option<String>,
+    /// The version of this app; the installer fetches the command line of the same version.
+    pub app_version: String,
+}
+
+/// Where the command line is and which version it is, so the app can offer to install it when it is missing.
+#[tauri::command]
+async fn cli_status() -> Result<CliStatus, String> {
+    tauri::async_runtime::spawn_blocking(|| {
+        let app_version = env!("CARGO_PKG_VERSION").to_string();
+        let Ok(bin) = locate_tracewise_binary() else {
+            return CliStatus { installed: false, path: None, version: None, app_version };
+        };
+        let mut cmd = build_tracewise_command(&bin, &["--version".to_string()], None);
+        let version = run_bounded(&mut cmd, Duration::from_secs(5), 4096)
+            .ok()
+            .filter(|r| r.exit_code == 0)
+            .map(|r| r.stdout.trim().trim_start_matches("tracewise ").to_string());
+        CliStatus { installed: version.is_some(), path: Some(bin.to_string_lossy().into_owned()), version, app_version }
+    })
+    .await
+    .map_err(|e| format!("status task failed: {e}"))
+}
+
+const INSTALL_TIMEOUT: Duration = Duration::from_secs(300);
+
+/// The shell script that installs the command line of `version`: it downloads the installer of that tag to a file first, so a failed
+/// download stops the script instead of running an empty one.
+pub fn install_script(version: &str) -> String {
+    format!(
+        "set -eu\nf=$(mktemp \"${{TMPDIR:-/tmp}}/tracewise-install.XXXXXX\")\ntrap 'rm -f \"$f\"' EXIT\n\
+         curl -fsSL \"https://raw.githubusercontent.com/cmdworks/Tracewise/v{version}/scripts/install.sh\" -o \"$f\"\n\
+         sh \"$f\" --version v{version} --login no\n"
+    )
+}
+
+/// Installs the command line (programs, command wrappers, shell hook, watcher) with the release installer; same as the one-line install.
+#[tauri::command]
+async fn install_cli() -> Result<TracewiseResult, String> {
+    let mut cmd = Command::new("/bin/sh");
+    cmd.arg("-c").arg(install_script(env!("CARGO_PKG_VERSION"))).env("PATH", "/usr/bin:/bin:/usr/sbin:/sbin");
+    for var in STRIPPED_ENV_VARS {
+        cmd.env_remove(var);
+    }
+    tauri::async_runtime::spawn_blocking(move || run_bounded(&mut cmd, INSTALL_TIMEOUT, MAX_OUTPUT_BYTES))
+        .await
+        .map_err(|e| format!("install task failed: {e}"))?
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![tracewise])
+        .invoke_handler(tauri::generate_handler![tracewise, cli_status, install_cli])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{build_tracewise_command, validate_repo_path, validate_repo_path_in, validate_tracewise_args, ALLOWED_COMMANDS};
+    use super::{
+        build_tracewise_command, install_script, validate_repo_path, validate_repo_path_in, validate_tracewise_args, ALLOWED_COMMANDS,
+    };
     use std::path::PathBuf;
+
+    #[test]
+    fn the_install_script_fetches_the_installer_of_the_same_version_to_a_file_first() {
+        let s = install_script("0.2.0");
+        assert!(s.starts_with("set -eu"));
+        assert!(s.contains("Tracewise/v0.2.0/scripts/install.sh\" -o \"$f\""));
+        assert!(s.contains("--version v0.2.0 --login no"));
+        assert!(!s.contains("| sh"), "a failed download must not run an empty script");
+    }
 
     #[test]
     fn test_allow_list_permits_allowed_commands() {

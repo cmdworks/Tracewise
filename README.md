@@ -47,6 +47,13 @@ Coding agents edit many files quickly, often several at once, and git only sees 
     </td>
   </tr>
   <tr>
+    <td><b>Desktop app</b> (preview)</td>
+    <td>
+      <a href="https://github.com/cmdworks/Tracewise/releases/download/v0.2.0/tracewise-desktop-0.2.0-macos-arm64.dmg">Apple silicon</a> |
+      <a href="https://github.com/cmdworks/Tracewise/releases/download/v0.2.0/tracewise-desktop-0.2.0-macos-x86_64.dmg">Intel</a>
+    </td>
+  </tr>
+  <tr>
     <td><b>Linux</b>, <b>Windows</b></td>
     <td>planned</td>
   </tr>
@@ -88,7 +95,7 @@ tracewise doctor --all     # in a new terminal: check the installation
 ```
 
 > [!NOTE]
-> Release builds are not notarized yet. If macOS blocks them, clear the download flag first: `xattr -dr com.apple.quarantine .`
+> Release builds are not notarized yet. If macOS blocks them, clear the download flag first: `xattr -dr com.apple.quarantine .`. For the desktop app: drag it to Applications, then run `xattr -dr com.apple.quarantine /Applications/Tracewise.app` (or right-click it and choose Open). On first start it offers to install the command line if it is missing.
 
 **From source** (needs a current stable Rust from [rustup](https://rustup.rs)):
 

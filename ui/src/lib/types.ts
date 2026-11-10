@@ -128,3 +128,11 @@ export interface ToastMessage {
   repo?: string;
   originalId?: string;
 }
+
+/** What the desktop side finds of the command line: where it is, which version, and the version of this app. */
+export interface CliStatus {
+  installed: boolean;
+  path: string | null;
+  version: string | null;
+  app_version: string;
+}

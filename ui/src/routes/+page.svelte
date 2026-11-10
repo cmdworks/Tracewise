@@ -13,6 +13,7 @@
   import SettingsPanel from "$lib/panels/SettingsPanel.svelte";
   import Topbar from "$lib/panels/Topbar.svelte";
   import Dialogs from "$lib/panels/Dialogs.svelte";
+  import CliSetup from "$lib/panels/CliSetup.svelte";
   import { app } from "$lib/app/state.svelte";
   import * as fx from "$lib/app/fx";
   import { start } from "$lib/app/lifecycle";
@@ -35,6 +36,9 @@
 
 <div class="sr-only" aria-live="polite">{app.statusAnnouncement}</div>
 
+{#if app.cliChecked && !app.cliInstalled}
+  <CliSetup />
+{:else}
 <div class="app-layout">
   <!-- Collapsible Precision Sidebar (A1) -->
   <Sidebar
@@ -116,6 +120,8 @@
     />
   </div>
 </div>
+
+{/if}
 
 <!-- TypeSafe Modal: Safe Undo (M3, M4, M5, M6) -->
 <Dialogs />

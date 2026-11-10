@@ -87,6 +87,9 @@ export function tracewiseBridge() {
           };
           try {
             const { cmd, args } = JSON.parse(body);
+            // TRACEWISE_BRIDGE_CLI=missing shows the page that offers to install the command line; the install itself is desktop-only
+            if (cmd === "cli_status" && process.env.TRACEWISE_BRIDGE_CLI === "missing") return reply({ result: { installed: false, path: null, version: null, app_version: "0.2.0" } });
+            if (cmd === "install_cli") return reply({ error: "the dev bridge cannot install the command line" });
             if (cmd !== "tracewise") return reply({ result: null });
             const argv = args.args ?? [];
             if (!allowed.includes(argv[0])) return reply({ error: `subcommand not permitted: '${argv[0]}'` });

@@ -48,9 +48,51 @@ jobs:
             target/dist/*.tar.gz
             target/dist/*.tar.gz.sha256
 
+  desktop:
+    name: Desktop app ${{ matrix.target }}
+    needs: version
+    strategy:
+      matrix:
+        include:
+          - target: aarch64-apple-darwin
+            arch: arm64
+          - target: x86_64-apple-darwin
+            arch: x86_64
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 12.11.2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: ui/pnpm-lock.yaml
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      - name: Install dependencies
+        working-directory: ui
+        run: pnpm install --frozen-lockfile
+      - name: Build the disk image
+        working-directory: ui
+        run: pnpm tauri build --target ${{ matrix.target }} --bundles dmg
+      - name: Name and checksum the disk image
+        run: |
+          version=${GITHUB_REF_NAME#v}
+          mkdir -p dmg
+          out="dmg/tracewise-desktop-$version-macos-${{ matrix.arch }}.dmg"
+          cp ui/src-tauri/target/${{ matrix.target }}/release/bundle/dmg/*.dmg "$out"
+          (cd dmg && shasum -a 256 "$(basename "$out")" > "$(basename "$out").sha256")
+      - uses: actions/upload-artifact@v4
+        with:
+          name: desktop-${{ matrix.target }}
+          path: dmg/*
+
   publish:
     name: Publish
-    needs: build
+    needs: [build, desktop]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

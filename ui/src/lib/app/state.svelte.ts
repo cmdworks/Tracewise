@@ -62,6 +62,12 @@ export class AppState {
   repoRestored = $state<boolean>(false);
   /** The saved session has been read; only then may the page write one (an empty page must not overwrite what was saved). */
   sessionReady = $state<boolean>(false);
+  /** The command line: not looked for yet, found or missing, being installed, and what the installer said when it failed. */
+  cliChecked = $state<boolean>(false);
+  cliInstalled = $state<boolean>(true);
+  cliInstalling = $state<boolean>(false);
+  cliError = $state<string | null>(null);
+  cliAppVersion = $state<string>("");
   watchedRepos = $state<string[]>([]);
   daemonPid = $state<number | null>(null);
   daemonUptime = $state<number | null>(null);
