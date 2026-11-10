@@ -24,6 +24,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ### Fixed
 - **deps:** Update rusqlite to 0.41 for the bundled SQLite security fix
+- **desktop:** The app and disk image now use the Tracewise logo instead of the default icon
 
 
 ## [0.2.0] - 2026-11-10
