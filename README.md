@@ -42,8 +42,8 @@ Coding agents edit many files quickly, often several at once, and git only sees 
   <tr>
     <td><b>macOS</b></td>
     <td>
-      <a href="https://github.com/cmdworks/Tracewise/releases/download/v0.1.0/tracewise-0.1.0-macos-arm64.tar.gz">Apple silicon</a> |
-      <a href="https://github.com/cmdworks/Tracewise/releases/download/v0.1.0/tracewise-0.1.0-macos-x86_64.tar.gz">Intel</a>
+      <a href="https://github.com/cmdworks/Tracewise/releases/download/v0.2.0/tracewise-0.2.0-macos-arm64.tar.gz">Apple silicon</a> |
+      <a href="https://github.com/cmdworks/Tracewise/releases/download/v0.2.0/tracewise-0.2.0-macos-x86_64.tar.gz">Intel</a>
     </td>
   </tr>
   <tr>
