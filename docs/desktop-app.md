@@ -16,7 +16,7 @@ xattr -dr com.apple.quarantine /Applications/Tracewise.app
 
 The app needs the `tracewise` program. At start it looks in `~/.tracewise/bin`, then in `PATH`. When it finds none it shows a screen with:
 
-- **Install the command line** — runs the release installer of the app's own version (the same as the [one-line install](../README.md#install)): programs, command wrappers, shell hook and watcher in `~/.tracewise`. No password is asked.
+- **Install the command line** — runs the release installer of the app's own version (the same as the [one-line install](../README.md#download)): programs, command wrappers, shell hook and watcher in `~/.tracewise`. No password is asked.
 - **Check again** — after you installed it yourself.
 - The one-line command, to copy into a terminal instead.
 
