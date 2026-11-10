@@ -18,18 +18,18 @@ ignore = "0.4"
 tempfile = "3.17"
 blake3 = "1.5"
 zstd = "0.14"
-rusqlite = { version = "0.33", features = ["bundled"] }
-ulid = "1.1"
+rusqlite = { version = "0.41", features = ["bundled"] }
+ulid = "3.0"
 chrono = { version = "0.4", default-features = false, features = ["serde", "now", "std"] }
-similar = "2.6"
-notify = "6.1"
-sha1 = "0.10"
+similar = "3.2"
+notify = "8.2"
+sha1 = "0.11"
 flate2 = "1.0"
 libc = "0.2"
-ed25519-dalek = "2.1"
-getrandom = "0.2"
-chacha20poly1305 = "0.10"
-toml = { version = "0.8", default-features = false, features = ["parse"] }
+ed25519-dalek = "3.0"
+getrandom = "0.4"
+chacha20poly1305 = "0.11"
+toml = { version = "1.2", default-features = false, features = ["parse"] }
 
 [profile.release]
 opt-level = 2
