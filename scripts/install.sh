@@ -40,7 +40,7 @@ Usage: install.sh [options]
   --uninstall            remove what an earlier install added (project histories stay)
   -h, --help             this help
 
-Environment: GITHUB_TOKEN is used for downloads when set (needed while the repository is private).
+Environment: GITHUB_TOKEN is used for downloads when set.
 EOF
 }
 
@@ -103,7 +103,7 @@ if [ -z "$ARCHIVE" ]; then
   api() { curl -fsSL ${auth:+-H "$auth"} -H "Accept: $2" "https://api.github.com/repos/$REPO/$1"; }
   if [ -z "$VERSION" ]; then
     VERSION=$(api "releases?per_page=1" application/vnd.github+json | sed -n 's/.*"tag_name": *"\([^"]*\)".*/\1/p' | head -1)
-    [ -n "$VERSION" ] || die "no release found for $REPO (private repository? set GITHUB_TOKEN)"
+    [ -n "$VERSION" ] || die "no release found for $REPO"
   fi
   name="tracewise-${VERSION#v}-macos-$ARCH.tar.gz"
   say "Downloading Tracewise $VERSION for $ARCH"
