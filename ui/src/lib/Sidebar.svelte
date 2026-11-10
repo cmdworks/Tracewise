@@ -60,7 +60,7 @@
     <div class="sidebar-brand">
       <div class="brand-left">
         <span class="brand-glyph">
-          <Icon name="brand" size={15} />
+          <img src="/logo.svg" alt="" width="26" height="26" />
         </span>
         {#if !collapsed}
           <span class="brand-title text-14">Tracewise</span>
@@ -296,11 +296,9 @@
   }
 
   .brand-glyph {
-    width: 24px;
-    height: 24px;
-    border-radius: 4px;
-    background: var(--card-elevated);
-    border: 1px solid var(--border);
+    width: 26px;
+    height: 26px;
+    flex: none;
     display: flex;
     align-items: center;
     justify-content: center;

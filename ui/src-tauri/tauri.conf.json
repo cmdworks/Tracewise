@@ -26,6 +26,10 @@
   "bundle": {
     "active": true,
     "targets": "all",
+    "category": "DeveloperTool",
+    "shortDescription": "A flight recorder for your code",
+    "longDescription": "Shows who changed every line of your code, when and why, and lets you undo it: a live timeline, file history and undo for what Tracewise records.",
+    "copyright": "Copyright (C) 2026 Asmat. Released under the GNU GPL v3 or later.",
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",

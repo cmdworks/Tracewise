@@ -1,8 +1,10 @@
 [package]
 name = "ui"
 version = "0.3.0"
-description = "A Tauri App"
-authors = ["you"]
+description = "Tracewise desktop app: a live timeline, file history and undo for the code changes Tracewise records"
+authors = ["Tracewise contributors"]
+license = "GPL-3.0-or-later"
+repository = "https://github.com/cmdworks/tracewise"
 edition = "2021"
 
 [workspace]
