@@ -6,6 +6,7 @@ import appWindow from "@phosphor-icons/core/assets/duotone/app-window-duotone.sv
 import copyIcon from "@phosphor-icons/core/assets/duotone/copy-duotone.svg?raw";
 import checkIcon from "@phosphor-icons/core/assets/duotone/check-circle-duotone.svg?raw";
 import download from "@phosphor-icons/core/assets/duotone/download-simple-duotone.svg?raw";
+import TerminalDemo from "./TerminalDemo.vue";
 import book from "@phosphor-icons/core/assets/duotone/book-open-duotone.svg?raw";
 
 const installCmd = "curl -fsSL https://raw.githubusercontent.com/cmdworks/tracewise/main/scripts/install.sh | sh";
@@ -65,20 +66,7 @@ async function copy() {
     </div>
 
     <div v-show="active === 'cli'" id="panel-cli" role="tabpanel" aria-labelledby="tab-cli" tabindex="0" class="panel">
-      <div class="term" role="img" aria-label="A terminal session: tracewise blame, tracewise why, tracewise undo">
-        <div class="bar"><i /><i /><i /></div>
-<pre><span class="p">$</span> tracewise blame src/parser.rs
-   1 claude/s1  | fn parse(input: &amp;str) -&gt; Result&lt;Ast&gt; {   <span class="why">&lt;- "handle empty input without panicking"</span>
-   2 claude/s1  |     let tokens = lex(input)?;
-   3 baseline   |     build(tokens)   <span class="why">(git: you)</span>
-
-<span class="p">$</span> tracewise why src/parser.rs:2
-changed by claude/s1 · 06:42 UTC
-<span class="why">Why: handle empty input without panicking</span>
-
-<span class="p">$</span> tracewise undo --actor claude --since 1h
-<span class="why">3 changes undone; your own edits stay</span></pre>
-      </div>
+      <TerminalDemo />
       <div class="side">
         <ul class="points">
           <li><b>Every command speaks JSON</b> with <code>--json</code>, for scripts and agents.</li>

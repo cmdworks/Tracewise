@@ -10,3 +10,6 @@ ui/src-tauri/gen/
 site/src/
 site/dist/
 site/.vitepress/cache/
+
+# demo video source (rendered output is in assets/)
+/brag-output/

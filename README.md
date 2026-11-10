@@ -17,6 +17,14 @@ Recorded. Explained. Reversible.
 
 <br>
 
+<div align="center">
+<video src="assets/demo.mp4" poster="assets/demo.jpg" controls muted playsinline width="880">
+  <a href="assets/demo.mp4">Watch the 23-second demo</a>
+</video>
+</div>
+
+<br>
+
 ```console
 $ tracewise blame src/parser.rs
    1 01M6ZGP1763ZWNTNPSJSCEQVSB claude/s1  2026-11-09T06:42:12Z | fn parse(input: &str) -> Result<Ast> {   <- "handle empty input without panicking"
