@@ -74,7 +74,7 @@ impl Database {
     }
 
     pub fn open(db_path: &Path) -> Result<Self> {
-        let conn = Self::open_checked(db_path)?;
+        let mut conn = Self::open_checked(db_path)?;
         conn.busy_handler(Some(wait_patient))?;
         if conn.pragma_update(None, "journal_mode", "WAL").is_err() {
             // the data folder cannot be written (read-only, or a full disk): reading still works
@@ -107,7 +107,7 @@ impl Database {
 
     /// Fast open for hot path (hooks, shell begin/end): sets timeout without redundant PRAGMAs.
     pub fn open_hot(db_path: &Path) -> Result<Self> {
-        let conn = Self::open_checked(db_path)?;
+        let mut conn = Self::open_checked(db_path)?;
         conn.busy_handler(Some(wait_briefly))?;
         let version: i64 = conn.pragma_query_value(None, "user_version", |row| row.get(0)).unwrap_or(0);
         let db = Self { conn, head_path: Some(db_path.with_file_name("chain-head")), pending_head: Default::default() };

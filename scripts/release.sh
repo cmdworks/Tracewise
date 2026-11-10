@@ -21,6 +21,7 @@ perl -0pi -e 's/"version": "[^"]*"/"version": "'"$v"'"/' ui/package.json ui/src-
 perl -pi -e 's#download/v[0-9.]+/tracewise-[0-9.]+-#download/v'"$v"'/tracewise-'"$v"'-#g' README.md
 perl -pi -e 's#tracewise-[0-9.]+-macos-#tracewise-'"$v"'-macos-#g' docs/getting-started.md
 cargo update -w --offline >/dev/null
+cargo update -w --offline --manifest-path ui/src-tauri/Cargo.toml >/dev/null
 
 # a hand-written section for this version wins; otherwise it comes from the commits since the last tag
 if ! grep -q "^## \[$v\]" CHANGELOG.md; then
