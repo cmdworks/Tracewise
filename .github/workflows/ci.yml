@@ -14,6 +14,19 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
+  commits:
+    name: Conventional commits
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: "Every commit is type(scope): summary"
+        run: |
+          bad=$(git log --no-merges --format=%s ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }} | grep -v -E '^(feat|fix|perf|refactor|docs|test|build|ci|chore|style|revert)(\([a-z0-9._/-]+\))?!?: .+' || true)
+          test -z "$bad" || { printf 'Not Conventional Commits:\n%s\n' "$bad"; exit 1; }
+
   rust:
     name: Rust (macOS)
     runs-on: macos-latest
